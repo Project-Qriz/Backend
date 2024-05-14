@@ -30,9 +30,6 @@ public class User {
     @Column(nullable = false, length = 60)
     private String password;
 
-    @Column(length = 100)
-    private String essay;
-
     @Column(nullable = false, length = 20)
     private String email;
 
@@ -49,15 +46,18 @@ public class User {
     private LocalDateTime updatedAt;
 
     @Builder
-    public User(Long id, String username, String nickname, String password, String essay, String email, UserEnum role, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public User(Long id, String username, String nickname, String password, String email, UserEnum role, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.username = username;
         this.nickname = nickname;
         this.password = password;
-        this.essay = essay;
         this.email = email;
         this.role = role;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: 8080
   servlet:
     encoding:
       charset: utf-8
@@ -29,3 +29,4 @@ spring:
 logging:
   level:
     '[com.abo2.recode]': DEBUG
+    '[org.hibernate.type]': TRACE

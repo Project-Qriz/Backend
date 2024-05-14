@@ -35,6 +35,19 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
+
+    // for sending gmail from changing password
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    // Redis for check email
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // dependency for google oauth2
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
+    // SLF4J to Log4j2 Bridge
+    implementation 'org.apache.logging.log4j:log4j-api:2.21.1'
+    implementation 'org.apache.logging.log4j:log4j-core:2.21.1'
 }
 
 tasks.named('test') {
