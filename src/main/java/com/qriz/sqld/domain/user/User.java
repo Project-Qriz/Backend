@@ -61,16 +61,12 @@ public class User {
     // 소셜 엑세스 토큰
     private String accessToken;
 
-    // test
-    private String name;
-
 
     @Builder
-    public User(Long id, String username, String nickname, String name, String password, String email, UserEnum role, String provider, String providerId, String accessToken, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public User(Long id, String username, String nickname, String password, String email, UserEnum role, String provider, String providerId, String accessToken, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.username = username;
         this.nickname = nickname;
-        this.name = name;
         this.password = password;
         this.email = email;
         this.role = role;
@@ -79,10 +75,6 @@ public class User {
         this.accessToken = accessToken;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-    }
-
-    public Object getName() {
-        return null;
     }
 
     public void setPassword(String password) {
