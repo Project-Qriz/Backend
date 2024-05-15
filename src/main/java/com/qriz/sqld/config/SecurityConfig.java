@@ -3,7 +3,12 @@ package com.qriz.sqld.config;
 import com.qriz.sqld.config.jwt.JwtAuthenticationFilter;
 import com.qriz.sqld.config.jwt.JwtAuthorizationFilter;
 import com.qriz.sqld.domain.user.UserEnum;
+import com.qriz.sqld.handler.oauth2.OAuth2AuthenticationSuccessHandler;
+import com.qriz.sqld.handler.oauth2.OAuth2AuthenticationFailureHandler;
+import com.qriz.sqld.domain.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
+import com.qriz.sqld.service.CustomOAuth2UserService;
 import com.qriz.sqld.util.CustomResponseUtil;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -11,6 +16,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -20,9 +26,15 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
+@EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+    private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
+    private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -46,6 +58,7 @@ public class SecurityConfig {
         logger.debug("디버그 : filterChain 빈 등록됨");
         http.headers().frameOptions().disable(); // iframe 허용안함.
         http.csrf().disable();
+
         http.cors().configurationSource(configurationSource());
 
         // jSessionId를 서버쪽에서 관리안함
@@ -71,6 +84,22 @@ public class SecurityConfig {
                 .antMatchers("/api/v1/**").authenticated()
                 .antMatchers("/api/admin/v1/**").hasRole("" + UserEnum.ADMIN)
                 .anyRequest().permitAll();
+
+        // OAuth 로그인
+        http.oauth2Login(configure ->
+                configure.authorizationEndpoint(config -> config.authorizationRequestRepository(httpCookieOAuth2AuthorizationRequestRepository))
+                        .userInfoEndpoint(config -> config.userService(customOAuth2UserService))
+                        .successHandler(oAuth2AuthenticationSuccessHandler)
+                        .failureHandler(oAuth2AuthenticationFailureHandler)
+        );
+
+        // 로그아웃
+        http.logout(logout -> logout
+                .logoutSuccessUrl("/")
+                .invalidateHttpSession(true)
+                .clearAuthentication(true)
+                .deleteCookies("JSESSIONID")
+         );
 
         return http.build();
     }

@@ -18,43 +18,71 @@ import java.time.LocalDateTime;
 public class User {
 
     @Id
+    @Column(name = "user_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false, length = 20)
+    // 사용자 아이디
+    @Column(unique = true, nullable = false, length = 50)
     private String username;
 
-    @Column(nullable = false, length = 20)
+    // 사용자 성명
     private String nickname;
 
-    @Column(nullable = false, length = 60)
+    // 비밀번호
     private String password;
 
-    @Column(nullable = false, length = 20)
+    // 이메일
+    @Column(nullable = true, length = 30)
     private String email;
 
+    // 권한
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserEnum role;
 
+    // 생성일
     @CreatedDate
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    // 수정일
     @LastModifiedDate
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    // 소셜 로그인
+    // 어떤 OAuth (google, kakao)
+    private String provider;
+
+    // OAuth Key
+    private String providerId;
+
+    // 소셜 엑세스 토큰
+    private String accessToken;
+
+    // test
+    private String name;
+
+
     @Builder
-    public User(Long id, String username, String nickname, String password, String email, UserEnum role, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public User(Long id, String username, String nickname, String name, String password, String email, UserEnum role, String provider, String providerId, String accessToken, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.username = username;
         this.nickname = nickname;
+        this.name = name;
         this.password = password;
         this.email = email;
         this.role = role;
+        this.provider = provider;
+        this.providerId = providerId;
+        this.accessToken = accessToken;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    public Object getName() {
+        return null;
     }
 
     public void setPassword(String password) {
