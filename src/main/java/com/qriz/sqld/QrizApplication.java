@@ -6,10 +6,10 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @EnableJpaAuditing
 @SpringBootApplication
-public class RecodeApplication {
+public class QrizApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(RecodeApplication.class, args);
+        SpringApplication.run(QrizApplication.class, args);
     }
 
 }
