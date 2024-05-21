@@ -1,27 +1,39 @@
 package com.qriz.sqld.config.jwt;
 
-import com.qriz.sqld.config.auth.LoginUser;
-import com.qriz.sqld.domain.user.User;
-import com.qriz.sqld.domain.user.UserEnum;
+import java.util.Date;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.qriz.sqld.config.auth.LoginUser;
+import com.qriz.sqld.domain.user.User;
+import com.qriz.sqld.domain.user.UserEnum;
 
-import java.util.Date;
-
+@Component
 public class JwtProcess {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     // 토큰 생성
-    public static String create(LoginUser loginUser) {
+    public static String createAccessToken(LoginUser loginUser) {
         String jwtToken = JWT.create()
-                .withSubject("bank")
-                .withExpiresAt(new Date(System.currentTimeMillis() + JwtVO.EXPIRATION_TIME))
+                .withSubject("access_token")
+                .withExpiresAt(new Date(System.currentTimeMillis() + JwtVO.ACCESS_TOKEN_EXPIRATION_TIME))
                 .withClaim("id", loginUser.getUser().getId())
                 .withClaim("role", loginUser.getUser().getRole() + "")
+                .sign(Algorithm.HMAC512(JwtVO.SECRET));
+        return JwtVO.TOKEN_PREFIX + jwtToken;
+    }
+
+    public static String createRefreshToken(LoginUser loginUser) {
+        String jwtToken = JWT.create()
+                .withSubject("refresh_token")
+                .withExpiresAt(new Date(System.currentTimeMillis() + JwtVO.REFRESH_TOKEN_EXPIRATION_TIME))
+                .withClaim("id", loginUser.getUser().getId())
                 .sign(Algorithm.HMAC512(JwtVO.SECRET));
         return JwtVO.TOKEN_PREFIX + jwtToken;
     }

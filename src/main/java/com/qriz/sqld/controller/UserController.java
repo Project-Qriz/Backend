@@ -3,7 +3,6 @@ package com.qriz.sqld.controller;
 import com.qriz.sqld.domain.user.User;
 import com.qriz.sqld.domain.user.UserRepository;
 import com.qriz.sqld.dto.ResponseDto;
-import com.qriz.sqld.dto.email.EmailReqDto;
 import com.qriz.sqld.dto.user.UserReqDto;
 import com.qriz.sqld.dto.user.UserRespDto;
 import com.qriz.sqld.handler.ex.CustomApiException;
@@ -30,7 +29,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 
 @RequiredArgsConstructor
