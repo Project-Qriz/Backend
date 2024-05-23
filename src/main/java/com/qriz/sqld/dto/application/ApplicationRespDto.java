@@ -1,7 +1,10 @@
 package com.qriz.sqld.dto.application;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
 import java.util.List;
+import java.util.Locale;
 
 import com.qriz.sqld.domain.application.Application;
 
@@ -9,7 +12,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 public class ApplicationRespDto {
-    
+
     @Getter
     @Setter
     public static class ApplyListRespDto {
@@ -22,16 +25,20 @@ public class ApplicationRespDto {
         @Getter
         @Setter
         public static class ApplicationDetail {
-            private Long id;
-            private LocalDate date;
+            private Long applyId;
+            private String period;
+            private String date;
             private String testTime;
-            private String location;
 
             public ApplicationDetail(Application application) {
-                this.id = application.getId();
-                this.date = application.getDate();
+                DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MM.dd(E)");
+                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+                DateTimeFormatter testDateFormatter = DateTimeFormatter.ofPattern("M월 d일(E)");
+        
+                this.applyId = application.getId();
+                this.period = application.getStartDate().format(dateFormatter) + " ~ " + application.getEndDate().format(dateFormatter);
+                this.date = application.getExamDate().format(testDateFormatter);
                 this.testTime = application.getTestTime();
-                this.location = application.getLocation();
             }
         }
     }
@@ -40,15 +47,25 @@ public class ApplicationRespDto {
     @Setter
     public static class ApplyRespDto {
         private Long applyId;
-        private String date;
+        private String period;
+        private String examDate;
         private String testTime;
-        private String location;
 
-        public ApplyRespDto(Long applyId, String date, String testTime, String location) {
+        public ApplyRespDto(Long applyId, String period, String examDate, String testTime) {
             this.applyId = applyId;
-            this.date = date;
+            this.period = period;
+            this.examDate = examDate;
             this.testTime = testTime;
-            this.location = location;
+        }
+    }
+
+    @Getter
+    @Setter
+    public static class ExamDDayRespDto {
+        private Integer DDay;
+
+        public ExamDDayRespDto(Integer DDay) {
+            this.DDay = DDay;
         }
     }
 }

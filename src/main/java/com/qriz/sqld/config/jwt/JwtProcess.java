@@ -16,13 +16,16 @@ import com.qriz.sqld.domain.user.UserEnum;
 @Component
 public class JwtProcess {
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger log = LoggerFactory.getLogger(JwtProcess.class);
 
     // 토큰 생성
     public static String createAccessToken(LoginUser loginUser) {
+        long expirationTime = System.currentTimeMillis() + JwtVO.ACCESS_TOKEN_EXPIRATION_TIME * 1000L;
+        log.debug("디버깅 : AccessToken 만료 시간 (초 단위): " + expirationTime);
+
         String jwtToken = JWT.create()
                 .withSubject("access_token")
-                .withExpiresAt(new Date(System.currentTimeMillis() + JwtVO.ACCESS_TOKEN_EXPIRATION_TIME))
+                .withExpiresAt(new Date(expirationTime))
                 .withClaim("id", loginUser.getUser().getId())
                 .withClaim("role", loginUser.getUser().getRole() + "")
                 .sign(Algorithm.HMAC512(JwtVO.SECRET));
@@ -30,21 +33,22 @@ public class JwtProcess {
     }
 
     public static String createRefreshToken(LoginUser loginUser) {
+        long expirationTime = System.currentTimeMillis() + JwtVO.REFRESH_TOKEN_EXPIRATION_TIME * 1000L;
+        log.debug("디버깅 : RefreshToken 만료 시간 (밀리초 단위): " + expirationTime);
+
         String jwtToken = JWT.create()
                 .withSubject("refresh_token")
-                .withExpiresAt(new Date(System.currentTimeMillis() + JwtVO.REFRESH_TOKEN_EXPIRATION_TIME))
+                .withExpiresAt(new Date(expirationTime))
                 .withClaim("id", loginUser.getUser().getId())
                 .sign(Algorithm.HMAC512(JwtVO.SECRET));
         return JwtVO.TOKEN_PREFIX + jwtToken;
     }
 
-    // 토큰 검증 (return 되는 LoginUser 객체를 강제로 시큐리티 세션에 직접 주입)
     public static LoginUser verify(String token) {
         DecodedJWT decodedJWT = JWT.require(Algorithm.HMAC512(JwtVO.SECRET)).build().verify(token);
         Long id = decodedJWT.getClaim("id").asLong();
         String role = decodedJWT.getClaim("role").asString();
         User user = User.builder().id(id).role(UserEnum.valueOf(role)).build();
-        LoginUser loginUser = new LoginUser(user);
-        return loginUser;
+        return new LoginUser(user);
     }
 }

@@ -19,6 +19,7 @@ import lombok.Setter;
 
 @NoArgsConstructor
 @Getter
+@Setter
 @Entity
 public class Application {
     
@@ -27,11 +28,14 @@ public class Application {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 시험장
-    private String location;
+    // 시험 접수 시작 날짜
+    private LocalDate startDate;
+
+    // 시험 접수 종료 날짜
+    private LocalDate endDate;
 
     // 시험 날짜
-    private LocalDate date;
+    private LocalDate examDate;
 
     // 시험 시간
     private String testTime;
@@ -39,9 +43,10 @@ public class Application {
     @OneToMany(mappedBy = "application")
     private List<UserApply> userApplies;
 
-    public Application(String location, LocalDate date, String testTime) {
-        this.location = location;
-        this.date = date;
+    public Application(LocalDate startDate, LocalDate endDate, LocalDate examDate, String testTime) {
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.examDate = examDate;
         this.testTime = testTime;
     }
 
