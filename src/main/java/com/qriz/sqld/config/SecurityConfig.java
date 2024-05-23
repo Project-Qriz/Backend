@@ -19,7 +19,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationCodeTokenResponseClient;
-import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -32,15 +31,18 @@ public class SecurityConfig {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final RedisUtil redisUtil;
-    private final ClientRegistrationRepository clientRegistrationRepository;
-    private final DefaultAuthorizationCodeTokenResponseClient authorizationCodeTokenResponseClient;
-
+    
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         logger.debug("디버그 : BCryptPasswordEncoder 빈 등록됨");
         return new BCryptPasswordEncoder();
     }
-
+    
+    @Bean
+    public DefaultAuthorizationCodeTokenResponseClient defaultAuthorizationCodeTokenResponseClient() {
+        return new DefaultAuthorizationCodeTokenResponseClient();
+    }
+    
     // JWT 필터 등록이 필요함
     public class CustomSecurityFilterManager extends AbstractHttpConfigurer<CustomSecurityFilterManager, HttpSecurity> {
         @Override

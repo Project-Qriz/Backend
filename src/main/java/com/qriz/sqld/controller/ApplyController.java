@@ -41,7 +41,20 @@ public class ApplyController {
 
         System.out.println("applyReqDto = " + applyReqDto);
         ApplicationRespDto.ApplyRespDto applyRespDto = applyService.apply(applyReqDto, loginUser);
-        return new ResponseEntity<>(new ResponseDto<>(1, "시험 접수 등록 성공", applyRespDto), HttpStatus.OK);
+        return new ResponseEntity<>(new ResponseDto<>(1, "등록 시험 조회", applyRespDto), HttpStatus.OK);
     }
 
+    // 등록한 시험 접수 정보 조회
+    @GetMapping("/v1/applied")
+    public ResponseEntity<?> getApplied(@AuthenticationPrincipal LoginUser loginUser) {
+        ApplicationRespDto.ApplyRespDto applyRespDto = applyService.getApplied(loginUser.getUser().getId());
+        return new ResponseEntity<>(new ResponseDto<>(1, "등록 시험 조회", applyRespDto), HttpStatus.OK);
+    }
+
+    // 등록한 시험에 대한 D-Day
+    @GetMapping("/v1/applied/d-day")
+    public ResponseEntity<?> getDDay(@AuthenticationPrincipal LoginUser loginUser) {
+        ApplicationRespDto.ExamDDayRespDto examDDayRespDto = applyService.getDDay(loginUser.getUser().getId());
+        return new ResponseEntity<>(new ResponseDto<>(1, "남은 D-Day 계산 성공", examDDayRespDto), HttpStatus.OK);
+    }
 }

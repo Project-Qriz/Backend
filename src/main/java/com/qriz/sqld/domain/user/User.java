@@ -58,12 +58,8 @@ public class User {
     // OAuth Key
     private String providerId;
 
-    // 소셜 엑세스 토큰
-    private String accessToken;
-
-
     @Builder
-    public User(Long id, String username, String nickname, String password, String email, UserEnum role, String provider, String providerId, String accessToken, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public User(Long id, String username, String nickname, String password, String email, UserEnum role, String provider, String providerId, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.username = username;
         this.nickname = nickname;
@@ -72,7 +68,6 @@ public class User {
         this.role = role;
         this.provider = provider;
         this.providerId = providerId;
-        this.accessToken = accessToken;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
