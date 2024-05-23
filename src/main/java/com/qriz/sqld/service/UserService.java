@@ -24,7 +24,7 @@ public class UserService {
 
     // 회원 가입
     @Transactional
-    public UserRespDto.JoinRespDto 회원가입(UserReqDto.JoinReqDto joinReqDto) {
+    public UserRespDto.JoinRespDto join(UserReqDto.JoinReqDto joinReqDto) {
         // 1. 동일 유저네임 존재 검사
         Optional<User> userOP = userRepository.findByUsername(joinReqDto.getUsername());
         if (userOP.isPresent()) {

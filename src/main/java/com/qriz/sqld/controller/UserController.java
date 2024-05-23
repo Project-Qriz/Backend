@@ -42,12 +42,14 @@ public class UserController {
     private final UserRepository userRepository;
     private final MailSendService mailService;
 
+    // 회원 가입
     @PostMapping("/join")
     public ResponseEntity<?> join(@RequestBody @Valid UserReqDto.JoinReqDto joinReqDto, BindingResult bindingResult) {
-        UserRespDto.JoinRespDto joinRespDto = userService.회원가입(joinReqDto);
+        UserRespDto.JoinRespDto joinRespDto = userService.join(joinReqDto);
         return new ResponseEntity<>(new ResponseDto<>(1, "회원가입 성공", joinRespDto), HttpStatus.CREATED);
     }
 
+    // 아이디 찾기
     @GetMapping("/find-username")
     public ResponseEntity<?> findUSername(@RequestBody @Valid UserReqDto.FindUsernameReqDto findUsernameReqDto,
             BindingResult bindingResult) {
@@ -55,6 +57,7 @@ public class UserController {
         return new ResponseEntity<>(new ResponseDto<>(1, "아이디 찾기 성공", findUsernameRespDto), HttpStatus.OK);
     }
 
+    // 비밀번호 찾기
     @PostMapping("/find-pwd")
     public ResponseEntity<?> findPwd(@RequestBody @Valid UserReqDto.FindPwdReqDto findPwdReqDto,
             BindingResult bindingResult, HttpServletRequest request) {
@@ -101,6 +104,7 @@ public class UserController {
         }
     }
 
+    // 비밀번호 변경
     @PostMapping(value = { "/v1/change-pwd", "/change-pwd" })
     public ResponseEntity<?> ChangePwd(@RequestBody @Valid UserReqDto.ChangePwdReqDto changePwdReqDto,
             BindingResult bindingResult, HttpSession session) {
@@ -127,6 +131,7 @@ public class UserController {
         return new ResponseEntity<>(new ResponseDto<>(1, "비밀번호 변경 성공", changePwdRespDto), HttpStatus.OK);
     }
 
+    // 아이디 중복 확인
     @GetMapping("/username-duplicate")
     public ResponseEntity<?> usernameDuplicate(@RequestBody @Valid UserReqDto.UsernameDuplicateReqDto usernameDuplicateReqDto) {
         UserRespDto.UsernameDuplicateRespDto usernameDuplicateRespDto = userService.usernameDuplicate(usernameDuplicateReqDto);
@@ -138,6 +143,7 @@ public class UserController {
         }
     }
 
+    // 이메일 중복확인
     @GetMapping("/email-duplicate")
     public ResponseEntity<?> emailDuplicate(@RequestBody @Valid UserReqDto.EmailDuplicateReqDto emailDuplicateReqDto) {
         UserRespDto.EmailDuplicateRespDto emailDuplicateRespDto = userService.emailDuplicate(emailDuplicateReqDto);
@@ -148,4 +154,6 @@ public class UserController {
             return new ResponseEntity<>(new ResponseDto<>(1, "사용 가능한 이메일입니다.", emailDuplicateRespDto), HttpStatus.OK);
         }
     }
+
+    
 }
