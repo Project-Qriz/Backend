@@ -89,4 +89,18 @@ public class UserRespDto {
             this.isAvailable = isAvailable;
         }
     }
+
+    @Getter
+    @Setter
+    public static class ProfileRespDto {
+        private String nickname;
+        private String username;
+        private String email; 
+
+        public ProfileRespDto(User user) {
+            this.nickname = user.getNickname();
+            this.username = user.getUsername();
+            this.email = user.getEmail();
+        }
+    }
 }

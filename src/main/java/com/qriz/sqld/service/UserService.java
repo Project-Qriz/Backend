@@ -5,6 +5,8 @@ import com.qriz.sqld.domain.user.UserRepository;
 import com.qriz.sqld.dto.user.UserReqDto;
 import com.qriz.sqld.dto.user.UserRespDto;
 import com.qriz.sqld.handler.ex.CustomApiException;
+import com.qriz.sqld.util.RedisUtil;
+
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +23,7 @@ public class UserService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final RedisUtil redisUtil;
 
     // 회원 가입
     @Transactional
@@ -36,6 +39,12 @@ public class UserService {
 
         // 3. dto 응답
         return new UserRespDto.JoinRespDto(userPS);
+    }
+
+    // 로그 아웃
+    public void logout(String username) {
+        redisUtil.deleteData("RT:" + username);
+        redisUtil.deleteData("AT:" + username);
     }
 
     // 아이디 찾기
@@ -98,5 +107,12 @@ public class UserService {
             // 사용 기능한 이메일인 경우
             return new UserRespDto.EmailDuplicateRespDto(true);
         }
+    }
+
+    // 내 정보 불러오기
+    @Transactional(readOnly = true)
+    public UserRespDto.ProfileRespDto getProfile(Long userId) {
+        User userOp = userRepository.findById(userId).orElseThrow(() -> new CustomApiException("존재하지 않는 사용자 입니다."));
+        return new UserRespDto.ProfileRespDto(userOp);
     }
 }

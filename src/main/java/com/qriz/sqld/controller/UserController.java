@@ -1,5 +1,6 @@
 package com.qriz.sqld.controller;
 
+import com.qriz.sqld.config.auth.LoginUser;
 import com.qriz.sqld.domain.user.User;
 import com.qriz.sqld.domain.user.UserRepository;
 import com.qriz.sqld.dto.ResponseDto;
@@ -14,11 +15,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -47,6 +50,12 @@ public class UserController {
     public ResponseEntity<?> join(@RequestBody @Valid UserReqDto.JoinReqDto joinReqDto, BindingResult bindingResult) {
         UserRespDto.JoinRespDto joinRespDto = userService.join(joinReqDto);
         return new ResponseEntity<>(new ResponseDto<>(1, "회원가입 성공", joinRespDto), HttpStatus.CREATED);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestParam String username) {
+        userService.logout(username);
+        return ResponseEntity.ok("로그아웃 성공");
     }
 
     // 아이디 찾기
@@ -155,5 +164,10 @@ public class UserController {
         }
     }
 
-    
+    // 내 정보 불러오기
+    @GetMapping("/v1/my-profile")
+    public ResponseEntity<?> getProfile(@AuthenticationPrincipal LoginUser loginUser) {
+        UserRespDto.ProfileRespDto profileRespDto = userService.getProfile(loginUser.getUser().getId());
+        return new ResponseEntity<>(new ResponseDto<>(1, "회원 정보 불러오기 성공", profileRespDto), HttpStatus.OK);
+    }
 }

@@ -3,6 +3,8 @@ package com.qriz.sqld.config;
 import com.qriz.sqld.config.jwt.JwtAuthenticationFilter;
 import com.qriz.sqld.config.jwt.JwtAuthorizationFilter;
 import com.qriz.sqld.domain.user.UserEnum;
+import com.qriz.sqld.handler.logout.CustomLogoutHandler;
+import com.qriz.sqld.handler.logout.CustomLogoutSuccessHandler;
 import com.qriz.sqld.util.CustomResponseUtil;
 import com.qriz.sqld.util.RedisUtil;
 
@@ -91,11 +93,12 @@ public class SecurityConfig {
 
         // 로그아웃
         http.logout(logout -> logout
-                .logoutSuccessUrl("/")
+                .logoutUrl("/api/logout")
+                .addLogoutHandler(new CustomLogoutHandler(redisUtil))
+                .logoutSuccessHandler(new CustomLogoutSuccessHandler())
                 .invalidateHttpSession(true)
                 .clearAuthentication(true)
-                .deleteCookies("JSESSIONID")
-         );
+                .deleteCookies("JSESSIONID"));
 
         return http.build();
     }
