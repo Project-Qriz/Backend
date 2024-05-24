@@ -19,9 +19,15 @@ public class LoginService implements UserDetailsService {
     // 없으면 오류
     // 있으면 정상적으로 시큐리티 컨텍스트 내부 세션에 로그인된 세션이 만들어진다.
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User userPS = userRepository.findByUsername(username).orElseThrow(
+    public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
+        User userPS;
+        if (usernameOrEmail.contains("@")) {
+            userPS = userRepository.findByEmail(usernameOrEmail).orElseThrow(
                 () -> new InternalAuthenticationServiceException("인증 실패"));
+        } else {
+            userPS = userRepository.findByUsername(usernameOrEmail).orElseThrow(
+                () -> new InternalAuthenticationServiceException("인증 실패"));
+        }
         return new LoginUser(userPS);
     }
 }

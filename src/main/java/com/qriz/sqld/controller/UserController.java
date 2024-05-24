@@ -1,5 +1,6 @@
 package com.qriz.sqld.controller;
 
+import com.qriz.sqld.config.auth.LoginUser;
 import com.qriz.sqld.domain.user.User;
 import com.qriz.sqld.domain.user.UserRepository;
 import com.qriz.sqld.dto.ResponseDto;
@@ -14,11 +15,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -32,8 +35,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 
 @RequiredArgsConstructor
-@RequestMapping("/api")
 @RestController
+@RequestMapping("/api")
 public class UserController {
 
     private final Logger logger = LoggerFactory.getLogger(UserController.class);
@@ -42,12 +45,20 @@ public class UserController {
     private final UserRepository userRepository;
     private final MailSendService mailService;
 
+    // 회원 가입
     @PostMapping("/join")
     public ResponseEntity<?> join(@RequestBody @Valid UserReqDto.JoinReqDto joinReqDto, BindingResult bindingResult) {
-        UserRespDto.JoinRespDto joinRespDto = userService.회원가입(joinReqDto);
+        UserRespDto.JoinRespDto joinRespDto = userService.join(joinReqDto);
         return new ResponseEntity<>(new ResponseDto<>(1, "회원가입 성공", joinRespDto), HttpStatus.CREATED);
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestParam String username) {
+        userService.logout(username);
+        return ResponseEntity.ok("로그아웃 성공");
+    }
+
+    // 아이디 찾기
     @GetMapping("/find-username")
     public ResponseEntity<?> findUSername(@RequestBody @Valid UserReqDto.FindUsernameReqDto findUsernameReqDto,
             BindingResult bindingResult) {
@@ -55,6 +66,7 @@ public class UserController {
         return new ResponseEntity<>(new ResponseDto<>(1, "아이디 찾기 성공", findUsernameRespDto), HttpStatus.OK);
     }
 
+    // 비밀번호 찾기
     @PostMapping("/find-pwd")
     public ResponseEntity<?> findPwd(@RequestBody @Valid UserReqDto.FindPwdReqDto findPwdReqDto,
             BindingResult bindingResult, HttpServletRequest request) {
@@ -101,6 +113,7 @@ public class UserController {
         }
     }
 
+    // 비밀번호 변경
     @PostMapping(value = { "/v1/change-pwd", "/change-pwd" })
     public ResponseEntity<?> ChangePwd(@RequestBody @Valid UserReqDto.ChangePwdReqDto changePwdReqDto,
             BindingResult bindingResult, HttpSession session) {
@@ -127,6 +140,7 @@ public class UserController {
         return new ResponseEntity<>(new ResponseDto<>(1, "비밀번호 변경 성공", changePwdRespDto), HttpStatus.OK);
     }
 
+    // 아이디 중복 확인
     @GetMapping("/username-duplicate")
     public ResponseEntity<?> usernameDuplicate(@RequestBody @Valid UserReqDto.UsernameDuplicateReqDto usernameDuplicateReqDto) {
         UserRespDto.UsernameDuplicateRespDto usernameDuplicateRespDto = userService.usernameDuplicate(usernameDuplicateReqDto);
@@ -138,6 +152,7 @@ public class UserController {
         }
     }
 
+    // 이메일 중복확인
     @GetMapping("/email-duplicate")
     public ResponseEntity<?> emailDuplicate(@RequestBody @Valid UserReqDto.EmailDuplicateReqDto emailDuplicateReqDto) {
         UserRespDto.EmailDuplicateRespDto emailDuplicateRespDto = userService.emailDuplicate(emailDuplicateReqDto);
@@ -147,5 +162,12 @@ public class UserController {
         } else {
             return new ResponseEntity<>(new ResponseDto<>(1, "사용 가능한 이메일입니다.", emailDuplicateRespDto), HttpStatus.OK);
         }
+    }
+
+    // 내 정보 불러오기
+    @GetMapping("/v1/my-profile")
+    public ResponseEntity<?> getProfile(@AuthenticationPrincipal LoginUser loginUser) {
+        UserRespDto.ProfileRespDto profileRespDto = userService.getProfile(loginUser.getUser().getId());
+        return new ResponseEntity<>(new ResponseDto<>(1, "회원 정보 불러오기 성공", profileRespDto), HttpStatus.OK);
     }
 }

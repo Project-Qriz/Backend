@@ -1,14 +1,31 @@
 package com.qriz.sqld.domain.user;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import java.time.LocalDateTime;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import javax.persistence.*;
-import java.time.LocalDateTime;
+import com.qriz.sqld.domain.apply.UserApply;
+import com.qriz.sqld.domain.survey.Survey;
+
+import java.util.List;
+
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @Getter
@@ -57,6 +74,12 @@ public class User {
 
     // OAuth Key
     private String providerId;
+
+    @OneToMany(mappedBy = "user")
+    private List<UserApply> userApplies;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Survey> surveys;
 
     @Builder
     public User(Long id, String username, String nickname, String password, String email, UserEnum role, String provider, String providerId, LocalDateTime createdAt, LocalDateTime updatedAt) {
