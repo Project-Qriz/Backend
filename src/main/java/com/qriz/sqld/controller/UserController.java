@@ -35,8 +35,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 
 @RequiredArgsConstructor
-@RequestMapping("/api")
 @RestController
+@RequestMapping("/api")
 public class UserController {
 
     private final Logger logger = LoggerFactory.getLogger(UserController.class);
