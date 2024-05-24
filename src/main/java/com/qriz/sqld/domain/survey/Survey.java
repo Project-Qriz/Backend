@@ -27,9 +27,6 @@ public class Survey {
     @Column(name = "survey_id")
     private Long id;
 
-    // 설문 조사에서 체크했는지 여부
-    private boolean checked;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
@@ -37,6 +34,10 @@ public class Survey {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "skill_id")
     private Skill skill;
+
+    // 설문 조사에서 체크했는지 여부
+    private boolean checked;
+
 
     public Survey(User user, Skill skill, boolean checked) {
         this.user = user;
