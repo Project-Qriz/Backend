@@ -32,8 +32,8 @@ public class Question {
     @JoinColumn(name = "skill_id")
     private Skill skill;
 
-    // 문제 유형 (진단 고사 / 데일리 / 모의고사)
-    private Integer category;
+    // 문제 유형 (1: preview / 2: Daily / 3: exam)
+    private int category;
 
     // 문항
     private String question;

@@ -50,7 +50,7 @@ public class User {
     private String password;
 
     // 이메일
-    @Column(nullable = true, length = 30)
+    @Column(nullable = true)
     private String email;
 
     // 권한
