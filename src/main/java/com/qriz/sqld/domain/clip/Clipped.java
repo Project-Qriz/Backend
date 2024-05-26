@@ -10,7 +10,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
-import com.qriz.sqld.domain.UserActivity.UserActivity;
+import com.qriz.sqld.domain.userActivity.UserActivity;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
