@@ -7,7 +7,7 @@ import com.qriz.sqld.dto.ResponseDto;
 import com.qriz.sqld.dto.user.UserReqDto;
 import com.qriz.sqld.dto.user.UserRespDto;
 import com.qriz.sqld.handler.ex.CustomApiException;
-import com.qriz.sqld.service.MailSendService;
+import com.qriz.sqld.mail.service.MailSendService;
 import com.qriz.sqld.service.UserService;
 import lombok.RequiredArgsConstructor;
 
