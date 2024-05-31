@@ -115,7 +115,7 @@ public class UserController {
 
     // 비밀번호 변경
     @PostMapping(value = { "/v1/change-pwd", "/change-pwd" })
-    public ResponseEntity<?> ChangePwd(@RequestBody @Valid UserReqDto.ChangePwdReqDto changePwdReqDto,
+    public ResponseEntity<?> changePwd(@RequestBody @Valid UserReqDto.ChangePwdReqDto changePwdReqDto,
             BindingResult bindingResult, HttpSession session) {
 
         if (bindingResult.hasErrors()) {

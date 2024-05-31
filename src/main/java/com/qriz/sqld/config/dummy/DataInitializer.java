@@ -8,7 +8,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.qriz.sqld.domain.question.Question;
 import com.qriz.sqld.domain.question.QuestionRepository;
 import com.qriz.sqld.domain.skill.Skill;
 import com.qriz.sqld.domain.skill.SkillRepository;
@@ -73,24 +72,6 @@ public class DataInitializer implements CommandLineRunner {
 
         // 스킬 데이터 삽입
         skillRepository.saveAll(skills);
-
-        // 문제 데이터 삽입
-        for (int i = 1; i <= 100; i++) {
-            Question question = new Question();
-            question.setSkill(skills.get(i % skills.size()));  // 스킬을 순환하여 설정
-            question.setCategory(i % 3 + 1);  // 예제 숫자 카테고리 설정
-            question.setQuestion("Sample question " + i);
-            question.setOption1("Option 1");
-            question.setOption2("Option 2");
-            question.setOption3("Option 3");
-            question.setOption4("Option 4");
-            question.setAnswer("Option " + (i % 4 + 1));
-            question.setSolution("Sample solution " + i);
-            question.setDifficulty(i % 5 + 1);
-            question.setTimeLimit(60);
-
-            questionRepository.save(question);
-        }
     }
 
     private Skill createSkill(String title, String type, String keyConcepts) {
