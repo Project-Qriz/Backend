@@ -7,7 +7,7 @@ import com.qriz.sqld.dto.ResponseDto;
 import com.qriz.sqld.dto.user.UserReqDto;
 import com.qriz.sqld.dto.user.UserRespDto;
 import com.qriz.sqld.handler.ex.CustomApiException;
-import com.qriz.sqld.service.MailSendService;
+import com.qriz.sqld.mail.service.MailSendService;
 import com.qriz.sqld.service.UserService;
 import lombok.RequiredArgsConstructor;
 
@@ -115,7 +115,7 @@ public class UserController {
 
     // 비밀번호 변경
     @PostMapping(value = { "/v1/change-pwd", "/change-pwd" })
-    public ResponseEntity<?> ChangePwd(@RequestBody @Valid UserReqDto.ChangePwdReqDto changePwdReqDto,
+    public ResponseEntity<?> changePwd(@RequestBody @Valid UserReqDto.ChangePwdReqDto changePwdReqDto,
             BindingResult bindingResult, HttpSession session) {
 
         if (bindingResult.hasErrors()) {

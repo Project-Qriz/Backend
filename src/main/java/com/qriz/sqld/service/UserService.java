@@ -79,10 +79,11 @@ public class UserService {
 
     // 아이디 중복확인
     @Transactional
-    public UserRespDto.UsernameDuplicateRespDto usernameDuplicate(UserReqDto.UsernameDuplicateReqDto usernameDuplicateReqDto) {
+    public UserRespDto.UsernameDuplicateRespDto usernameDuplicate(
+            UserReqDto.UsernameDuplicateReqDto usernameDuplicateReqDto) {
         // 1. 사용자 찾기
         Optional<User> userOP = userRepository.findByUsername(usernameDuplicateReqDto.getUsername());
-        
+
         // 2. 사용자 존재 여부에 따라 응답 생성
         if (userOP.isPresent()) {
             // 아이디가 이미 사용 중인 경우
@@ -98,7 +99,7 @@ public class UserService {
     public UserRespDto.EmailDuplicateRespDto emailDuplicate(UserReqDto.EmailDuplicateReqDto emailDuplicateReqDto) {
         // 1. 이메일이 존재하는지 찾기
         Optional<User> userOP = userRepository.findByEmail(emailDuplicateReqDto.getEmail());
-        
+
         // 2. 이메일 존재 여부에 따라 응답 생성
         if (userOP.isPresent()) {
             // 이메일 이미 사용 중인 경우
@@ -114,5 +115,14 @@ public class UserService {
     public UserRespDto.ProfileRespDto getProfile(Long userId) {
         User userOp = userRepository.findById(userId).orElseThrow(() -> new CustomApiException("존재하지 않는 사용자 입니다."));
         return new UserRespDto.ProfileRespDto(userOp);
+    }
+
+    @Transactional
+    public void resetPassword(String email, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomApiException("사용자를 찾을 수 없습니다."));
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        user.setPassword(encodedPassword);
+        userRepository.save(user);
     }
 }

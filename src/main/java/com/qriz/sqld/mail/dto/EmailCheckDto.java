@@ -1,4 +1,4 @@
-package com.qriz.sqld.dto.email;
+package com.qriz.sqld.mail.dto;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;

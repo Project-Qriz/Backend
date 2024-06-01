@@ -1,4 +1,4 @@
-package com.qriz.sqld.config;
+package com.qriz.sqld.mail.config;
 
 import java.util.Properties;
 
