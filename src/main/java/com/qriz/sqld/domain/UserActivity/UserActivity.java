@@ -41,7 +41,7 @@ public class UserActivity {
     private Question question;
 
     // 사용자가 체크한 정답
-    private Integer checked;
+    private String checked;
 
     // 소요 시간
     private Integer timeSpent;
