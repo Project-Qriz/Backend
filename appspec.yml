@@ -1,0 +1,23 @@
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /home/app/current
+file_exists_behavior: OVERWRITE
+
+permissions:
+  - object: /home/app
+    pattern: '**'
+    owner: ubuntu
+    group: ubuntu
+
+hooks:
+  BeforeInstall:
+    - location: docker-stop.sh
+      timeout: 300
+      runas: ubuntu
+
+  AfterInstall:
+    - location: deploy-be.sh
+      timeout: 300
+      runas: ubuntu
