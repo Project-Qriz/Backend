@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.qriz.sqld.config.auth.LoginUser;
+import com.qriz.sqld.domain.question.Question;
 import com.qriz.sqld.dto.ResponseDto;
 import com.qriz.sqld.dto.test.TestReqDto;
 import com.qriz.sqld.dto.test.TestRespDto;
@@ -45,5 +46,19 @@ public class TestController {
         List<TestRespDto.TestSubmitRespDto> submitResponse = testService.processActivity(loginUser.getUser().getId(),
                 testSubmitReqDto);
         return new ResponseEntity<>(new ResponseDto<>(1, "테스트 제출 성공", submitResponse), HttpStatus.OK);
+    }
+
+    // 진단 고사 문제 추천
+    @GetMapping("/preview/get")
+    public ResponseEntity<?> recommendPreview(@AuthenticationPrincipal LoginUser loginUser, @RequestParam int numProblems) {
+        List<TestRespDto.DailyRespDto> recommendedProblems = testService.recommendPreview(loginUser.getUser().getId(), numProblems);
+        return new ResponseEntity<>(new ResponseDto<>(1, "진단 고사 문제 추천 성공", recommendedProblems), HttpStatus.OK);
+    }
+
+    // 진단 고사 결과 제출
+    @PostMapping("/preview/submit")
+    public ResponseEntity<?> submitPreview(@AuthenticationPrincipal LoginUser loginUser, @RequestBody @Valid TestReqDto testSubmitReqDto) {
+        List<TestRespDto.TestSubmitRespDto> submitResponse = testService.processPreviewResults(loginUser.getUser().getId(), testSubmitReqDto.getActivities());
+        return new ResponseEntity<>(new ResponseDto<>(1, "진단 고사 제출 성공", submitResponse), HttpStatus.OK);
     }
 }

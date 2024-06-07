@@ -30,25 +30,42 @@ public class UserActivity {
     @Column(name = "activity_id")
     private Long id;
 
-    // 사용자 외래 키
+    /**
+     * 사용자 외래 키
+     */
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
 
-    // 문제 외래 키
+    /**
+     * 문제 외래 키
+     */
     @ManyToOne
     @JoinColumn(name = "question_id")
     private Question question;
 
-    // 사용자가 체크한 정답
+    /**
+     * 데일리 정보
+     */
+    private String testInfo;
+
+    /**
+     * 사용자가 체크한 정답
+     */
     private String checked;
 
-    // 소요 시간
+    /**
+     * 소요 시간
+     */
     private Integer timeSpent;
 
-    // 정답 여부 (false: 오답, true: 정답)
+    /**
+     * 정답 여부 (false: 오답, true: 정답)
+     */
     private boolean correction;
 
-    // 푼 날짜
+    /**
+     * 푼 날짜
+     */
     private LocalDateTime date;
 }

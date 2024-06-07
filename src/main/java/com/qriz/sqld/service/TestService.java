@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Comparator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,8 @@ import com.qriz.sqld.domain.question.Question;
 import com.qriz.sqld.domain.question.QuestionRepository;
 import com.qriz.sqld.domain.skillLevel.SkillLevel;
 import com.qriz.sqld.domain.skillLevel.SkillLevelRepository;
+import com.qriz.sqld.domain.survey.Survey;
+import com.qriz.sqld.domain.survey.SurveyRepository;
 import com.qriz.sqld.domain.user.User;
 import com.qriz.sqld.domain.user.UserRepository;
 import com.qriz.sqld.domain.userActivity.UserActivityRepository;
@@ -32,9 +35,14 @@ public class TestService {
     private final QuestionRepository questionRepository;
     private final UserRepository userRepository;
     private final UserActivityRepository userActivityRepository;
+    private final SurveyRepository surveyRepository;
     private final Logger log = LoggerFactory.getLogger(TestService.class);
 
-    // 데일리 문제 추천
+    /**
+     * 데일리 문제 추천
+     * @param userId
+     * @param numRecommendations
+     */ 
     public List<TestRespDto.DailyRespDto> recommendDaily(Long userId, int numRecommendations) {
         List<SkillLevel> skillLevels = skillLevelRepository.findByUserId(userId);
 
@@ -54,6 +62,9 @@ public class TestService {
 
         Long currentSkillId = currentSkill.getSkill().getId();
 
+        double easyAccuracy = getAccuracy(skillLevels, currentSkillId, 1);
+        double mediumAccuracy = getAccuracy(skillLevels, currentSkillId, 2);
+
         // current skill 과 연관된 문제 불러오기
         List<Question> questions = questionRepository.findBySkillId(currentSkillId);
 
@@ -69,11 +80,10 @@ public class TestService {
                 .collect(Collectors.toList());
 
         List<Question> recommendations = new ArrayList<>();
-        double currentAccuracy = currentSkill.getCurrentAccuracy();
 
-        if (currentAccuracy > 0.7) {
+        if (easyAccuracy > 0.7 && mediumAccuracy > 0.7) {
             recommendations = getRandomQuestionIds(hardProblems, numRecommendations);
-        } else if (currentAccuracy > 0.4) {
+        } else if (easyAccuracy > 0.7) {
             recommendations = getRandomQuestionIds(mediumProblems, numRecommendations);
         } else {
             recommendations = getRandomQuestionIds(easyProblems, numRecommendations);
@@ -92,6 +102,14 @@ public class TestService {
         return recommendations.stream().map(TestRespDto.DailyRespDto::new).collect(Collectors.toList());
     }
 
+    private double getAccuracy(List<SkillLevel> skillLevels, Long skillId, int difficulty) {
+        return skillLevels.stream()
+                .filter(skill -> skill.getSkill().getId().equals(skillId) && skill.getDifficulty() == difficulty)
+                .findFirst()
+                .map(SkillLevel::getCurrentAccuracy)
+                .orElse(0.0f);
+    }
+
     private List<Question> getRandomQuestionIds(List<Question> questions, int count) {
         Collections.shuffle(questions);
         return questions.stream()
@@ -100,7 +118,11 @@ public class TestService {
                 .collect(Collectors.toList());
     }
 
-    // 데일리 문제 제출
+    /**
+     * 데일리 문제 제출
+     * @param userId
+     * @param testSubmitReqDto
+     */
     public List<TestRespDto.TestSubmitRespDto> processActivity(Long userId, TestReqDto testSubmitReqDto) {
         return testSubmitReqDto.getActivities().stream()
                 .map(activity -> {
@@ -112,8 +134,7 @@ public class TestService {
                     boolean isCorrect = checkAnswer(question, activity.getChecked());
 
                     TestRespDto.TestSubmitRespDto.QuestionRespDto questionRespDto = new TestRespDto.TestSubmitRespDto.QuestionRespDto(
-                            question.getId(),
-                            getCategoryName(questionReqDto.getCategory()));
+                            question.getId(), getCategoryName(questionReqDto.getCategory()));
 
                     User user = userRepository.findById(userId)
                             .orElseThrow(() -> new CustomApiException("해당 사용자를 찾을 수 없습니다."));
@@ -126,21 +147,23 @@ public class TestService {
                     userActivity.setTimeSpent(activity.getTimeSpent());
                     userActivity.setCorrection(isCorrect);
                     userActivity.setDate(LocalDateTime.now());
+                    
+                    // Set testInfo based on the current day
+                    userActivity.setTestInfo(getNextDayInfo(userId));
+
                     userActivityRepository.save(userActivity);
 
-
-                    return new TestRespDto.TestSubmitRespDto(
-                            activity.getActivityId(),
-                            activity.getUserId(),
-                            questionRespDto,
-                            activity.getQuestionNum(),
-                            activity.getChecked(),
-                            activity.getTimeSpent(),
-                            isCorrect);
+                    return new TestRespDto.TestSubmitRespDto(activity.getActivityId(), activity.getUserId(), questionRespDto,
+                            activity.getQuestionNum(), activity.getChecked(), activity.getTimeSpent(), isCorrect);
                 })
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 정답 여부 확인
+     * @param question
+     * @param checked
+     */
     private boolean checkAnswer(Question question, String checked) {
         log.info("Checked: " + checked);
         log.info("Answer: " + question.getAnswer());
@@ -149,6 +172,10 @@ public class TestService {
         return isCorrect;
     }
 
+    /**
+     * 카테고리 값에 따른 분류
+     * @param category
+     */
     private String getCategoryName(int category) {
         switch (category) {
             case 1:
@@ -160,5 +187,100 @@ public class TestService {
             default:
                 return "Unknown";
         }
+    }
+
+    /**
+     * 데일리 정보 불러오기
+     * @param userId
+     */
+    private String getNextDayInfo(Long userId) {
+        List<UserActivity> userActivities = userActivityRepository.findByUserId(userId);
+        int maxDay = userActivities.stream()
+                .filter(activity -> activity.getTestInfo().startsWith("Day "))
+                .mapToInt(activity -> Integer.parseInt(activity.getTestInfo().substring(4)))
+                .max()
+                .orElse(0);
+        return "Day " + (maxDay + 1);
+    }
+
+    /**
+     * 진단 고사 문제 추천
+     * @param userId
+     * @param numRecommendations
+     */
+    public List<TestRespDto.DailyRespDto> recommendPreview(Long userId, int numRecommendations) {
+        List<Survey> surveys = surveyRepository.findByUserIdAndCheckedFalse(userId);
+
+        if (surveys.isEmpty()) {
+            throw new CustomApiException("진단고사에 해당하는 체크하지 않은 개념이 없습니다.");
+        }
+
+        List<Long> uncheckedSkillIds = surveys.stream()
+                .map(survey -> survey.getSkill().getId())
+                .collect(Collectors.toList());
+
+        List<Question> diagnosisProblems = questionRepository.findBySkillIdInAndCategory(uncheckedSkillIds, 1);
+
+        // 최근 2년 시험 출제 경향에 따라 선별
+        diagnosisProblems = prioritizeByRecentTrends(diagnosisProblems);
+
+        return diagnosisProblems.stream()
+                .limit(numRecommendations)
+                .map(TestRespDto.DailyRespDto::new)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 최근 2년 시험 출제 경향에 따른 우선순위 지정
+     * @param questions
+     */
+    private List<Question> prioritizeByRecentTrends(List<Question> questions) {
+        return questions.stream()
+                .sorted(Comparator.comparingInt((Question q) -> q.getSkill().getFrequency()).reversed())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 진단 고사 결과 처리
+     * @param userId
+     * @param testResults
+     */
+    public List<TestRespDto.TestSubmitRespDto> processPreviewResults(Long userId, List<TestReqDto.TestSubmitReqDto> testResults) {
+        return testResults.stream()
+                .map(result -> {
+                    TestReqDto.TestSubmitReqDto.QuestionReqDto questionReqDto = result.getQuestion();
+                    Long questionId = questionReqDto.getQuestionId();
+                    Question question = questionRepository.findById(questionId)
+                            .orElseThrow(() -> new CustomApiException("해당 문제를 찾을 수 없습니다."));
+    
+                    boolean isCorrect = checkAnswer(question, result.getChecked());
+    
+                    TestRespDto.TestSubmitRespDto.QuestionRespDto questionRespDto = new TestRespDto.TestSubmitRespDto.QuestionRespDto(
+                            question.getId(),
+                            getCategoryName(questionReqDto.getCategory()));
+    
+                    User user = userRepository.findById(userId)
+                            .orElseThrow(() -> new CustomApiException("해당 사용자를 찾을 수 없습니다."));
+    
+                    // UserActivity 엔티티 저장
+                    UserActivity userActivity = new UserActivity();
+                    userActivity.setUser(user);
+                    userActivity.setQuestion(question);
+                    userActivity.setChecked(result.getChecked());
+                    userActivity.setTimeSpent(result.getTimeSpent());
+                    userActivity.setCorrection(isCorrect);
+                    userActivity.setDate(LocalDateTime.now());
+                    userActivityRepository.save(userActivity);
+    
+                    return new TestRespDto.TestSubmitRespDto(
+                            result.getActivityId(),
+                            userId,
+                            questionRespDto,
+                            result.getQuestionNum(),
+                            result.getChecked(),
+                            result.getTimeSpent(),
+                            isCorrect);
+                })
+                .collect(Collectors.toList());
     }
 }

@@ -27,14 +27,25 @@ public class Skill {
     @Column(name = "skill_id")
     private Long id;
 
-    // 1과목 / 2과목
+    /**
+     * 1과목 / 2과목
+     */
     private String title;
 
-    // 주요 항목
+    /**
+     * 주요 항목
+     */
     private String type;
 
-    // 세부 항목
+    /**
+     * 세부 항목
+     */
     private String keyConcepts;
+
+    /**
+     * 출제 빈도
+     */
+    private Integer frequency;
 
     @OneToMany(mappedBy = "skill", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Survey> surveys;
