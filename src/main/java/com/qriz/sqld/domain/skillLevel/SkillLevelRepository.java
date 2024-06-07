@@ -9,4 +9,5 @@ import org.springframework.stereotype.Repository;
 public interface SkillLevelRepository extends JpaRepository<SkillLevel, Long> {
     List<SkillLevel> findByUserId(Long userId);
     List<SkillLevel> findByUserIdAndSkillId(Long userId, Long skillId);
+    SkillLevel findByUserIdAndSkillIdAndDifficulty(Long userId, Long skillId, Integer difficulty);
 }
