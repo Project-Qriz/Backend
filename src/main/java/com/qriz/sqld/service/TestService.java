@@ -40,9 +40,10 @@ public class TestService {
 
     /**
      * 데일리 문제 추천
+     * 
      * @param userId
      * @param numRecommendations
-     */ 
+     */
     public List<TestRespDto.DailyRespDto> recommendDaily(Long userId, int numRecommendations) {
         List<SkillLevel> skillLevels = skillLevelRepository.findByUserId(userId);
 
@@ -120,6 +121,7 @@ public class TestService {
 
     /**
      * 데일리 문제 제출
+     * 
      * @param userId
      * @param testSubmitReqDto
      */
@@ -147,13 +149,14 @@ public class TestService {
                     userActivity.setTimeSpent(activity.getTimeSpent());
                     userActivity.setCorrection(isCorrect);
                     userActivity.setDate(LocalDateTime.now());
-                    
+
                     // Set testInfo based on the current day
                     userActivity.setTestInfo(getNextDayInfo(userId));
 
                     userActivityRepository.save(userActivity);
 
-                    return new TestRespDto.TestSubmitRespDto(activity.getActivityId(), activity.getUserId(), questionRespDto,
+                    return new TestRespDto.TestSubmitRespDto(activity.getActivityId(), activity.getUserId(),
+                            questionRespDto,
                             activity.getQuestionNum(), activity.getChecked(), activity.getTimeSpent(), isCorrect);
                 })
                 .collect(Collectors.toList());
@@ -161,6 +164,7 @@ public class TestService {
 
     /**
      * 정답 여부 확인
+     * 
      * @param question
      * @param checked
      */
@@ -174,6 +178,7 @@ public class TestService {
 
     /**
      * 카테고리 값에 따른 분류
+     * 
      * @param category
      */
     private String getCategoryName(int category) {
@@ -191,6 +196,7 @@ public class TestService {
 
     /**
      * 데일리 정보 불러오기
+     * 
      * @param userId
      */
     private String getNextDayInfo(Long userId) {
@@ -204,7 +210,69 @@ public class TestService {
     }
 
     /**
+     * 데일리 결과 조회
+     * 
+     * @param userId
+     * @param dayNumber
+     * @return TestResultRespDto
+     */
+    public List<TestRespDto.TestResultRespDto> getDailyResults(Long userId, String dayNumber) {
+        List<UserActivity> activities = userActivityRepository.findByUserIdAndTestInfo(userId, dayNumber);
+
+        if (activities.isEmpty()) {
+            throw new CustomApiException("해당 데일리 결과를 찾을 수 없습니다.");
+        }
+
+        return activities.stream()
+                .map(activity -> new TestRespDto.TestResultRespDto(
+                        activity.getId(),
+                        activity.getUser().getId(),
+                        new TestRespDto.TestResultRespDto.QuestionRespDto(
+                                activity.getQuestion().getId(),
+                                getCategoryName(activity.getQuestion().getCategory())),
+                        activity.getQuestionNum(),
+                        activity.isCorrection()))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 데일리 결과 상세보기
+     * @param userId
+     * @param activityId
+     * @return TestResultDetailRespDto
+     */
+    public TestRespDto.TestResultDetailRespDto getDailyResultDetail(Long userId, Long activityId) {
+        UserActivity activity = userActivityRepository.findByIdAndUserId(activityId, userId)
+                .orElseThrow(() -> new CustomApiException("해당 활동을 찾을 수 없습니다."));
+
+        Question question = activity.getQuestion();
+
+        TestRespDto.TestResultDetailRespDto.QuestionDto questionDto = new TestRespDto.TestResultDetailRespDto.QuestionDto(
+                question.getId(),
+                question.getSkill().getId(),
+                getCategoryName(question.getCategory()),
+                question.getAnswer(),
+                question.getSolution()
+        );
+
+        TestRespDto.TestResultDetailRespDto.ActivityDto activityDto = new TestRespDto.TestResultDetailRespDto.ActivityDto(
+                activity.getId(),
+                activity.getTestInfo()
+        );
+
+        return new TestRespDto.TestResultDetailRespDto(
+                activityDto,
+                activity.getUser().getId(),
+                questionDto,
+                activity.getQuestionNum(),
+                activity.getChecked(),
+                activity.isCorrection()
+        );
+    }
+
+    /**
      * 진단 고사 문제 추천
+     * 
      * @param userId
      * @param numRecommendations
      */
@@ -232,6 +300,7 @@ public class TestService {
 
     /**
      * 최근 2년 시험 출제 경향에 따른 우선순위 지정
+     * 
      * @param questions
      */
     private List<Question> prioritizeByRecentTrends(List<Question> questions) {
@@ -242,26 +311,28 @@ public class TestService {
 
     /**
      * 진단 고사 결과 처리
+     * 
      * @param userId
      * @param testResults
      */
-    public List<TestRespDto.TestSubmitRespDto> processPreviewResults(Long userId, List<TestReqDto.TestSubmitReqDto> testResults) {
+    public List<TestRespDto.TestSubmitRespDto> processPreviewResults(Long userId,
+            List<TestReqDto.TestSubmitReqDto> testResults) {
         return testResults.stream()
                 .map(result -> {
                     TestReqDto.TestSubmitReqDto.QuestionReqDto questionReqDto = result.getQuestion();
                     Long questionId = questionReqDto.getQuestionId();
                     Question question = questionRepository.findById(questionId)
                             .orElseThrow(() -> new CustomApiException("해당 문제를 찾을 수 없습니다."));
-    
+
                     boolean isCorrect = checkAnswer(question, result.getChecked());
-    
+
                     TestRespDto.TestSubmitRespDto.QuestionRespDto questionRespDto = new TestRespDto.TestSubmitRespDto.QuestionRespDto(
                             question.getId(),
                             getCategoryName(questionReqDto.getCategory()));
-    
+
                     User user = userRepository.findById(userId)
                             .orElseThrow(() -> new CustomApiException("해당 사용자를 찾을 수 없습니다."));
-    
+
                     // UserActivity 엔티티 저장
                     UserActivity userActivity = new UserActivity();
                     userActivity.setUser(user);
@@ -271,7 +342,7 @@ public class TestService {
                     userActivity.setCorrection(isCorrect);
                     userActivity.setDate(LocalDateTime.now());
                     userActivityRepository.save(userActivity);
-    
+
                     return new TestRespDto.TestSubmitRespDto(
                             result.getActivityId(),
                             userId,
