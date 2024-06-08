@@ -51,20 +51,103 @@ public class TestRespDto {
         public static class QuestionRespDto {
             private Long questionId;
             private String category;
-            
+
             public QuestionRespDto(Long questionId, String category) {
                 this.questionId = questionId;
                 this.category = category;
             }
         }
 
-        public TestSubmitRespDto(Long activityId, Long userId, QuestionRespDto question, int questionNum, String checked, Integer timeSpent, boolean correction) {
+        public TestSubmitRespDto(Long activityId, Long userId, QuestionRespDto question, int questionNum,
+                String checked, Integer timeSpent, boolean correction) {
             this.activityId = activityId;
             this.userId = userId;
             this.question = question;
             this.questionNum = questionNum;
             this.checked = checked;
             this.timeSpent = timeSpent;
+            this.correction = correction;
+        }
+    }
+
+    @Getter
+    @Setter
+    public static class TestResultRespDto {
+        private Long activityId;
+        private Long userId;
+        private QuestionRespDto question;
+        private int questionNum;
+        private boolean correction;
+
+        @Getter
+        @Setter
+        public static class QuestionRespDto {
+            private Long questionId;
+            private String category;
+
+            public QuestionRespDto(Long questionId, String category) {
+                this.questionId = questionId;
+                this.category = category;
+            }
+        }
+
+        public TestResultRespDto(Long activityId, Long userId, QuestionRespDto question, int questionNum,
+                boolean correction) {
+            this.activityId = activityId;
+            this.userId = userId;
+            this.question = question;
+            this.questionNum = questionNum;
+            this.correction = correction;
+        }
+    }
+
+    @Getter
+    @Setter
+    public static class TestResultDetailRespDto {
+        private ActivityDto activity;
+        private Long userId;
+        private QuestionDto question;
+        private int questionNum;
+        private String checked;
+        private boolean correction;
+
+        @Getter
+        @Setter
+        public static class ActivityDto {
+            private Long activityId;
+            private String testInfo;
+
+            public ActivityDto(Long activityId, String testInfo) {
+                this.activityId = activityId;
+                this.testInfo = testInfo;
+            }
+        }
+
+        @Getter
+        @Setter
+        public static class QuestionDto {
+            private Long questionId;
+            private Long skillId;
+            private String category;
+            private String answer;
+            private String solution;
+
+            public QuestionDto(Long questionId, Long skillId, String category, String answer, String solution) {
+                this.questionId = questionId;
+                this.skillId = skillId;
+                this.category = category;
+                this.answer = answer;
+                this.solution = solution;
+            }
+        }
+
+        public TestResultDetailRespDto(ActivityDto activity, Long userId, QuestionDto question, int questionNum,
+                String checked, boolean correction) {
+            this.activity = activity;
+            this.userId = userId;
+            this.question = question;
+            this.questionNum = questionNum;
+            this.checked = checked;
             this.correction = correction;
         }
     }

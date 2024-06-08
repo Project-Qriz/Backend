@@ -50,6 +50,11 @@ public class UserActivity {
     private String testInfo;
 
     /**
+     * 문제 번호
+     */
+    private int questionNum;
+
+    /**
      * 사용자가 체크한 정답
      */
     private String checked;
