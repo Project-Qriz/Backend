@@ -10,6 +10,8 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
+import org.springframework.data.annotation.CreatedDate;
+
 import com.qriz.sqld.domain.user.User;
 
 import lombok.AllArgsConstructor;
@@ -41,5 +43,6 @@ public class UserDaily {
     private boolean completed;
 
     // 완료 날짜
+    @CreatedDate
     private LocalDate completionDate;
 }
