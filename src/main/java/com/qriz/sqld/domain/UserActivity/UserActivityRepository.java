@@ -11,4 +11,8 @@ public interface UserActivityRepository extends JpaRepository<UserActivity, Long
     List<UserActivity> findByUserId(Long userId);
     List<UserActivity> findByUserIdAndTestInfo(Long userId, String testInfo);
     Optional<UserActivity> findByIdAndUserId(Long activityId, Long userId);
+    boolean existsByUserIdAndQuestionCategory(Long userId, int category);
+    List<UserActivity> findByUserIdAndQuestionCategory(Long userId, int category);
+    Optional<UserActivity> findLatestDailyByUserId(Long userId);
+    boolean existsByUserIdAndTestInfo(Long userId, String testInfo);
 }

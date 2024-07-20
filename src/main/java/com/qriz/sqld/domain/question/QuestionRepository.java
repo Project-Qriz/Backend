@@ -23,4 +23,6 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
      *  특정 skillId 와 Category 에 해당하는 질문들을 찾은 메서드
      */
     List<Question> findBySkillIdAndCategory(Long skillId, int category);
+
+    List<Question> findBySkillIdAndCategoryAndDifficulty(Long skillId, int category, int difficulty);
 }
