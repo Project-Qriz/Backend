@@ -1,15 +1,23 @@
 package com.qriz.sqld.domain.daily;
 
 import java.util.Optional;
+import java.util.List;
+import java.time.LocalDate;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
-import com.qriz.sqld.domain.user.User;
 
 @Repository
 public interface UserDailyRepository extends JpaRepository<UserDaily, Long> {
-    Optional<UserDaily> findLatestDailyByCompletion(User user, boolean completed);
-    Optional<UserDaily> findLatestDaily(User user);
-    Optional<UserDaily> findDailyByUserAndDay(User user, String dayNumber);
+    @Query("SELECT DISTINCT ud FROM UserDaily ud LEFT JOIN FETCH ud.plannedSkills WHERE ud.user.id = :userId ORDER BY ud.planDate ASC")
+    List<UserDaily> findByUserIdWithPlannedSkillsOrderByPlanDateAsc(@Param("userId") Long userId);
+
+    @Query("SELECT ud FROM UserDaily ud LEFT JOIN FETCH ud.plannedSkills WHERE ud.user.id = :userId AND ud.dayNumber = :dayNumber")
+    Optional<UserDaily> findByUserIdAndDayNumberWithPlannedSkills(@Param("userId") Long userId, @Param("dayNumber") String dayNumber);
+
+    Optional<UserDaily> findByUserIdAndPlanDate(Long userId, LocalDate planDate);
+
+    Optional<UserDaily> findByUserIdAndDayNumber(Long userId, String dayNumber);
 }
