@@ -47,6 +47,12 @@ public class Skill {
      */
     private Integer frequency;
 
+    /**
+     * 개념 설명
+     */
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
     @OneToMany(mappedBy = "skill", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Survey> surveys;
 }

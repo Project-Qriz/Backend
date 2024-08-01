@@ -21,7 +21,7 @@ import lombok.Setter;
 @Setter
 @Entity
 public class Survey {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "survey_id")
@@ -38,10 +38,24 @@ public class Survey {
     // 설문 조사에서 체크했는지 여부
     private boolean checked;
 
+    // 설문조사에서 아무것도 모른다 선택
+    @Column(name = "knows_nothing")
+    private boolean knowsNothing;
 
     public Survey(User user, Skill skill, boolean checked) {
         this.user = user;
         this.skill = skill;
         this.checked = checked;
+        this.knowsNothing = false;
+    }
+
+    // "아무것도 모른다" 옵션을 위한 정적 팩토리 메소드
+    public static Survey createKnowsNothingSurvey(User user) {
+        Survey survey = new Survey();
+        survey.setUser(user);
+        survey.setSkill(null);
+        survey.setChecked(false);
+        survey.setKnowsNothing(true);
+        return survey;
     }
 }

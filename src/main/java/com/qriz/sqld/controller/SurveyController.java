@@ -1,7 +1,6 @@
 package com.qriz.sqld.controller;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,11 +15,8 @@ import com.qriz.sqld.config.auth.LoginUser;
 import com.qriz.sqld.dto.ResponseDto;
 import com.qriz.sqld.dto.survey.SurveyReqDto;
 import com.qriz.sqld.dto.survey.SurveyRespDto;
-import com.qriz.sqld.dto.test.TestRespDto;
+import com.qriz.sqld.handler.ex.CustomApiException;
 import com.qriz.sqld.service.SurveyService;
-import com.qriz.sqld.service.TestService;
-
-import java.util.List;
 
 import javax.validation.Valid;
 
@@ -28,30 +24,51 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/v1/survey")
 public class SurveyController {
-    
+
     private final SurveyService surveyService;
-    private final TestService testService;
 
-    @PostMapping("/v1/survey")
-    public ResponseEntity<?> submitSurvey(@AuthenticationPrincipal LoginUser loginUser, @Valid @RequestBody SurveyReqDto surveyReqDto) {
-        List<SurveyRespDto> responses = surveyService.submitSurvey(loginUser.getUser().getId(), surveyReqDto.getKeyConcepts());
-        
-        // 진단고사 문제 추천
-        // 30은 진단고사 문제 수
-        List<TestRespDto.DailyRespDto> previewProblems = testService.recommendPreview(loginUser.getUser().getId(), 30);
-
-        Map<String, Object> result = new HashMap<>();
-        result.put("surveyResponses", responses);
-        result.put("previewProblems", previewProblems);
-
-        return new ResponseEntity<>(new ResponseDto<>(1, "설문조사 제출 성공 및 진단고사 준비", result), HttpStatus.OK);
+    /**
+     * 설문조사 제출
+     * 
+     * @param loginUser 로그인한 사용자
+     * @param surveyReqDto 설문조사 요청 데이터
+     * @return
+     */
+    @PostMapping
+    public ResponseEntity<?> submitSurvey(@AuthenticationPrincipal LoginUser loginUser,
+            @Valid @RequestBody SurveyReqDto surveyReqDto) {
+        try {
+            List<SurveyRespDto> responses = surveyService.submitSurvey(loginUser.getUser().getId(),
+                    surveyReqDto.getKeyConcepts());
+            return new ResponseEntity<>(new ResponseDto<>(1, "설문조사 제출 성공", responses), HttpStatus.OK);
+        } catch (CustomApiException e) {
+            return new ResponseEntity<>(new ResponseDto<>(-1, e.getMessage(), null), HttpStatus.BAD_REQUEST);
+        }
     }
 
-    @GetMapping("/v1/survey/status")
+    /**
+     * 설문조사 완료 여부 확인
+     * 
+     * @param loginUser 로그인한 사용자
+     * @return
+     */
+    @GetMapping("/status")
     public ResponseEntity<?> getSurveyStatus(@AuthenticationPrincipal LoginUser loginUser) {
         boolean isCompleted = surveyService.isSurveyCompleted(loginUser.getUser().getId());
         return new ResponseEntity<>(new ResponseDto<>(1, "설문조사 상태 조회 성공", isCompleted), HttpStatus.OK);
+    }
+
+    /**
+     * 설문조사 결과 조회
+     * 
+     * @param loginUser 로그인한 사용자
+     * @return
+     */
+    @GetMapping("/results")
+    public ResponseEntity<?> getSurveyResults(@AuthenticationPrincipal LoginUser loginUser) {
+        List<SurveyRespDto> results = surveyService.getSurveyResults(loginUser.getUser().getId());
+        return new ResponseEntity<>(new ResponseDto<>(1, "설문조사 결과 조회 성공", results), HttpStatus.OK);
     }
 }
