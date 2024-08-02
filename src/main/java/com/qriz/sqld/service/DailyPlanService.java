@@ -7,8 +7,12 @@ import com.qriz.sqld.domain.skill.SkillRepository;
 import com.qriz.sqld.domain.user.User;
 import com.qriz.sqld.domain.user.UserRepository;
 import com.qriz.sqld.dto.daily.UserDailyDto;
+import com.qriz.sqld.util.WeekendPlanUtil;
 
 import lombok.RequiredArgsConstructor;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +29,9 @@ public class DailyPlanService {
     private final UserDailyRepository userDailyRepository;
     private final SkillRepository skillRepository;
     private final UserRepository userRepository;
+    private final WeekendPlanUtil weekendPlanUtil;
+
+    private final Logger log = LoggerFactory.getLogger(DailyPlanService.class);
 
     @Transactional
     public void generateDailyPlan(Long userId) {
@@ -92,15 +99,6 @@ public class DailyPlanService {
         return true;
     }
 
-    @Transactional(readOnly = true)
-    public List<UserDailyDto> getUserDailyPlan(Long userId) {
-        List<UserDaily> dailyPlans = userDailyRepository.findByUserIdWithPlannedSkillsOrderByPlanDateAsc(userId);
-        return dailyPlans.stream()
-                .map(UserDailyDto::new)
-                .distinct() // 중복 제거
-                .collect(Collectors.toList());
-    }
-
     @Transactional
     public void completeDailyPlan(Long userId, String dayNumber) {
         UserDaily userDaily = userDailyRepository.findByUserIdAndDayNumber(userId, dayNumber)
@@ -109,6 +107,34 @@ public class DailyPlanService {
         userDaily.setCompleted(true);
         userDaily.setCompletionDate(LocalDate.now());
         userDailyRepository.save(userDaily);
+
+        int day = Integer.parseInt(dayNumber.replace("Day", ""));
+        if (day % 7 == 5 && day <= 19) {
+            log.info("Updating weekend plan for day: {}", day);
+            updateWeekendPlan(userId, day);
+        }
+    }
+
+    @Transactional
+    public void updateWeekendPlan(Long userId, int currentDay) {
+        UserDaily day6 = userDailyRepository.findByUserIdAndDayNumber(userId, "Day" + (currentDay + 1))
+                .orElseThrow(() -> new RuntimeException("Day " + (currentDay + 1) + " plan not found"));
+        UserDaily day7 = userDailyRepository.findByUserIdAndDayNumber(userId, "Day" + (currentDay + 2))
+                .orElseThrow(() -> new RuntimeException("Day " + (currentDay + 2) + " plan not found"));
+
+        day6.setReviewDay(true);
+        day7.setReviewDay(true);
+
+        List<Skill> day6Skills = weekendPlanUtil.getWeekendPlannedSkills(userId, day6);
+        List<Skill> day7Skills = weekendPlanUtil.getWeekendPlannedSkills(userId, day7);
+
+        day6.setPlannedSkills(day6Skills);
+        day7.setPlannedSkills(day7Skills);
+
+        userDailyRepository.save(day6);
+        userDailyRepository.save(day7);
+
+        log.info("Weekend plan updated for days {} and {}", currentDay + 1, currentDay + 2);
     }
 
     public LocalDate getPlanStartDate(LocalDate currentDate) {
@@ -122,5 +148,13 @@ public class DailyPlanService {
     public boolean isWeekFour(LocalDate date) {
         LocalDate startDate = getPlanStartDate(date);
         return ChronoUnit.WEEKS.between(startDate, date) == 3;
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserDailyDto> getUserDailyPlan(Long userId) {
+        List<UserDaily> dailyPlans = userDailyRepository.findByUserIdWithPlannedSkillsOrderByPlanDateAsc(userId);
+        return dailyPlans.stream()
+                .map(UserDailyDto::new)
+                .collect(Collectors.toList());
     }
 }

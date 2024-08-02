@@ -3,28 +3,27 @@ package com.qriz.sqld.service;
 import com.qriz.sqld.domain.question.Question;
 import com.qriz.sqld.domain.question.QuestionRepository;
 import com.qriz.sqld.domain.skill.Skill;
-import com.qriz.sqld.domain.skill.SkillRepository;
-import com.qriz.sqld.domain.skillLevel.SkillLevel;
-import com.qriz.sqld.domain.skillLevel.SkillLevelRepository;
 import com.qriz.sqld.domain.user.User;
 import com.qriz.sqld.domain.user.UserRepository;
 import com.qriz.sqld.domain.userActivity.UserActivity;
 import com.qriz.sqld.domain.userActivity.UserActivityRepository;
 import com.qriz.sqld.domain.daily.UserDaily;
 import com.qriz.sqld.domain.daily.UserDailyRepository;
-import com.qriz.sqld.domain.preview.UserPreviewTest;
-import com.qriz.sqld.domain.preview.UserPreviewTestRepository;
 import com.qriz.sqld.dto.daily.DailyResultDetailDto;
 import com.qriz.sqld.dto.test.TestReqDto;
 import com.qriz.sqld.dto.test.TestRespDto;
 import com.qriz.sqld.handler.ex.CustomApiException;
+import com.qriz.sqld.util.WeekendPlanUtil;
+
 import lombok.RequiredArgsConstructor;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Map;
-import java.util.HashMap;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -32,7 +31,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.Collections;
 
 @Service
 @RequiredArgsConstructor
@@ -44,9 +42,12 @@ public class DailyService {
     private final UserDailyRepository userDailyRepository;
     private final DailyPlanService dailyPlanService;
     private final DKTService dktService;
-    private final SurveyService surveyService;
-    private final SkillLevelRepository skillLevelRepository;
-    private final SkillRepository skillRepository;
+
+    private final Logger log = LoggerFactory.getLogger(DailyService.class);
+
+    @Lazy
+    @Autowired
+    private final WeekendPlanUtil weekendPlanUtil;
 
     /**
      * 오늘의 데일리 테스트 문제를 가져오기
@@ -69,7 +70,7 @@ public class DailyService {
             questions = getWeekFourQuestions(userId, userDaily);
         } else if (userDaily.isReviewDay()) {
             // 주말: 복습 문제
-            questions = getWeekendQuestions(userId, userDaily);
+            questions = weekendPlanUtil.getWeekendQuestions(userId, userDaily);
         } else {
             // 평일: 일반 문제
             questions = getRegularDayQuestions(userDaily);
@@ -78,107 +79,6 @@ public class DailyService {
         return questions.stream()
                 .map(TestRespDto.DailyRespDto::new)
                 .collect(Collectors.toList());
-    }
-
-    private List<Question> getWeekendQuestions(Long userId, UserDaily todayPlan) {
-        List<Question> weakConceptQuestions = getWeakConceptQuestionsForWeek(userId, todayPlan);
-
-        boolean isKnowsNothingUser = surveyService.isKnowsNothingUser(userId);
-        if (!isKnowsNothingUser) {
-            // 프리뷰 테스트를 진행한 사용자의 경우
-            List<Question> previewTestWeakQuestions = getPreviewTestWeakQuestions(userId);
-            weakConceptQuestions.addAll(previewTestWeakQuestions);
-        }
-
-        // 중복 제거 및 10개로 제한
-        List<Question> finalQuestions = weakConceptQuestions.stream()
-                .distinct()
-                .limit(10)
-                .collect(Collectors.toList());
-
-        // 문제가 10개 미만이면 약점 개념에서 추가 문제 선택
-        if (finalQuestions.size() < 10) {
-            List<Question> additionalQuestions = getAdditionalWeakConceptQuestions(userId, todayPlan,
-                    10 - finalQuestions.size());
-            finalQuestions.addAll(additionalQuestions);
-        }
-
-        return finalQuestions;
-    }
-
-    private List<Question> getAdditionalWeakConceptQuestions(Long userId, UserDaily todayPlan, int count) {
-        int currentDay = Integer.parseInt(todayPlan.getDayNumber().replace("Day", ""));
-        int startDay = Math.max(1, currentDay - 5); // Day1 미만으로 내려가지 않도록
-
-        List<UserDaily> previousDays = userDailyRepository.findByUserIdAndDayNumberBetween(
-                userId, "Day" + startDay, "Day" + (currentDay - 1));
-
-        Map<Long, SkillAccuracy> skillAccuracyMap = new HashMap<>();
-
-        for (UserDaily daily : previousDays) {
-            if (daily.isCompleted()) {
-                List<UserActivity> activities = userActivityRepository.findByUserIdAndTestInfo(userId,
-                        "데일리 테스트 - " + daily.getDayNumber());
-                for (UserActivity activity : activities) {
-                    Long skillId = activity.getQuestion().getSkill().getId();
-                    skillAccuracyMap.computeIfAbsent(skillId, k -> new SkillAccuracy())
-                            .addResult(activity.isCorrection());
-                }
-            }
-        }
-
-        List<Long> weakSkillIds = skillAccuracyMap.entrySet().stream()
-                .sorted(Comparator.comparingDouble(e -> e.getValue().getAccuracy()))
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
-
-        // 약점 스킬이 충분하지 않은 경우, 모든 스킬을 포함
-        if (weakSkillIds.size() < count) {
-            List<Long> allSkillIds = skillRepository.findAllIds();
-            for (Long skillId : allSkillIds) {
-                if (!weakSkillIds.contains(skillId)) {
-                    weakSkillIds.add(skillId);
-                }
-            }
-        }
-
-        // 요청된 수만큼의 문제를 가져오기
-        List<Question> additionalQuestions = new ArrayList<>();
-        int questionsPerSkill = Math.max(1, count / weakSkillIds.size());
-        int remainingQuestions = count;
-
-        for (Long skillId : weakSkillIds) {
-            if (remainingQuestions <= 0)
-                break;
-
-            int questionsToFetch = Math.min(questionsPerSkill, remainingQuestions);
-            List<Question> questions = questionRepository.findRandomQuestionsBySkillIdsAndCategory(
-                    Collections.singletonList(skillId), 2, questionsToFetch);
-
-            additionalQuestions.addAll(questions);
-            remainingQuestions -= questions.size();
-        }
-
-        // 아직 부족한 경우 랜덤으로 추가
-        if (remainingQuestions > 0) {
-            additionalQuestions.addAll(getRandomQuestions(remainingQuestions));
-        }
-
-        return additionalQuestions;
-    }
-
-    private List<Question> getRandomQuestions(int count) {
-        List<Long> allSkillIds = skillRepository.findAllIds();
-        return questionRepository.findRandomQuestionsBySkillIdsAndCategory(allSkillIds, 2, count);
-    }
-
-    private List<Question> getPreviewTestWeakQuestions(Long userId) {
-        List<SkillLevel> weakSkillLevels = skillLevelRepository.findTop3ByUserIdOrderByCurrentAccuracyAsc(userId);
-        List<Long> weakSkillIds = weakSkillLevels.stream()
-                .map(skillLevel -> skillLevel.getSkill().getId())
-                .collect(Collectors.toList());
-
-        return questionRepository.findRandomQuestionsBySkillIdsAndCategory(weakSkillIds, 2, 5); // 데일리 카테고리, 5문제
     }
 
     private List<Question> getWeekFourQuestions(Long userId, UserDaily todayPlan) {
@@ -197,52 +97,6 @@ public class DailyService {
                 2, // 데일리 카테고리 값
                 10 // 데일리 테스트 문제 수
         );
-    }
-
-    private List<Question> getWeakConceptQuestionsForWeek(Long userId, UserDaily todayPlan) {
-        int currentDay = Integer.parseInt(todayPlan.getDayNumber().replace("Day", ""));
-        int startDay = Math.max(1, currentDay - 5); // Day1 미만으로 내려가지 않도록
-
-        List<UserActivity> activities = userActivityRepository.findByUserIdAndTestInfoBetween(
-                userId,
-                "데일리 테스트 - Day" + startDay,
-                "데일리 테스트 - Day" + (currentDay - 1));
-
-        Map<Long, SkillAccuracy> skillAccuracyMap = new HashMap<>();
-
-        for (UserActivity activity : activities) {
-            Long skillId = activity.getQuestion().getSkill().getId();
-            skillAccuracyMap.computeIfAbsent(skillId, k -> new SkillAccuracy())
-                    .addResult(activity.isCorrection());
-        }
-
-        List<Long> weakSkillIds = skillAccuracyMap.entrySet().stream()
-                .sorted(Comparator.comparingDouble(e -> e.getValue().getAccuracy()))
-                .limit(3)
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
-
-        if (weakSkillIds.isEmpty()) {
-            // 만약 이번 주에 푼 문제가 없다면, 모든 스킬에서 선택
-            weakSkillIds = skillRepository.findAllIds();
-        }
-
-        return questionRepository.findRandomQuestionsBySkillIdsAndCategory(weakSkillIds, 2, 5); // 데일리 카테고리, 5문제
-    }
-
-    private static class SkillAccuracy {
-        private int correct = 0;
-        private int total = 0;
-
-        public void addResult(boolean isCorrect) {
-            if (isCorrect)
-                correct++;
-            total++;
-        }
-
-        public double getAccuracy() {
-            return total == 0 ? 0 : (double) correct / total;
-        }
     }
 
     private List<Question> getQuestionsBasedOnPredictions(List<Double> predictions) {
@@ -308,6 +162,12 @@ public class DailyService {
         userDaily.setCompletionDate(LocalDate.now());
         userDailyRepository.save(userDaily);
 
+        int day = Integer.parseInt(dayNumber.replace("Day", ""));
+        if (day % 7 == 5 && day <= 19) { // Day5, Day12, Day19 완료 시
+            log.info("Day {} completed. Updating weekend plan.", day);
+            dailyPlanService.updateWeekendPlan(userId, day);
+        }
+
         return results;
     }
 
@@ -358,5 +218,16 @@ public class DailyService {
                 .checked(userActivity.getChecked())
                 .correction(userActivity.isCorrection())
                 .build();
+    }
+
+    // 테스트용
+    @Transactional
+    public void completeDailyTest(Long userId, String dayNumber) {
+        dailyPlanService.completeDailyPlan(userId, dayNumber);
+
+        if (dayNumber.equals("Day5")) {
+            log.info("Day5 completed. Updating weekend plan.");
+            dailyPlanService.updateWeekendPlan(userId, 5);
+        }
     }
 }

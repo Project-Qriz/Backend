@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,13 +16,29 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Component
-public class DataInitializer implements CommandLineRunner {
+public class DataInitializer {
 
     private final SkillRepository skillRepository;
 
-    @Override
+    /**
+     * spring.jpa.hibernate.ddl-auto=create 일 때만 데이터를 삽입
+     * ContextRefreshedEvent를 사용하여 애플리케이션 컨텍스트가 초기화될 때 데이터베이스 상태를 확인하고, 필요한 경우에만 데이터를 삽입
+     * 
+     * @param event
+     */
+    @EventListener
     @Transactional
-    public void run(String... args) throws Exception {
+    public void onApplicationEvent(ContextRefreshedEvent event) {
+        if (isDatabaseEmpty()) {
+            initializeData();
+        }
+    }
+
+    private boolean isDatabaseEmpty() {
+        return skillRepository.count() == 0;
+    }
+
+    private void initializeData() {
         // 스킬 데이터 나누어 삽입
         List<Skill> skillsPart1 = Arrays.asList(
                 createSkill("1과목", "데이터 모델링의 이해", "데이터모델의 이해", 74, "모델링의 이해 설명"),

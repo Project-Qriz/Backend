@@ -77,9 +77,9 @@ public class DailyController {
     /**
      * 데일리 테스트 결과 - 문제 상세보기
      * 
-     * @param dayNumber 데일리 정보
+     * @param dayNumber  데일리 정보
      * @param questionId 문제 아이디
-     * @param loginUser 로그인한 사용자
+     * @param loginUser  로그인한 사용자
      * @return
      */
     @GetMapping("/result/{dayNumber}/{questionId}")
@@ -89,5 +89,13 @@ public class DailyController {
         DailyResultDetailDto resultDetail = dailyService.getDailyResultDetail(loginUser.getUser().getId(), dayNumber,
                 questionId);
         return new ResponseEntity<>(new ResponseDto<>(1, "데일리 결과 상세 조회 성공", resultDetail), HttpStatus.OK);
+    }
+
+    // 테스트용
+    @PostMapping("/complete/{dayNumber}")
+    public ResponseEntity<?> completeDailyTest(@PathVariable String dayNumber,
+            @AuthenticationPrincipal LoginUser loginUser) {
+        dailyService.completeDailyTest(loginUser.getUser().getId(), dayNumber);
+        return new ResponseEntity<>(new ResponseDto<>(1, "데일리 테스트 완료 처리 성공", null), HttpStatus.OK);
     }
 }
