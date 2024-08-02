@@ -20,4 +20,6 @@ public interface UserDailyRepository extends JpaRepository<UserDaily, Long> {
     Optional<UserDaily> findByUserIdAndPlanDate(Long userId, LocalDate planDate);
 
     Optional<UserDaily> findByUserIdAndDayNumber(Long userId, String dayNumber);
+
+    List<UserDaily> findByUserIdAndDayNumberBetween(Long userId, String startDayNumber, String endDayNumber);
 }

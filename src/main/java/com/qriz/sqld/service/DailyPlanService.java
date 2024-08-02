@@ -68,8 +68,9 @@ public class DailyPlanService {
         userDailyRepository.saveAll(dailyPlans);
     }
 
-    public boolean canAccessNextDay(Long userId, String currentDayNumber) {
+    public boolean canAccessDay(Long userId, String currentDayNumber) {
         int currentDay = Integer.parseInt(currentDayNumber.replace("Day", ""));
+
         if (currentDay == 1)
             return true;
 
@@ -77,7 +78,18 @@ public class DailyPlanService {
         UserDaily previousDay = userDailyRepository.findByUserIdAndDayNumber(userId, previousDayNumber)
                 .orElseThrow(() -> new RuntimeException("Previous day plan not found"));
 
-        return previousDay.isCompleted();
+        // 이전 Day가 완료되지 않았으면 접근 불가
+        if (!previousDay.isCompleted()) {
+            return false;
+        }
+
+        // 이전 Day가 오늘 완료되었으면 접근 불가
+        if (previousDay.getCompletionDate() != null &&
+                previousDay.getCompletionDate().equals(LocalDate.now())) {
+            return false;
+        }
+
+        return true;
     }
 
     @Transactional(readOnly = true)
