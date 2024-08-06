@@ -181,7 +181,7 @@ public class PreviewService {
                 float accuracy = (float) correct / total;
 
                 SkillLevel skillLevel = skillLevelRepository.findByUserAndSkillAndDifficulty(user, skill, difficulty)
-                        .orElse(new SkillLevel(null, user, skill, difficulty, 0f, 0f, null));
+                        .orElse(new SkillLevel(user, skill, difficulty));
 
                 skillLevel.setCurrentAccuracy(accuracy);
                 skillLevel.setLastUpdated(LocalDateTime.now());

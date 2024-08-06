@@ -1,10 +1,12 @@
 package com.qriz.sqld.domain.daily;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.time.LocalDate;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -53,11 +55,11 @@ public class UserDaily {
     // 복습날짜 확인
     private boolean reviewDay;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_daily_skills",
             joinColumns = @JoinColumn(name = "daily_id"),
             inverseJoinColumns = @JoinColumn(name = "skill_id"))
-    private List<Skill> plannedSkills;
+    private List<Skill> plannedSkills = new ArrayList<>();
 
     private LocalDate planDate;
 }

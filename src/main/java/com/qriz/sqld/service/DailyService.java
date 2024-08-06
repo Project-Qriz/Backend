@@ -223,11 +223,13 @@ public class DailyService {
     // 테스트용
     @Transactional
     public void completeDailyTest(Long userId, String dayNumber) {
+        log.info("Completing daily test for user {} and day {}", userId, dayNumber);
         dailyPlanService.completeDailyPlan(userId, dayNumber);
 
-        if (dayNumber.equals("Day5")) {
-            log.info("Day5 completed. Updating weekend plan.");
-            dailyPlanService.updateWeekendPlan(userId, 5);
+        if (dayNumber.equals("Day21")) {
+            log.info("Day21 completed. Updating week four plan.");
+            dailyPlanService.updateWeekFourPlan(userId);
         }
+        log.info("Completed daily test for user {} and day {}", userId, dayNumber);
     }
 }

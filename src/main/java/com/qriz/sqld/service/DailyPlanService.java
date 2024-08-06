@@ -6,6 +6,8 @@ import com.qriz.sqld.domain.skill.Skill;
 import com.qriz.sqld.domain.skill.SkillRepository;
 import com.qriz.sqld.domain.user.User;
 import com.qriz.sqld.domain.user.UserRepository;
+import com.qriz.sqld.domain.userActivity.UserActivity;
+import com.qriz.sqld.domain.userActivity.UserActivityRepository;
 import com.qriz.sqld.dto.daily.UserDailyDto;
 import com.qriz.sqld.util.WeekendPlanUtil;
 
@@ -14,13 +16,17 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Collections;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +36,8 @@ public class DailyPlanService {
     private final SkillRepository skillRepository;
     private final UserRepository userRepository;
     private final WeekendPlanUtil weekendPlanUtil;
+    private final UserActivityRepository userActivityRepository;
+    private final DKTService dktService;
 
     private final Logger log = LoggerFactory.getLogger(DailyPlanService.class);
 
@@ -101,6 +109,7 @@ public class DailyPlanService {
 
     @Transactional
     public void completeDailyPlan(Long userId, String dayNumber) {
+        log.info("Completing daily plan for user {} and day {}", userId, dayNumber);
         UserDaily userDaily = userDailyRepository.findByUserIdAndDayNumber(userId, dayNumber)
                 .orElseThrow(() -> new RuntimeException("Daily plan not found"));
 
@@ -113,10 +122,12 @@ public class DailyPlanService {
             log.info("Updating weekend plan for day: {}", day);
             updateWeekendPlan(userId, day);
         }
+        log.info("Daily plan completed for user {} and day {}", userId, dayNumber);
     }
 
     @Transactional
     public void updateWeekendPlan(Long userId, int currentDay) {
+        log.info("Updating weekend plan for user {} and currentDay {}", userId, currentDay);
         UserDaily day6 = userDailyRepository.findByUserIdAndDayNumber(userId, "Day" + (currentDay + 1))
                 .orElseThrow(() -> new RuntimeException("Day " + (currentDay + 1) + " plan not found"));
         UserDaily day7 = userDailyRepository.findByUserIdAndDayNumber(userId, "Day" + (currentDay + 2))
@@ -125,8 +136,8 @@ public class DailyPlanService {
         day6.setReviewDay(true);
         day7.setReviewDay(true);
 
-        List<Skill> day6Skills = weekendPlanUtil.getWeekendPlannedSkills(userId, day6);
-        List<Skill> day7Skills = weekendPlanUtil.getWeekendPlannedSkills(userId, day7);
+        List<Skill> day6Skills = new ArrayList<>(weekendPlanUtil.getWeekendPlannedSkills(userId, day6));
+        List<Skill> day7Skills = new ArrayList<>(weekendPlanUtil.getWeekendPlannedSkills(userId, day7));
 
         day6.setPlannedSkills(day6Skills);
         day7.setPlannedSkills(day7Skills);
@@ -135,6 +146,105 @@ public class DailyPlanService {
         userDailyRepository.save(day7);
 
         log.info("Weekend plan updated for days {} and {}", currentDay + 1, currentDay + 2);
+    }
+
+    @Transactional
+    public void updateWeekFourPlan(Long userId) {
+        log.info("Starting updateWeekFourPlan for user {}", userId);
+        List<UserDaily> weekFourPlans = userDailyRepository.findByUserIdAndDayNumberBetween(userId, "Day22", "Day30");
+
+        if (weekFourPlans.isEmpty()) {
+            log.warn("Week four plans not found for user {}", userId);
+            return;
+        }
+
+        List<UserActivity> userActivities = userActivityRepository.findByUserIdAndDateBetween(
+                userId,
+                weekFourPlans.get(0).getPlanDate().minusWeeks(3).atStartOfDay(),
+                weekFourPlans.get(weekFourPlans.size() - 1).getPlanDate().atTime(23, 59, 59));
+
+        log.info("Found {} user activities for week four plan", userActivities.size());
+
+        List<Double> predictions = dktService.getPredictions(userId, userActivities);
+        log.info("Received predictions: {}", predictions);
+
+        List<Skill> recommendedSkills;
+        if (predictions.isEmpty() || predictions.stream().allMatch(p -> p == 0.0)) {
+            log.warn("Predictions are empty or all zero for user {}. Using default skills.", userId);
+            recommendedSkills = getDefaultSkills();
+        } else {
+            recommendedSkills = getRecommendedSkills(predictions);
+        }
+
+        log.info("Recommended skills: {}",
+                recommendedSkills.stream().map(Skill::getKeyConcepts).collect(Collectors.toList()));
+
+        int totalDays = 9; // Day22부터 Day30까지 9일
+        int totalSkills = recommendedSkills.size();
+
+        for (int i = 0; i < totalDays; i++) {
+            String dayNumber = "Day" + (i + 22);
+            UserDaily userDaily = weekFourPlans.stream()
+                    .filter(plan -> plan.getDayNumber().equals(dayNumber))
+                    .findFirst()
+                    .orElse(null);
+
+            if (userDaily == null) {
+                log.warn("Plan for {} not found", dayNumber);
+                continue;
+            }
+
+            int skillIndex = i % totalSkills; // 순환적으로 스킬 선택
+            Skill dailySkill = recommendedSkills.get(skillIndex);
+
+            log.info("Updating UserDaily {} with skill: {}", userDaily.getDayNumber(), dailySkill.getKeyConcepts());
+            updateSingleUserDaily(userDaily.getId(), Collections.singletonList(dailySkill));
+        }
+
+        log.info("Completed updateWeekFourPlan for user: {}", userId);
+    }
+
+    private List<Skill> getDefaultSkills() {
+        List<Skill> allSkills = skillRepository.findAllByOrderByFrequencyDesc();
+        return allSkills.stream().limit(9).collect(Collectors.toList());
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void updateSingleUserDaily(Long userDailyId, List<Skill> skills) {
+        UserDaily userDaily = userDailyRepository.findById(userDailyId)
+                .orElseThrow(() -> new RuntimeException("UserDaily not found"));
+        userDaily.setPlannedSkills(new ArrayList<>(skills));
+        userDaily.setReviewDay(false);
+        userDailyRepository.save(userDaily);
+        log.info("Updated UserDaily {} with {} skills", userDaily.getDayNumber(), skills.size());
+    }
+
+    private List<Skill> getRecommendedSkills(List<Double> predictions) {
+        log.info("Getting recommended skills based on predictions: {}", predictions);
+
+        if (predictions.isEmpty()) {
+            log.warn("Predictions list is empty");
+            return Collections.emptyList();
+        }
+
+        // 정답률에 따라 스킬을 정렬하고 하위 9개를 선택 (Day22-Day30, 9일간)
+        List<Skill> allSkills = skillRepository.findAll();
+        log.info("Total available skills: {}", allSkills.size());
+
+        if (allSkills.isEmpty()) {
+            log.warn("No skills found in the database");
+            return Collections.emptyList();
+        }
+
+        int minSize = Math.min(predictions.size(), allSkills.size());
+        int limitSize = Math.min(9, minSize);
+
+        return IntStream.range(0, minSize)
+                .boxed()
+                .sorted(Comparator.comparingDouble(predictions::get)) // 오름차순 정렬 (낮은 정답률부터)
+                .limit(limitSize) // 하위 9개 또는 가능한 최대 개수 선택
+                .map(allSkills::get)
+                .collect(Collectors.toList());
     }
 
     public LocalDate getPlanStartDate(LocalDate currentDate) {

@@ -10,6 +10,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 
+import org.springframework.data.annotation.Version;
+
 import com.qriz.sqld.domain.survey.Survey;
 
 import lombok.Getter;
@@ -55,4 +57,8 @@ public class Skill {
 
     @OneToMany(mappedBy = "skill", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Survey> surveys;
+
+    // Optimistic Locking 동시성 문제 해결
+    @Version
+    private Long version;
 }
