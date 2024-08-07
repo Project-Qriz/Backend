@@ -10,6 +10,9 @@ import com.qriz.sqld.domain.userActivity.UserActivityRepository;
 import com.qriz.sqld.domain.daily.UserDaily;
 import com.qriz.sqld.domain.daily.UserDailyRepository;
 import com.qriz.sqld.dto.daily.DailyResultDetailDto;
+import com.qriz.sqld.dto.daily.DailyScoreDto;
+import com.qriz.sqld.dto.daily.DaySubjectDetailsDto;
+import com.qriz.sqld.dto.daily.WeeklyTestResultDto;
 import com.qriz.sqld.dto.test.TestReqDto;
 import com.qriz.sqld.dto.test.TestRespDto;
 import com.qriz.sqld.handler.ex.CustomApiException;
@@ -24,11 +27,16 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -141,6 +149,8 @@ public class DailyService {
             userActivity.setTimeSpent(activity.getTimeSpent());
             userActivity.setCorrection(question.getAnswer().equals(activity.getChecked()));
             userActivity.setDate(LocalDateTime.now());
+            double score = calculateScore(activity, question);
+            userActivity.setScore(score);
 
             userActivityRepository.save(userActivity);
 
@@ -171,6 +181,10 @@ public class DailyService {
         return results;
     }
 
+    private double calculateScore(TestReqDto.TestSubmitReqDto activity, Question question) {
+        return question.getAnswer().equals(activity.getChecked()) ? 10.0 : 0.0;
+    }
+
     /**
      * 카테고리 번호에 해당하는 카테고리 이름 반환
      * 
@@ -191,7 +205,7 @@ public class DailyService {
     }
 
     /**
-     * 오늘의 데일리 테스트 결과 - 문제 상세보기
+     * 오늘의 공부 결과 - 문제 상세보기
      * 
      * @param userId     로그인 사용자 아이디
      * @param dayNumber  데일리 정보
@@ -218,6 +232,80 @@ public class DailyService {
                 .checked(userActivity.getChecked())
                 .correction(userActivity.isCorrection())
                 .build();
+    }
+
+    /**
+     * 특정 Day 가 포함된 주의 과목별 테스트 결과 점수
+     * 
+     * @param userId
+     * @param dayNumber
+     * @return
+     */
+    public WeeklyTestResultDto getDetailedWeeklyTestResult(Long userId, String dayNumber) {
+        log.info("Starting getDetailedWeeklyTestResult for userId: {} and dayNumber: {}", userId, dayNumber);
+
+        UserDaily currentDaily = userDailyRepository.findByUserIdAndDayNumber(userId, dayNumber)
+                .orElseThrow(() -> new CustomApiException("Daily plan not found"));
+
+        LocalDate startDate = currentDaily.getPlanDate().with(DayOfWeek.MONDAY);
+        LocalDate endDate = startDate.plusDays(6);
+
+        log.info("Fetching activities between {} and {}", startDate, endDate);
+        List<UserActivity> activities = userActivityRepository.findByUserIdAndDateBetween(
+                userId, startDate.atStartOfDay(), endDate.atTime(LocalTime.MAX));
+
+        Map<String, DailyScoreDto> dailyScores = new HashMap<>();
+
+        for (UserActivity activity : activities) {
+            log.debug("Processing activity: {}", activity.getId());
+
+            UserDaily daily = userDailyRepository.findByUserIdAndPlanDate(userId, activity.getDate().toLocalDate())
+                    .orElseThrow(() -> new CustomApiException(
+                            "Daily plan not found for date: " + activity.getDate().toLocalDate()));
+
+            String dayNum = daily.getDayNumber();
+
+            Optional.ofNullable(activity.getQuestion())
+                    .map(Question::getSkill)
+                    .ifPresentOrElse(
+                            skill -> {
+                                log.debug("Adding score for skill: {}", skill.getTitle());
+                                dailyScores.computeIfAbsent(dayNum, k -> new DailyScoreDto())
+                                        .addScore(skill.getTitle(), activity.getScore());
+                            },
+                            () -> log.warn("Question or Skill is null for activity: {}", activity.getId()));
+        }
+
+        log.info("Completed processing for getDetailedWeeklyTestResult");
+        return new WeeklyTestResultDto(dailyScores);
+    }
+
+    public DaySubjectDetailsDto.Response getDaySubjectDetails(Long userId, String dayNumber) {
+        List<UserActivity> activities = userActivityRepository.findByUserIdAndTestInfo(userId, dayNumber);
+
+        Map<String, DaySubjectDetailsDto.SubjectDetails> subjectDetailsMap = new HashMap<>();
+
+        for (UserActivity activity : activities) {
+            Question question = activity.getQuestion();
+            Skill skill = question.getSkill();
+            String title = skill.getTitle();
+            String keyConcepts = skill.getKeyConcepts();
+
+            // 정답 여부에 따라 점수 계산 (맞으면 10점, 틀리면 0점)
+            double score = activity.isCorrection() ? 10.0 : 0.0;
+
+            subjectDetailsMap.computeIfAbsent(title, k -> new DaySubjectDetailsDto.SubjectDetails(title))
+                    .addScore(keyConcepts, score);
+        }
+
+        List<DaySubjectDetailsDto.SubjectDetails> subjectDetailsList = new ArrayList<>(subjectDetailsMap.values());
+
+        // 총점이 100을 넘지 않도록 조정
+        for (DaySubjectDetailsDto.SubjectDetails subject : subjectDetailsList) {
+            subject.adjustTotalScore();
+        }
+
+        return new DaySubjectDetailsDto.Response(dayNumber, subjectDetailsList);
     }
 
     // 테스트용

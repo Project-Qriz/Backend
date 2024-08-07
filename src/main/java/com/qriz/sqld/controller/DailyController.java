@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.qriz.sqld.config.auth.LoginUser;
 import com.qriz.sqld.dto.ResponseDto;
 import com.qriz.sqld.dto.daily.DailyResultDetailDto;
+import com.qriz.sqld.dto.daily.DaySubjectDetailsDto;
 import com.qriz.sqld.dto.daily.UserDailyDto;
+import com.qriz.sqld.dto.daily.WeeklyTestResultDto;
 import com.qriz.sqld.dto.test.TestReqDto;
 import com.qriz.sqld.dto.test.TestRespDto;
 import com.qriz.sqld.service.DailyPlanService;
@@ -75,7 +77,7 @@ public class DailyController {
     }
 
     /**
-     * 데일리 테스트 결과 - 문제 상세보기
+     * 오늘의 공부 결과 - 문제 상세보기
      * 
      * @param dayNumber  데일리 정보
      * @param questionId 문제 아이디
@@ -89,6 +91,28 @@ public class DailyController {
         DailyResultDetailDto resultDetail = dailyService.getDailyResultDetail(loginUser.getUser().getId(), dayNumber,
                 questionId);
         return new ResponseEntity<>(new ResponseDto<>(1, "데일리 결과 상세 조회 성공", resultDetail), HttpStatus.OK);
+    }
+
+    /**
+     * 특정 Day 가 포함된 주의 과목별 테스트 결과 점수
+     * 
+     * @param dayNumber
+     * @param loginUser
+     * @return
+     */
+    @GetMapping("/detailed-weekly-result/{dayNumber}")
+    public ResponseEntity<?> getDetailedWeeklyTestResult(@PathVariable String dayNumber,
+            @AuthenticationPrincipal LoginUser loginUser) {
+        WeeklyTestResultDto result = dailyService.getDetailedWeeklyTestResult(loginUser.getUser().getId(),
+                dayNumber);
+        return new ResponseEntity<>(new ResponseDto<>(1, "주간 과목점수 비교 조회 성공", result), HttpStatus.OK);
+    }
+
+    @GetMapping("/subject-details/{dayNumber}")
+    public ResponseEntity<?> getDaySubjectDetails(@PathVariable String dayNumber,
+                                                  @AuthenticationPrincipal LoginUser loginUser) {
+        DaySubjectDetailsDto.Response details = dailyService.getDaySubjectDetails(loginUser.getUser().getId(), dayNumber);
+        return new ResponseEntity<>(new ResponseDto<>(1, "과목별 세부 항목 점수 조회 성공", details), HttpStatus.OK);
     }
 
     // 테스트용

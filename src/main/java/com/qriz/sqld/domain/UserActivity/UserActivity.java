@@ -70,6 +70,11 @@ public class UserActivity {
     private boolean correction;
 
     /**
+     * 점수
+     */
+    private Double score;
+
+    /**
      * 푼 날짜
      */
     private LocalDateTime date;
