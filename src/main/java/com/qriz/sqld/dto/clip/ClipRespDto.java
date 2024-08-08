@@ -14,6 +14,7 @@ public class ClipRespDto {
     private int questionNum;
     private String question;
     private boolean correction;
+    private String keyConcepts;
     private LocalDateTime date;
 
     public ClipRespDto(Clipped clipped) {
@@ -21,6 +22,7 @@ public class ClipRespDto {
         this.questionNum = clipped.getUserActivity().getQuestionNum();
         this.question = clipped.getUserActivity().getQuestion().getQuestion();
         this.correction = clipped.getUserActivity().isCorrection();
+        this.keyConcepts = clipped.getUserActivity().getQuestion().getSkill().getKeyConcepts();
         this.date = clipped.getDate();
     }
 }

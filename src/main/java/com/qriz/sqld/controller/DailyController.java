@@ -108,6 +108,13 @@ public class DailyController {
         return new ResponseEntity<>(new ResponseDto<>(1, "주간 과목점수 비교 조회 성공", result), HttpStatus.OK);
     }
 
+    /**
+     * 특정 Day 의 과목별 세부 항목 점수 조회
+     * 
+     * @param dayNumber
+     * @param loginUser
+     * @return
+     */
     @GetMapping("/subject-details/{dayNumber}")
     public ResponseEntity<?> getDaySubjectDetails(@PathVariable String dayNumber,
                                                   @AuthenticationPrincipal LoginUser loginUser) {

@@ -212,15 +212,28 @@ public class DailyService {
      * @param questionId 문제 아이디
      * @return
      */
+    @Transactional(readOnly = true)
     public DailyResultDetailDto getDailyResultDetail(Long userId, String dayNumber, Long questionId) {
+        log.info("Getting daily result detail for userId: {}, dayNumber: {}, questionId: {}", userId, dayNumber,
+                questionId);
+
+        String testInfo = dayNumber;
+        log.info("Constructed testInfo: {}", testInfo);
+
         UserActivity userActivity = userActivityRepository
-                .findByUserIdAndTestInfoAndQuestionId(userId, "데일리 테스트 - " + dayNumber, questionId)
-                .orElseThrow(() -> new CustomApiException("해당 문제의 풀이 결과를 찾을 수 없습니다."));
+                .findByUserIdAndTestInfoAndQuestionId(userId, testInfo, questionId)
+                .orElseThrow(() -> {
+                    log.error("UserActivity not found for userId: {}, testInfo: {}, questionId: {}", userId, testInfo,
+                            questionId);
+                    return new CustomApiException("해당 문제의 풀이 결과를 찾을 수 없습니다.");
+                });
+
+        log.info("UserActivity found: {}", userActivity);
 
         Question question = userActivity.getQuestion();
         Skill skill = question.getSkill();
 
-        return DailyResultDetailDto.builder()
+        DailyResultDetailDto result = DailyResultDetailDto.builder()
                 .skillName(skill.getKeyConcepts())
                 .question(question.getQuestion())
                 .option1(question.getOption1())
@@ -232,6 +245,10 @@ public class DailyService {
                 .checked(userActivity.getChecked())
                 .correction(userActivity.isCorrection())
                 .build();
+
+        log.info("DailyResultDetailDto created: {}", result);
+
+        return result;
     }
 
     /**
