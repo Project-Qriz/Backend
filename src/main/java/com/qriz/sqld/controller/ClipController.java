@@ -60,9 +60,16 @@ public class ClipController {
             @AuthenticationPrincipal LoginUser loginUser,
             @RequestParam(required = false) List<String> keyConcepts,
             @RequestParam(required = false, defaultValue = "false") boolean onlyIncorrect,
-            @RequestParam(required = false) Integer category) {
-        List<ClipRespDto> clippedQuestions = clipService.getFilteredClippedQuestions(
-            loginUser.getUser().getId(), keyConcepts, onlyIncorrect, category);
+            @RequestParam(required = false) Integer category,
+            @RequestParam(required = false) String dayNumber) {
+        List<ClipRespDto> clippedQuestions;
+        if (dayNumber != null) {
+            clippedQuestions = clipService.getFilteredClippedQuestions(
+                    loginUser.getUser().getId(), keyConcepts, onlyIncorrect, category, dayNumber);
+        } else {
+            clippedQuestions = clipService.getClippedQuestions(
+                    loginUser.getUser().getId(), keyConcepts, onlyIncorrect, category);
+        }
         return new ResponseEntity<>(new ResponseDto<>(1, "오답노트 조회 성공", clippedQuestions), HttpStatus.OK);
     }
 
@@ -95,11 +102,14 @@ public class ClipController {
             DailyResultDetailDto detailDto = clipService.getClippedQuestionDetail(loginUser.getUser().getId(), clipId);
             return new ResponseEntity<>(new ResponseDto<>(1, "오답노트 문제 상세 조회 성공", detailDto), HttpStatus.OK);
         } catch (CustomApiException e) {
-            log.error("Error getting clipped question detail for user: {} and clip: {}", loginUser.getUser().getId(), clipId, e);
+            log.error("Error getting clipped question detail for user: {} and clip: {}", loginUser.getUser().getId(),
+                    clipId, e);
             return new ResponseEntity<>(new ResponseDto<>(-1, e.getMessage(), null), HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
-            log.error("Unexpected error getting clipped question detail for user: {} and clip: {}", loginUser.getUser().getId(), clipId, e);
-            return new ResponseEntity<>(new ResponseDto<>(-1, "서버 오류가 발생했습니다.", null), HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error("Unexpected error getting clipped question detail for user: {} and clip: {}",
+                    loginUser.getUser().getId(), clipId, e);
+            return new ResponseEntity<>(new ResponseDto<>(-1, "서버 오류가 발생했습니다.", null),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

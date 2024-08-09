@@ -18,6 +18,7 @@ import com.qriz.sqld.handler.ex.CustomApiException;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -52,10 +53,27 @@ public class ClipService {
     }
 
     @Transactional(readOnly = true)
-    public List<ClipRespDto> getClippedQuestions(Long userId) {
-        List<Clipped> clippedList = clipRepository.findByUserActivity_User_Id(userId);
+    public List<ClipRespDto> getClippedQuestions(Long userId, List<String> keyConcepts, boolean onlyIncorrect,
+            Integer category) {
+        Integer latestDayNumber = clipRepository.findLatestDayNumberByUserId(userId);
+        if (latestDayNumber == null) {
+            return new ArrayList<>(); // 클립된 문제가 없는 경우 빈 리스트 반환
+        }
+        String dayNumber = "Day" + latestDayNumber;
+        return getFilteredClippedQuestions(userId, keyConcepts, onlyIncorrect, category, dayNumber);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ClipRespDto> getFilteredClippedQuestions(Long userId, List<String> keyConcepts, boolean onlyIncorrect,
+            Integer category, String dayNumber) {
+        List<Clipped> clippedList = clipRepository.findByUserIdAndDayNumberOrderByQuestionNum(userId, dayNumber);
 
         return clippedList.stream()
+                .filter(clipped -> (keyConcepts == null || keyConcepts.isEmpty()
+                        || keyConcepts.contains(clipped.getUserActivity().getQuestion().getSkill().getKeyConcepts())))
+                .filter(clipped -> (!onlyIncorrect || !clipped.getUserActivity().isCorrection()))
+                .filter(clipped -> (category == null
+                        || clipped.getUserActivity().getQuestion().getCategory() == category))
                 .map(ClipRespDto::new)
                 .collect(Collectors.toList());
     }
