@@ -7,6 +7,8 @@ import com.qriz.sqld.domain.user.User;
 import com.qriz.sqld.domain.user.UserRepository;
 import com.qriz.sqld.domain.userActivity.UserActivity;
 import com.qriz.sqld.domain.userActivity.UserActivityRepository;
+import com.qriz.sqld.domain.clip.ClipRepository;
+import com.qriz.sqld.domain.clip.Clipped;
 import com.qriz.sqld.domain.daily.UserDaily;
 import com.qriz.sqld.domain.daily.UserDailyRepository;
 import com.qriz.sqld.dto.daily.DailyResultDetailDto;
@@ -48,6 +50,7 @@ public class DailyService {
     private final UserActivityRepository userActivityRepository;
     private final UserRepository userRepository;
     private final UserDailyRepository userDailyRepository;
+    private final ClipRepository clipRepository;
     private final DailyPlanService dailyPlanService;
     private final DKTService dktService;
 
@@ -63,25 +66,39 @@ public class DailyService {
      * @param user 현재 사용자
      * @return 데일리 테스트 문제 목록
      */
+    @Transactional
     public List<TestRespDto.DailyRespDto> getDailyTestQuestionsByDay(Long userId, String dayNumber) {
-        UserDaily userDaily = userDailyRepository.findByUserIdAndDayNumberWithPlannedSkills(userId, dayNumber)
+        UserDaily userDaily = userDailyRepository.findByUserIdAndDayNumber(userId, dayNumber)
                 .orElseThrow(() -> new CustomApiException("해당 일자의 데일리 플랜을 찾을 수 없습니다."));
 
-        // 이전 Day 완료 여부 및 당일 접근 가능 여부 확인
         if (!dailyPlanService.canAccessDay(userId, userDaily.getDayNumber())) {
             throw new CustomApiException("이 테스트에 아직 접근할 수 없습니다.");
         }
 
+        // 이미 통과했거나 재시험 기회가 없는 경우 예외 발생
+        if (userDaily.isPassed() || (userDaily.getAttemptCount() > 0 && !userDaily.isRetestEligible())) {
+            throw new CustomApiException("이미 완료된 테스트이거나 재시험 자격이 없습니다.");
+        }
+
         List<Question> questions;
-        if (userDaily.getPlannedSkills() == null) {
-            // 4주차: DKT 기반 문제 추천
-            questions = getWeekFourQuestions(userId, userDaily);
-        } else if (userDaily.isReviewDay()) {
-            // 주말: 복습 문제
-            questions = weekendPlanUtil.getWeekendQuestions(userId, userDaily);
+
+        if (userDaily.getAttemptCount() > 0 && userDaily.isRetestEligible()) {
+            // 재시험이고 재시험 자격이 있는 경우, UserActivity에서 이전 시도의 문제들을 가져옵니다.
+            List<UserActivity> previousActivities = userActivityRepository
+                    .findByUserIdAndTestInfoOrderByQuestionNumAsc(userId, dayNumber);
+
+            questions = previousActivities.stream()
+                    .map(UserActivity::getQuestion)
+                    .collect(Collectors.toList());
         } else {
-            // 평일: 일반 문제
-            questions = getRegularDayQuestions(userDaily);
+            // 첫 시도인 경우, 기존 로직을 사용하여 문제를 선택합니다.
+            if (userDaily.getPlannedSkills() == null) {
+                questions = getWeekFourQuestions(userId, userDaily);
+            } else if (userDaily.isReviewDay()) {
+                questions = weekendPlanUtil.getWeekendQuestions(userId, userDaily);
+            } else {
+                questions = getRegularDayQuestions(userDaily);
+            }
         }
 
         return questions.stream()
@@ -131,10 +148,15 @@ public class DailyService {
         UserDaily userDaily = userDailyRepository.findByUserIdAndDayNumber(userId, dayNumber)
                 .orElseThrow(() -> new CustomApiException("해당 일자의 데일리 플랜을 찾을 수 없습니다."));
 
+        if (userDaily.isPassed() || (userDaily.getAttemptCount() > 0 && !userDaily.isRetestEligible())) {
+            throw new CustomApiException("이미 완료된 테스트이거나 재시험 자격이 없습니다.");
+        }
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomApiException("사용자를 찾을 수 없습니다."));
 
         List<TestRespDto.TestSubmitRespDto> results = new ArrayList<>();
+        int correctCount = 0;
 
         for (TestReqDto.TestSubmitReqDto activity : testSubmitReqDto.getActivities()) {
             Question question = questionRepository.findById(activity.getQuestion().getQuestionId())
@@ -165,16 +187,40 @@ public class DailyService {
                     activity.getTimeSpent(),
                     userActivity.isCorrection());
 
+            if (userActivity.isCorrection()) {
+                correctCount++;
+            }
+
             results.add(result);
         }
 
-        userDaily.setCompleted(true);
-        userDaily.setCompletionDate(LocalDate.now());
+        boolean isPassed = correctCount > 5;
+        userDaily.updateTestStatus(isPassed);
+
+        if (isPassed) {
+            userDaily.setPassed(true);
+            userDaily.setRetestEligible(false);
+        } else if (userDaily.getAttemptCount() >= 2) {
+            userDaily.setRetestEligible(false);
+        }
+
         userDailyRepository.save(userDaily);
+
+        // Clipped 엔티티 저장 로직
+        if (isPassed || userDaily.getAttemptCount() >= 2) {
+            for (TestRespDto.TestSubmitRespDto result : results) {
+                UserActivity userActivity = userActivityRepository.findById(result.getActivityId())
+                        .orElseThrow(() -> new CustomApiException("UserActivity를 찾을 수 없습니다."));
+
+                Clipped clipped = new Clipped();
+                clipped.setUserActivity(userActivity);
+                clipped.setDate(LocalDateTime.now());
+                clipRepository.save(clipped);
+            }
+        }
 
         int day = Integer.parseInt(dayNumber.replace("Day", ""));
         if (day % 7 == 5 && day <= 19) { // Day5, Day12, Day19 완료 시
-            log.info("Day {} completed. Updating weekend plan.", day);
             dailyPlanService.updateWeekendPlan(userId, day);
         }
 

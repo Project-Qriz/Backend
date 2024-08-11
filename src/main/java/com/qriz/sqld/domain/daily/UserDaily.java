@@ -62,4 +62,26 @@ public class UserDaily {
     private List<Skill> plannedSkills = new ArrayList<>();
 
     private LocalDate planDate;
+
+    // 통과 여부
+    private boolean passed;
+
+    // 시도횟수
+    private int attemptCount;
+
+    // 재시험 가능 여부
+    private boolean retestEligible;
+
+    public void updateTestStatus(boolean isPassed) {
+        this.attemptCount++;
+        this.passed = isPassed;
+        this.completed = true;
+        this.completionDate = LocalDate.now();
+
+        if (!isPassed && attemptCount == 1) {
+            this.retestEligible = true;
+        } else {
+            this.retestEligible = false;
+        }
+    }
 }

@@ -28,4 +28,6 @@ public interface UserActivityRepository extends JpaRepository<UserActivity, Long
     Optional<UserActivity> findByUserIdAndTestInfoAndQuestionId(Long userId, String testInfo, Long questionId);
 
     List<UserActivity> findByUserIdAndTestInfoBetween(Long userId, String startTestInfo, String endTestInfo);
+
+    List<UserActivity> findByUserIdAndTestInfoOrderByQuestionNumAsc(Long userId, String testInfo);
 }
