@@ -8,6 +8,7 @@ public class DailyScoreDto {
     private double subject2Score = 0;
     private int subject1Count = 0;
     private int subject2Count = 0;
+    private String passed;
 
     public void addScore(String subject, double score) {
         if ("1과목".equals(subject)) {

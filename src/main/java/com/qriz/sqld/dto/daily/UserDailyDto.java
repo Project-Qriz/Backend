@@ -2,7 +2,11 @@ package com.qriz.sqld.dto.daily;
 
 import com.qriz.sqld.domain.daily.UserDaily;
 import com.qriz.sqld.domain.skill.Skill;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
@@ -45,6 +49,28 @@ public class UserDailyDto {
             this.type = skill.getType();
             this.keyConcept = skill.getKeyConcepts();
             this.description = skill.getDescription();
+        }
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class DailyDetailsDto {
+        private String dayNumber;
+        private boolean passed;
+        private List<SkillDetailDto> skills;
+        
+        @Getter
+        @Setter
+        @NoArgsConstructor
+        @AllArgsConstructor
+        @Builder
+        public static class SkillDetailDto {
+            private Long id;
+            private String keyConcepts;
+            private String description;    
         }
     }
 }

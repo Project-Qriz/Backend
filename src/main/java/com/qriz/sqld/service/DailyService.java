@@ -14,6 +14,7 @@ import com.qriz.sqld.domain.daily.UserDailyRepository;
 import com.qriz.sqld.dto.daily.DailyResultDetailDto;
 import com.qriz.sqld.dto.daily.DailyScoreDto;
 import com.qriz.sqld.dto.daily.DaySubjectDetailsDto;
+import com.qriz.sqld.dto.daily.UserDailyDto;
 import com.qriz.sqld.dto.daily.WeeklyTestResultDto;
 import com.qriz.sqld.dto.test.TestReqDto;
 import com.qriz.sqld.dto.test.TestRespDto;
@@ -369,6 +370,26 @@ public class DailyService {
         }
 
         return new DaySubjectDetailsDto.Response(dayNumber, subjectDetailsList);
+    }
+
+    @Transactional(readOnly = true)
+    public UserDailyDto.DailyDetailsDto getDailyDetails(Long userId, String dayNumber) {
+        UserDaily userDaily = userDailyRepository.findByUserIdAndDayNumber(userId, dayNumber)
+                .orElseThrow(() -> new CustomApiException("해당 일자의 데일리 플랜을 찾을 수 없습니다."));
+
+        List<UserDailyDto.DailyDetailsDto.SkillDetailDto> skillDetails = userDaily.getPlannedSkills().stream()
+                .map(skill -> UserDailyDto.DailyDetailsDto.SkillDetailDto.builder()
+                        .id(skill.getId())
+                        .keyConcepts(skill.getKeyConcepts())
+                        .description(skill.getDescription())
+                        .build())
+                .collect(Collectors.toList());
+
+        return UserDailyDto.DailyDetailsDto.builder()
+                .dayNumber(userDaily.getDayNumber())
+                .passed(userDaily.isPassed())
+                .skills(skillDetails)
+                .build();
     }
 
     // 테스트용
