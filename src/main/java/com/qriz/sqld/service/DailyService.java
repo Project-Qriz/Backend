@@ -344,10 +344,12 @@ public class DailyService {
         return new WeeklyTestResultDto(dailyScores);
     }
 
+    @Transactional(readOnly = true)
     public DaySubjectDetailsDto.Response getDaySubjectDetails(Long userId, String dayNumber) {
         List<UserActivity> activities = userActivityRepository.findByUserIdAndTestInfo(userId, dayNumber);
 
         Map<String, DaySubjectDetailsDto.SubjectDetails> subjectDetailsMap = new HashMap<>();
+        List<DailyResultDetailDto> dailyResultDetails = new ArrayList<>();
 
         for (UserActivity activity : activities) {
             Question question = activity.getQuestion();
@@ -355,21 +357,35 @@ public class DailyService {
             String title = skill.getTitle();
             String keyConcepts = skill.getKeyConcepts();
 
-            // 정답 여부에 따라 점수 계산 (맞으면 10점, 틀리면 0점)
+            // SubjectDetails 생성 및 추가
             double score = activity.isCorrection() ? 10.0 : 0.0;
-
             subjectDetailsMap.computeIfAbsent(title, k -> new DaySubjectDetailsDto.SubjectDetails(title))
                     .addScore(keyConcepts, score);
+
+            // DailyResultDetailDto 생성 및 추가
+            DailyResultDetailDto detailDto = DailyResultDetailDto.builder()
+                    .skillName(skill.getKeyConcepts())
+                    .question(question.getQuestion())
+                    .option1(question.getOption1())
+                    .option2(question.getOption2())
+                    .option3(question.getOption3())
+                    .option4(question.getOption4())
+                    .answer(question.getAnswer())
+                    .solution(question.getSolution())
+                    .checked(activity.getChecked())
+                    .correction(activity.isCorrection())
+                    .build();
+
+            dailyResultDetails.add(detailDto);
         }
 
         List<DaySubjectDetailsDto.SubjectDetails> subjectDetailsList = new ArrayList<>(subjectDetailsMap.values());
 
-        // 총점이 100을 넘지 않도록 조정
         for (DaySubjectDetailsDto.SubjectDetails subject : subjectDetailsList) {
             subject.adjustTotalScore();
         }
 
-        return new DaySubjectDetailsDto.Response(dayNumber, subjectDetailsList);
+        return new DaySubjectDetailsDto.Response(dayNumber, subjectDetailsList, dailyResultDetails);
     }
 
     @Transactional(readOnly = true)
@@ -385,10 +401,17 @@ public class DailyService {
                         .build())
                 .collect(Collectors.toList());
 
+        // 해당 데일리의 UserActivity들을 가져와서 총 점수 계산
+        List<UserActivity> activities = userActivityRepository.findByUserIdAndTestInfo(userId, dayNumber);
+        double totalScore = activities.stream()
+                .mapToDouble(UserActivity::getScore)
+                .sum();
+
         return UserDailyDto.DailyDetailsDto.builder()
                 .dayNumber(userDaily.getDayNumber())
                 .passed(userDaily.isPassed())
                 .skills(skillDetails)
+                .totalScore(totalScore)
                 .build();
     }
 

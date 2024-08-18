@@ -30,4 +30,6 @@ public interface UserActivityRepository extends JpaRepository<UserActivity, Long
     List<UserActivity> findByUserIdAndTestInfoBetween(Long userId, String startTestInfo, String endTestInfo);
 
     List<UserActivity> findByUserIdAndTestInfoOrderByQuestionNumAsc(Long userId, String testInfo);
+
+    List<UserActivity> findByUserIdAndTestInfoAndDateAfter(Long userId, String testInfo, LocalDateTime date);
 }

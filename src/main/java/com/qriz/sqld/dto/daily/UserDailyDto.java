@@ -61,6 +61,7 @@ public class UserDailyDto {
         private String dayNumber;
         private boolean passed;
         private List<SkillDetailDto> skills;
+        private double totalScore;
         
         @Getter
         @Setter

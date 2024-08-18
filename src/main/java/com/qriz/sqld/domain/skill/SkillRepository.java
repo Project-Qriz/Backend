@@ -7,7 +7,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface SkillRepository extends JpaRepository<Skill, Long> {
-    
+
     // 설문조사
     List<Skill> findByKeyConceptsIn(List<String> keyConcepts);
 
@@ -18,4 +18,7 @@ public interface SkillRepository extends JpaRepository<Skill, Long> {
 
     @Query("SELECT s.id FROM Skill s")
     List<Long> findAllIds();
+
+    // 출제 빈도가 높은 상위
+    List<Skill> findTop2ByOrderByFrequencyDesc();
 }

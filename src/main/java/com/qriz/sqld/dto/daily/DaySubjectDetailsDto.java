@@ -12,7 +12,8 @@ public class DaySubjectDetailsDto {
     @AllArgsConstructor
     public static class Response {
         private String dayNumber;
-        private List<SubjectDetails> subjects;
+        private List<SubjectDetails> userDailyInfoList;
+        private List<DailyResultDetailDto> subjectResultsList;
     }
 
     @Getter

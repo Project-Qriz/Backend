@@ -45,7 +45,8 @@ public class UserActivity {
     private Question question;
 
     /**
-     * 데일리 정보
+     * 테스트 정보
+     * (Preview Test, dayNumber)
      */
     private String testInfo;
 

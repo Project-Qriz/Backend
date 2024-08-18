@@ -1,6 +1,7 @@
 package com.qriz.sqld.domain.survey;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -18,4 +19,6 @@ public interface SurveyRepository extends JpaRepository<Survey, Long> {
     void deleteByUserId(Long userId);
 
     List<Survey> findByUserAndCheckedTrue(User user);
+
+    Optional<Survey> findByUserAndKnowsNothingTrue(User user);
 }

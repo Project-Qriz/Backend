@@ -14,6 +14,8 @@ import com.qriz.sqld.domain.user.UserRepository;
 import com.qriz.sqld.domain.userActivity.UserActivity;
 import com.qriz.sqld.domain.userActivity.UserActivityRepository;
 import com.qriz.sqld.dto.preview.QuestionDto;
+import com.qriz.sqld.dto.preview.ResultDto;
+import com.qriz.sqld.dto.preview.ResultDto.ConceptResult;
 import com.qriz.sqld.dto.test.TestReqDto;
 import com.qriz.sqld.dto.test.TestRespDto;
 import com.qriz.sqld.domain.preview.UserPreviewTestRepository;
@@ -29,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.Collections;
+import java.util.Comparator;
 
 @Service
 @RequiredArgsConstructor
@@ -206,5 +209,46 @@ public class PreviewService {
             default:
                 return "UNKNOWN";
         }
+    }
+
+    @Transactional(readOnly = true)
+    public ResultDto getPreviewTestResult(Long userId, String testInfo) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<UserActivity> activities = userActivityRepository.findByUserIdAndTestInfo(userId, testInfo);
+
+        Map<String, ConceptResult> conceptResultMap = new HashMap<>();
+        int totalQuestions = activities.size();
+        int correctAnswers = 0;
+
+        for (UserActivity activity : activities) {
+            Question question = activity.getQuestion();
+            Skill skill = question.getSkill();
+            String keyConcepts = skill.getKeyConcepts();
+
+            ConceptResult conceptResult = conceptResultMap.computeIfAbsent(keyConcepts,
+                    k -> new ConceptResult(k, 0, 0));
+
+            conceptResult.setOccurrences(conceptResult.getOccurrences() + 1);
+
+            if (!activity.isCorrection()) {
+                conceptResult.setIncorrectAnswers(conceptResult.getIncorrectAnswers() + 1);
+            } else {
+                correctAnswers++;
+            }
+        }
+
+        List<ConceptResult> topMissedConcepts = conceptResultMap.values().stream()
+                .filter(cr -> cr.getIncorrectAnswers() > 0)
+                .sorted(Comparator.comparingInt(ConceptResult::getIncorrectAnswers).reversed())
+                .limit(3)
+                .collect(Collectors.toList());
+
+        return ResultDto.builder()
+                .topMissedConcepts(topMissedConcepts)
+                .totalQuestions(totalQuestions)
+                .correctAnswers(correctAnswers)
+                .build();
     }
 }
