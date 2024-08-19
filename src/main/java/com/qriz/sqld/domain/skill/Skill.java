@@ -55,6 +55,11 @@ public class Skill {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    /**
+     * 중요도
+     */
+    private String importanceLevel;
+
     @OneToMany(mappedBy = "skill", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Survey> surveys;
 

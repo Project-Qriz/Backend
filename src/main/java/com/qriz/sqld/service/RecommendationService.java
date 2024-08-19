@@ -93,6 +93,7 @@ public class RecommendationService {
                         .keyConcepts(stats.getSkill().getKeyConcepts())
                         .description(stats.getSkill().getDescription())
                         .frequency(stats.getSkill().getFrequency())
+                        .importanceLevel(stats.getSkill().getImportanceLevel())
                         .incorrectRate(stats.getIncorrectRate())
                         .build())
                 .collect(Collectors.toList());
@@ -112,6 +113,7 @@ public class RecommendationService {
                         .keyConcepts(skill.getKeyConcepts())
                         .description(skill.getDescription())
                         .frequency(skill.getFrequency())
+                        .importanceLevel(skill.getImportanceLevel())
                         .build())
                 .collect(Collectors.toList());
 

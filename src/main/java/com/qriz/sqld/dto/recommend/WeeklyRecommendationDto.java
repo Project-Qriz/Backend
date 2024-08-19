@@ -21,6 +21,7 @@ public class WeeklyRecommendationDto {
         private String keyConcepts;
         private String description;
         private Integer frequency;
+        private String importanceLevel;
         private Double incorrectRate;  // 프리뷰 테스트를 실시한 경우에만 사용
     }
 }

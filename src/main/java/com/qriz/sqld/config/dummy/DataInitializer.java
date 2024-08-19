@@ -51,7 +51,7 @@ public class DataInitializer {
                 createSkill("1과목", "데이터 모델과 SQL", "모델이 표현하는 트랜잭션의 이해", 7, "모델이 표현하는 트랜잭션의 이해 설명"),
                 createSkill("1과목", "데이터 모델과 SQL", "Null 속성의 이해", 8, "Null 속성의 이해 설명"),
                 createSkill("1과목", "데이터 모델과 SQL", "본질 식별자 vs 인조 식별자", 9, "본질 식별자 vs 인조 식별자 설명"));
-
+    
         List<Skill> skillsPart2 = Arrays.asList(
                 createSkill("2과목", "SQL 기본", "관계형 데이터 베이스 개요", 10, "관계형 데이터 베이스 개요 설명"),
                 createSkill("2과목", "SQL 기본", "SELECT 문", 104, "SELECT 문 설명"),
@@ -63,7 +63,7 @@ public class DataInitializer {
                 createSkill("2과목", "SQL 기본", "표준 조인", 16, "표준 조인 설명"),
                 createSkill("2과목", "SQL 활용", "서브 쿼리", 56, "서브 쿼리 설명"),
                 createSkill("2과목", "SQL 활용", "집합 연산자", 24, "집합 연산자 설명"));
-
+    
         List<Skill> skillsPart3 = Arrays.asList(
                 createSkill("2과목", "SQL 활용", "그룹 함수", 20, "그룹 함수 설명"),
                 createSkill("2과목", "SQL 활용", "윈도우 함수", 24, "윈도우 함수 설명"),
@@ -75,17 +75,17 @@ public class DataInitializer {
                 createSkill("2과목", "관리구문", "TCL", 17, "TCL 설명"),
                 createSkill("2과목", "관리구문", "DDL", 29, "DDL 설명"),
                 createSkill("2과목", "관리구문", "DCL", 22, "DCL 설명"));
-
+    
         // 스킬 리스트 합치기
         List<Skill> skills = new ArrayList<>();
         skills.addAll(skillsPart1);
         skills.addAll(skillsPart2);
         skills.addAll(skillsPart3);
-
+    
         // 스킬 데이터 삽입
         skillRepository.saveAll(skills);
     }
-
+    
     private Skill createSkill(String title, String type, String keyConcepts, Integer frequency, String description) {
         Skill skill = new Skill();
         skill.setTitle(title);
@@ -93,6 +93,17 @@ public class DataInitializer {
         skill.setKeyConcepts(keyConcepts);
         skill.setFrequency(frequency);
         skill.setDescription(description);
+        skill.setImportanceLevel(getImportanceLevel(frequency));
         return skill;
+    }
+    
+    private String getImportanceLevel(Integer frequency) {
+        if (frequency >= 50) {
+            return "상";
+        } else if (frequency >= 30) {
+            return "중";
+        } else {
+            return "하";
+        }
     }
 }
