@@ -7,7 +7,7 @@ import com.qriz.sqld.config.auth.LoginUser;
 import com.qriz.sqld.dto.ResponseDto;
 import com.qriz.sqld.dto.application.ApplicationReqDto;
 import com.qriz.sqld.dto.application.ApplicationRespDto;
-import com.qriz.sqld.service.ApplyService;
+import com.qriz.sqld.service.apply.ApplyService;
 
 import lombok.RequiredArgsConstructor;
 

@@ -20,7 +20,7 @@ import com.qriz.sqld.dto.clip.ClipReqDto;
 import com.qriz.sqld.dto.clip.ClipRespDto;
 import com.qriz.sqld.dto.daily.DailyResultDetailDto;
 import com.qriz.sqld.handler.ex.CustomApiException;
-import com.qriz.sqld.service.ClipService;
+import com.qriz.sqld.service.clip.ClipService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -34,20 +34,6 @@ public class ClipController {
     private final ClipService clipService;
 
     private final Logger log = LoggerFactory.getLogger(ClipController.class);
-
-    /**
-     * 오답노트에 문제 등록
-     * 
-     * @param loginUser  로그인 사용자
-     * @param clipReqDto 요청 데이터
-     * @return
-     */
-    @PostMapping
-    public ResponseEntity<?> clipQuestion(@AuthenticationPrincipal LoginUser loginUser,
-            @RequestBody ClipReqDto clipReqDto) {
-        clipService.clipQuestion(loginUser.getUser().getId(), clipReqDto);
-        return new ResponseEntity<>(new ResponseDto<>(1, "오답노트 등록 성공", null), HttpStatus.CREATED);
-    }
 
     /**
      * 오답노트 리스트 조회
@@ -74,20 +60,6 @@ public class ClipController {
     }
 
     /**
-     * 오답노트에서 삭제
-     * 
-     * @param loginUser 로그인 사용자
-     * @param clipId    오답노트 PK
-     * @return
-     */
-    @DeleteMapping("/{clipId}")
-    public ResponseEntity<?> unclipQuestion(@AuthenticationPrincipal LoginUser loginUser,
-            @PathVariable Long clipId) {
-        clipService.unclipQuestion(loginUser.getUser().getId(), clipId);
-        return new ResponseEntity<>(new ResponseDto<>(1, "오답노트 삭제 성공", null), HttpStatus.OK);
-    }
-
-    /**
      * 오답노트에 등록한 문제 상세보기
      * 
      * @param loginUser 로그인 사용자
@@ -111,5 +83,11 @@ public class ClipController {
             return new ResponseEntity<>(new ResponseDto<>(-1, "서버 오류가 발생했습니다.", null),
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @GetMapping("/days")
+    public ResponseEntity<?> getClippedDays(@AuthenticationPrincipal LoginUser loginUser) {
+        ClipRespDto.ClippedDaysDto clippedDaysDto = clipService.getClippedDaysDtos(loginUser.getUser().getId());
+        return new ResponseEntity<>(new ResponseDto<>(1, "완료한 데일리 리스트 조회 성공", clippedDaysDto), HttpStatus.OK);
     }
 }

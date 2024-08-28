@@ -53,4 +53,7 @@ public interface ClipRepository extends JpaRepository<Clipped, Long> {
         @Query("SELECT c FROM Clipped c WHERE c.userActivity.user.id = :userId AND c.userActivity.testInfo = :dayNumber ORDER BY c.userActivity.questionNum")
         List<Clipped> findByUserIdAndDayNumberOrderByQuestionNum(@Param("userId") Long userId,
                         @Param("dayNumber") String dayNumber);
+
+        @Query("SELECT DISTINCT ud.dayNumber FROM UserDaily ud WHERE ud.user.id = :userId AND ud.completed = true ORDER BY ud.dayNumber DESC")
+        List<String> findCompletedDayNumbersByUserId(@Param("userId") Long userId);
 }

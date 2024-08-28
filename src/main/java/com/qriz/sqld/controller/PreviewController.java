@@ -14,11 +14,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.qriz.sqld.config.auth.LoginUser;
 import com.qriz.sqld.dto.ResponseDto;
+import com.qriz.sqld.dto.preview.PreviewTestResult;
 import com.qriz.sqld.dto.preview.QuestionDto;
 import com.qriz.sqld.dto.preview.ResultDto;
 import com.qriz.sqld.dto.test.TestReqDto;
 import com.qriz.sqld.dto.test.TestRespDto;
-import com.qriz.sqld.service.PreviewService;
+import com.qriz.sqld.service.preview.PreviewService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -37,8 +38,8 @@ public class PreviewController {
      */
     @GetMapping("/get")
     public ResponseEntity<?> getPreviewTest(@AuthenticationPrincipal LoginUser loginUser) {
-        List<QuestionDto> previewQuestions = testService.getPreviewTestQuestions(loginUser.getUser());
-        return new ResponseEntity<>(new ResponseDto<>(1, "문제 불러오기 성공", previewQuestions), HttpStatus.OK);
+        PreviewTestResult previewTestResult = testService.getPreviewTestQuestions(loginUser.getUser());
+        return new ResponseEntity<>(new ResponseDto<>(1, "문제 불러오기 성공", previewTestResult), HttpStatus.OK);
     }
 
     /**
@@ -51,15 +52,21 @@ public class PreviewController {
     @PostMapping("/submit")
     public ResponseEntity<?> submitPreviewTest(@RequestBody TestReqDto testSubmitReqDto,
             @AuthenticationPrincipal LoginUser loginUser) {
-        List<TestRespDto.TestSubmitRespDto> submitResponse = testService
-                .processPreviewResults(loginUser.getUser().getId(), testSubmitReqDto.getActivities());
-        return new ResponseEntity<>(new ResponseDto<>(1, "테스트 제출 성공", submitResponse), HttpStatus.OK);
+        testService.processPreviewResults(loginUser.getUser().getId(), testSubmitReqDto.getActivities());
+        return new ResponseEntity<>(new ResponseDto<>(1, "테스트 제출 성공", null), HttpStatus.OK);
     }
 
-    @GetMapping("/result/{testInfo}")
-    public ResponseEntity<?> getPreviewTestResult(@AuthenticationPrincipal LoginUser loginUser,
+    /**
+     * Preview Test 결과 분석
+     * 
+     * @param loginUser 로그인한 사용자
+     * @param testInfo  테스트 정보 (예: "Preview Test")
+     * @return
+     */
+    @GetMapping("/analyze/{testInfo}")
+    public ResponseEntity<?> analyzePreviewTestResult(@AuthenticationPrincipal LoginUser loginUser,
             @PathVariable String testInfo) {
-        ResultDto result = testService.getPreviewTestResult(loginUser.getUser().getId(), testInfo);
-        return new ResponseEntity<>(new ResponseDto<>(1, "프리뷰 테스트 결과 조회 성공", result), HttpStatus.OK);
+        ResultDto.Response analysisResult = testService.analyzePreviewTestResult(loginUser.getUser().getId(), testInfo);
+        return new ResponseEntity<>(new ResponseDto<>(1, "프리뷰 테스트 분석 결과 조회 성공", analysisResult), HttpStatus.OK);
     }
 }

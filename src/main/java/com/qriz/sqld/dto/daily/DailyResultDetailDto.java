@@ -22,4 +22,7 @@ public class DailyResultDetailDto {
     private String solution;
     private String checked;
     private boolean correction;
+    private String testInfo;
+    private String title;
+    private String keyConcepts;
 }

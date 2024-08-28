@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.qriz.sqld.mail.dto.EmailCheckDto;
 import com.qriz.sqld.mail.dto.EmailReqDto;
 import com.qriz.sqld.mail.service.MailSendService;
-import com.qriz.sqld.service.UserService;
+import com.qriz.sqld.service.user.UserService;
 import com.qriz.sqld.util.RedisUtil;
 
 import lombok.RequiredArgsConstructor;

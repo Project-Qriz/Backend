@@ -13,7 +13,7 @@ public class DaySubjectDetailsDto {
     public static class Response {
         private String dayNumber;
         private List<SubjectDetails> userDailyInfoList;
-        private List<DailyResultDetailDto> subjectResultsList;
+        private List<DailyResultDto> subjectResultsList;
     }
 
     @Getter
@@ -51,6 +51,14 @@ public class DaySubjectDetailsDto {
                 }
             }
         }
+    }
+
+    @Getter
+    @AllArgsConstructor
+    public static class DailyResultDto {
+        private String skillName;
+        private String question;
+        private boolean correction;
     }
 
     @Getter

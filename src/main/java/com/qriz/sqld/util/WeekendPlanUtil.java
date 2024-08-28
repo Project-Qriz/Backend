@@ -14,7 +14,7 @@ import com.qriz.sqld.domain.skillLevel.SkillLevel;
 import com.qriz.sqld.domain.skillLevel.SkillLevelRepository;
 import com.qriz.sqld.domain.userActivity.UserActivity;
 import com.qriz.sqld.domain.userActivity.UserActivityRepository;
-import com.qriz.sqld.service.SurveyService;
+import com.qriz.sqld.service.survey.SurveyService;
 
 import lombok.RequiredArgsConstructor;
 

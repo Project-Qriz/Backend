@@ -2,10 +2,12 @@ package com.qriz.sqld.dto.clip;
 
 import com.qriz.sqld.domain.clip.Clipped;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -24,5 +26,12 @@ public class ClipRespDto {
         this.correction = clipped.getUserActivity().isCorrection();
         this.keyConcepts = clipped.getUserActivity().getQuestion().getSkill().getKeyConcepts();
         this.date = clipped.getDate();
+    }
+
+    @Getter
+    @Setter
+    @Builder
+    public static class ClippedDaysDto {
+        private List<String> days; 
     }
 }

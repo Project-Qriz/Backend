@@ -16,7 +16,7 @@ import com.qriz.sqld.dto.ResponseDto;
 import com.qriz.sqld.dto.survey.SurveyReqDto;
 import com.qriz.sqld.dto.survey.SurveyRespDto;
 import com.qriz.sqld.handler.ex.CustomApiException;
-import com.qriz.sqld.service.SurveyService;
+import com.qriz.sqld.service.survey.SurveyService;
 
 import javax.validation.Valid;
 

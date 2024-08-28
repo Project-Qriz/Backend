@@ -15,6 +15,7 @@ public class QuestionDto {
     private String option3;
     private String option4;
     private SkillDto skill;
+    private Integer timeLimit;
 
     public static QuestionDto from(Question question) {
         QuestionDto dto = new QuestionDto();
@@ -25,6 +26,7 @@ public class QuestionDto {
         dto.setOption3(question.getOption3());
         dto.setOption4(question.getOption4());
         dto.setSkill(SkillDto.from(question.getSkill()));
+        dto.setTimeLimit(question.getTimeLimit());
         return dto;
     }
 }

@@ -20,8 +20,8 @@ import com.qriz.sqld.dto.daily.UserDailyDto;
 import com.qriz.sqld.dto.daily.WeeklyTestResultDto;
 import com.qriz.sqld.dto.test.TestReqDto;
 import com.qriz.sqld.dto.test.TestRespDto;
-import com.qriz.sqld.service.DailyPlanService;
-import com.qriz.sqld.service.DailyService;
+import com.qriz.sqld.service.daily.DailyPlanService;
+import com.qriz.sqld.service.daily.DailyService;
 
 import lombok.RequiredArgsConstructor;
 
