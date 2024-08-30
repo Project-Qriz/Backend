@@ -405,6 +405,18 @@ public class DailyService {
                 .build();
     }
 
+    public UserDailyDto.TestStatusDto getDailyTestStatus(Long userId, String dayNumber) {
+        UserDaily userDaily = userDailyRepository.findByUserIdAndDayNumber(userId, dayNumber)
+                .orElseThrow(() -> new CustomApiException("해당 일자의 데일리 플랜을 찾을 수 없습니다."));
+
+        return UserDailyDto.TestStatusDto.builder()
+                .dayNumber(userDaily.getDayNumber())
+                .attemptCount(userDaily.getAttemptCount())
+                .passed(userDaily.isPassed())
+                .retestEligible(userDaily.isRetestEligible())
+                .build();
+    }
+
     // 테스트용
     @Transactional
     public void completeDailyTest(Long userId, String dayNumber) {

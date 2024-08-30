@@ -120,7 +120,8 @@ public class DailyController {
                         @AuthenticationPrincipal LoginUser loginUser) {
                 DaySubjectDetailsDto.Response details = dailyService.getDaySubjectDetails(loginUser.getUser().getId(),
                                 dayNumber);
-                return new ResponseEntity<>(new ResponseDto<>(1, "과목별 세부 항목 점수, 문제 풀이 결과 조회 성공", details), HttpStatus.OK);
+                return new ResponseEntity<>(new ResponseDto<>(1, "과목별 세부 항목 점수, 문제 풀이 결과 조회 성공", details),
+                                HttpStatus.OK);
         }
 
         /**
@@ -136,6 +137,21 @@ public class DailyController {
                 UserDailyDto.DailyDetailsDto details = dailyService.getDailyDetails(loginUser.getUser().getId(),
                                 dayNumber);
                 return new ResponseEntity<>(new ResponseDto<>(1, "일일 상세 정보 조회 성공", details), HttpStatus.OK);
+        }
+
+        /**
+         * 특정 Day의 테스트 상태 확인
+         * 
+         * @param dayNumber
+         * @param loginUser
+         * @return
+         */
+        @GetMapping("/test-status/{dayNumber}")
+        public ResponseEntity<?> getDailyTestStatus(@PathVariable String dayNumber,
+                        @AuthenticationPrincipal LoginUser loginUser) {
+                UserDailyDto.TestStatusDto status = dailyService.getDailyTestStatus(loginUser.getUser().getId(),
+                                dayNumber);
+                return new ResponseEntity<>(new ResponseDto<>(1, "데일리 테스트 상태 조회 성공", status), HttpStatus.OK);
         }
 
         // 테스트용

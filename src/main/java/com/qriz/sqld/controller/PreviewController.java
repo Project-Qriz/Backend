@@ -1,7 +1,5 @@
 package com.qriz.sqld.controller;
 
-import java.util.List;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -15,10 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.qriz.sqld.config.auth.LoginUser;
 import com.qriz.sqld.dto.ResponseDto;
 import com.qriz.sqld.dto.preview.PreviewTestResult;
-import com.qriz.sqld.dto.preview.QuestionDto;
 import com.qriz.sqld.dto.preview.ResultDto;
 import com.qriz.sqld.dto.test.TestReqDto;
-import com.qriz.sqld.dto.test.TestRespDto;
 import com.qriz.sqld.service.preview.PreviewService;
 
 import lombok.RequiredArgsConstructor;

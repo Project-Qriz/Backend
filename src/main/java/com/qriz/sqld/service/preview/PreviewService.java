@@ -121,10 +121,8 @@ public class PreviewService {
     }
 
     @Transactional
-    public List<TestRespDto.TestSubmitRespDto> processPreviewResults(Long userId,
-            List<TestReqDto.TestSubmitReqDto> activities) {
+    public void processPreviewResults(Long userId, List<TestReqDto.TestSubmitReqDto> activities) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        List<TestRespDto.TestSubmitRespDto> results = new ArrayList<>();
 
         Map<Long, List<TestReqDto.TestSubmitReqDto>> activityBySkill = activities.stream()
                 .collect(Collectors
@@ -159,34 +157,23 @@ public class PreviewService {
                 userActivity.setQuestionNum(activity.getQuestionNum());
                 userActivity.setChecked(activity.getChecked());
                 userActivity.setTimeSpent(activity.getTimeSpent());
-                userActivity.setCorrection(question.getAnswer().equals(activity.getChecked()));
-                double score = calculateScore(activity, question);
-                userActivity.setScore(score);
+
+                // 체크되지 않은 문제도 처리
+                boolean isCorrect = activity.getChecked() != null && question.getAnswer().equals(activity.getChecked());
+                userActivity.setCorrection(isCorrect);
+
+                // 정답일 경우 약 4.76점 부여 (100/21 ≈ 4.76), 체크되지 않은 경우 0점
+                userActivity.setScore(isCorrect ? 100.0 / 21 : 0.0);
+
                 userActivity.setDate(LocalDateTime.now());
 
-                // 정답일 경우 약 4.76점 부여 (100/21 ≈ 4.76)
-                userActivity.setScore(userActivity.isCorrection() ? 100.0 / 21 : 0.0);
-
-                userActivity = userActivityRepository.save(userActivity);
+                userActivityRepository.save(userActivity);
 
                 int difficulty = question.getDifficulty();
                 difficultyTotalMap.merge(difficulty, 1, Integer::sum);
-                if (userActivity.isCorrection()) {
+                if (isCorrect) {
                     difficultyCorrectMap.merge(difficulty, 1, Integer::sum);
                 }
-
-                TestRespDto.TestSubmitRespDto result = new TestRespDto.TestSubmitRespDto(
-                        userActivity.getId(),
-                        userId,
-                        new TestRespDto.TestSubmitRespDto.QuestionRespDto(
-                                question.getId(),
-                                getCategoryName(question.getCategory())),
-                        activity.getQuestionNum(),
-                        activity.getChecked(),
-                        activity.getTimeSpent(),
-                        userActivity.isCorrection());
-
-                results.add(result);
             }
 
             // 각 난이도별 SkillLevel 업데이트 또는 생성
@@ -206,25 +193,6 @@ public class PreviewService {
 
         // 30일 플랜 생성
         dailyPlanService.generateDailyPlan(userId);
-
-        return results;
-    }
-
-    private double calculateScore(TestReqDto.TestSubmitReqDto activity, Question question) {
-        return question.getAnswer().equals(activity.getChecked()) ? 10.0 : 0.0;
-    }
-
-    private String getCategoryName(int category) {
-        switch (category) {
-            case 1:
-                return "PREVIEW";
-            case 2:
-                return "DAILY";
-            case 3:
-                return "EXAM";
-            default:
-                return "UNKNOWN";
-        }
     }
 
     public ResultDto.Response analyzePreviewTestResult(Long userId, String testInfo) {

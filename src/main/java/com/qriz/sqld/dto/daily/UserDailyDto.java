@@ -74,4 +74,14 @@ public class UserDailyDto {
             private String description;    
         }
     }
+
+    @Getter
+    @Setter
+    @Builder
+    public static class TestStatusDto {
+        private String dayNumber;
+        private int attemptCount;
+        private boolean passed;
+        private boolean retestEligible;    
+    }
 }
