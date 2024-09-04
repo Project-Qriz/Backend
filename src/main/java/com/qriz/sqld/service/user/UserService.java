@@ -94,22 +94,6 @@ public class UserService {
         }
     }
 
-    // 이메일 중복확인
-    @Transactional
-    public UserRespDto.EmailDuplicateRespDto emailDuplicate(UserReqDto.EmailDuplicateReqDto emailDuplicateReqDto) {
-        // 1. 이메일이 존재하는지 찾기
-        Optional<User> userOP = userRepository.findByEmail(emailDuplicateReqDto.getEmail());
-
-        // 2. 이메일 존재 여부에 따라 응답 생성
-        if (userOP.isPresent()) {
-            // 이메일 이미 사용 중인 경우
-            return new UserRespDto.EmailDuplicateRespDto(false);
-        } else {
-            // 사용 기능한 이메일인 경우
-            return new UserRespDto.EmailDuplicateRespDto(true);
-        }
-    }
-
     // 내 정보 불러오기
     @Transactional(readOnly = true)
     public UserRespDto.ProfileRespDto getProfile(Long userId) {

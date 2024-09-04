@@ -153,18 +153,6 @@ public class UserController {
         }
     }
 
-    // 이메일 중복확인
-    @GetMapping("/email-duplicate")
-    public ResponseEntity<?> emailDuplicate(@RequestBody @Valid UserReqDto.EmailDuplicateReqDto emailDuplicateReqDto) {
-        UserRespDto.EmailDuplicateRespDto emailDuplicateRespDto = userService.emailDuplicate(emailDuplicateReqDto);
-        
-        if (!emailDuplicateRespDto.isAvailable()) {
-            return new ResponseEntity<>(new ResponseDto<>(-1, "해당 이메일은 이미 사용중 입니다.", emailDuplicateRespDto), HttpStatus.BAD_REQUEST);
-        } else {
-            return new ResponseEntity<>(new ResponseDto<>(1, "사용 가능한 이메일입니다.", emailDuplicateRespDto), HttpStatus.OK);
-        }
-    }
-
     // 내 정보 불러오기
     @GetMapping("/v1/my-profile")
     public ResponseEntity<?> getProfile(@AuthenticationPrincipal LoginUser loginUser) {

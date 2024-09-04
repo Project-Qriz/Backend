@@ -17,7 +17,6 @@ import com.qriz.sqld.dto.preview.PreviewTestResult;
 import com.qriz.sqld.dto.preview.QuestionDto;
 import com.qriz.sqld.dto.preview.ResultDto;
 import com.qriz.sqld.dto.test.TestReqDto;
-import com.qriz.sqld.dto.test.TestRespDto;
 import com.qriz.sqld.service.daily.DailyPlanService;
 import com.qriz.sqld.domain.preview.UserPreviewTestRepository;
 import lombok.RequiredArgsConstructor;
