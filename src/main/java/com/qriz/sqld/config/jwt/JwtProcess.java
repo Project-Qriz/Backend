@@ -51,4 +51,18 @@ public class JwtProcess {
         User user = User.builder().id(id).role(UserEnum.valueOf(role)).build();
         return new LoginUser(user);
     }
+
+    public static boolean isTokenExpired(String token) {
+        try {
+            DecodedJWT jwt = JWT.require(Algorithm.HMAC512(JwtVO.SECRET)).build().verify(token);
+            return jwt.getExpiresAt().before(new Date());
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
+    public static String getUsernameFromToken(String token) {
+        DecodedJWT jwt = JWT.require(Algorithm.HMAC512(JwtVO.SECRET)).build().verify(token);
+        return jwt.getClaim("id").asString();
+    }
 }
