@@ -63,40 +63,52 @@ public class MailSendService {
                 "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n" +
                 "    <title>인증번호 확인</title>\n" +
                 "  </head>\n" +
-                "  <body style=\"font-family: 'Noto Sans KR', Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;\">\n" +
-                "    <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"max-width: 600px; margin: 0 auto; background-color: #ffffff;\">\n" +
+                "  <body style=\"font-family: 'Noto Sans KR', Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;\">\n"
+                +
+                "    <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"max-width: 600px; margin: 0 auto; background-color: #ffffff;\">\n"
+                +
                 "      <tr>\n" +
                 "        <td style=\"padding: 40px 20px;\">\n" +
                 "          <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\">\n" +
                 "            <tr>\n" +
-                "              <td style=\"padding-bottom: 30px;\">\n" +
+                "              <td style=\"padding-bottom: 60px;\">\n" +
                 "                <img src=\"cid:logo\" alt=\"Qriz Logo\" style=\"width: auto; height: 32px;\" />\n" +
                 "              </td>\n" +
                 "            </tr>\n" +
                 "            <tr>\n" +
-                "              <td style=\"font-size: 24px; color: #24282D; padding-bottom: 20px;\">\n" +
-                "                인증번호를 <span style=\"color: #007AFF;\">확인해</span><br><span style=\"color: #007AFF;\">주세요!</span>\n" +
+                "              <td style=\"font-weight: bold; font-size: 24px; color: #24282D; padding: 0 30px 40px 30px;\">\n"
+                +
+                "                인증번호를 <span style=\"font-weight: bold; color: #007AFF;\">확인해</span><br><span style=\"font-weight: bold; color: #007AFF;\">주세요!</span>\n"
+                +
                 "              </td>\n" +
                 "            </tr>\n" +
                 "            <tr>\n" +
-                "              <td style=\"font-size: 16px; color: #666666; padding-bottom: 30px;\">\n" +
+                "              <td style=\"font-weight: semibold; font-size: 16px; color: #666666; padding: 0 30px 40px 30px;\">\n" +
                 "                아래 인증번호를 인증번호 입력 창에<br>입력해주세요.\n" +
                 "              </td>\n" +
                 "            </tr>\n" +
                 "            <tr>\n" +
-                "              <td style=\"font-weight: bold; color: #333333; padding: 10px 0; border-top: 2px solid #24282D;\">\n" +
+                "              <td style=\"font-weight: bold; color: #333333; padding: 0 30px 10px 30px;\">\n" +
                 "                인증번호\n" +
                 "              </td>\n" +
                 "            </tr>\n" +
                 "            <tr>\n" +
-                "              <td style=\"background-color: #F0F4F7; padding: 20px; font-size: 32px; font-weight: bold; text-align: center; color: #24282D;\">\n" +
-                "                " + authNumber + "\n" +
+                "              <td style=\"padding: 0 30px;\">\n" +
+                "                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\">\n" +
+                "                  <tr>\n" +
+                "                    <td style=\"background-color: #F0F4F7; padding: 20px; font-size: 32px; font-weight: bold; text-align: center; color: #24282D; border-top: 2px solid #24282D;\">\n"
+                +
+                "                      " + authNumber + "\n" +
+                "                    </td>\n" +
+                "                  </tr>\n" +
+                "                </table>\n" +
                 "              </td>\n" +
                 "            </tr>\n" +
                 "            <tr>\n" +
-                "              <td style=\"font-size: 14px; color: #999999; padding-top: 30px;\">\n" +
+                "              <td style=\"font-size: 14px; color: #999999; padding: 30px 30px 0 30px;\">\n" +
                 "                이 코드를 요청하지 않은 경우, 즉시 암호를 변경하시기 바랍니다.\n" +
                 "              </td>\n" +
+                "            </tr>\n" +
                 "            </tr>\n" +
                 "          </table>\n" +
                 "        </td>\n" +
