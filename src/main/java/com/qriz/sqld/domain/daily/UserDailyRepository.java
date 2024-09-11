@@ -5,9 +5,13 @@ import java.util.List;
 import java.time.LocalDate;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.repository.query.Param;
+
+import com.qriz.sqld.domain.user.User;
 
 @Repository
 public interface UserDailyRepository extends JpaRepository<UserDaily, Long> {
@@ -24,4 +28,8 @@ public interface UserDailyRepository extends JpaRepository<UserDaily, Long> {
     List<UserDaily> findByUserIdAndDayNumberBetween(Long userId, String startDayNumber, String endDayNumber);
 
     List<UserDaily> findAllByUserId(Long userId);
+
+    @Modifying
+    @Query("DELETE FROM UserDaily ud where ud.user = :user")
+    void deleteByUser(@Param("user") User user);
 }

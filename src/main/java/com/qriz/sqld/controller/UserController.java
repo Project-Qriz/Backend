@@ -34,7 +34,6 @@ import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 
-
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api")
@@ -93,17 +92,17 @@ public class UserController {
             if (userOpt.isPresent()) {
 
                 // 계정이 확인되면 이메일 전송
-            // 사용자 정보를 세션에 저장
-            HttpSession session = request.getSession();
-            session.setAttribute("username", findPwdReqDto.getUsername());
-            session.setMaxInactiveInterval(300); // 세션 유지 시간 5분
+                // 사용자 정보를 세션에 저장
+                HttpSession session = request.getSession();
+                session.setAttribute("username", findPwdReqDto.getUsername());
+                session.setMaxInactiveInterval(300); // 세션 유지 시간 5분
 
-            mailService.joinEmail(findPwdReqDto.getEmail());
+                mailService.joinEmail(findPwdReqDto.getEmail());
 
-            return new ResponseEntity<>(new ResponseDto<>(1, "해당 이메일로 인증번호가 전송되었습니다.", null), HttpStatus.OK);
+                return new ResponseEntity<>(new ResponseDto<>(1, "해당 이메일로 인증번호가 전송되었습니다.", null), HttpStatus.OK);
             } else {
                 return ResponseEntity.badRequest()
-                    .body(new ResponseDto<>(-1, "해당 계정이 존재하지 않습니다. 아이디 혹은 이메일을 확인해주세요.", null));
+                        .body(new ResponseDto<>(-1, "해당 계정이 존재하지 않습니다. 아이디 혹은 이메일을 확인해주세요.", null));
             }
         } catch (CustomApiException e) {
             logger.error("디버깅", e.getMessage());
@@ -143,13 +142,17 @@ public class UserController {
 
     // 아이디 중복 확인
     @GetMapping("/username-duplicate")
-    public ResponseEntity<?> usernameDuplicate(@RequestBody @Valid UserReqDto.UsernameDuplicateReqDto usernameDuplicateReqDto) {
-        UserRespDto.UsernameDuplicateRespDto usernameDuplicateRespDto = userService.usernameDuplicate(usernameDuplicateReqDto);
+    public ResponseEntity<?> usernameDuplicate(
+            @RequestBody @Valid UserReqDto.UsernameDuplicateReqDto usernameDuplicateReqDto) {
+        UserRespDto.UsernameDuplicateRespDto usernameDuplicateRespDto = userService
+                .usernameDuplicate(usernameDuplicateReqDto);
 
         if (!usernameDuplicateRespDto.isAvailable()) {
-            return new ResponseEntity<>(new ResponseDto<>(-1, "해당 아이디는 이미 사용중 입니다.", usernameDuplicateRespDto), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ResponseDto<>(-1, "해당 아이디는 이미 사용중 입니다.", usernameDuplicateRespDto),
+                    HttpStatus.BAD_REQUEST);
         } else {
-            return new ResponseEntity<>(new ResponseDto<>(1, "사용 가능한 아이디입니다.", usernameDuplicateRespDto), HttpStatus.OK);
+            return new ResponseEntity<>(new ResponseDto<>(1, "사용 가능한 아이디입니다.", usernameDuplicateRespDto),
+                    HttpStatus.OK);
         }
     }
 
@@ -158,5 +161,23 @@ public class UserController {
     public ResponseEntity<?> getProfile(@AuthenticationPrincipal LoginUser loginUser) {
         UserRespDto.ProfileRespDto profileRespDto = userService.getProfile(loginUser.getUser().getId());
         return new ResponseEntity<>(new ResponseDto<>(1, "회원 정보 불러오기 성공", profileRespDto), HttpStatus.OK);
+    }
+
+    /**
+     * 회원 탈퇴
+     * 
+     * @param loginUser
+     * @return
+     */
+    @PostMapping("/v1/withdraw")
+    public ResponseEntity<?> withdraw(@AuthenticationPrincipal LoginUser loginUser) {
+        try {
+            userService.withdraw(loginUser.getUser().getId());
+            return new ResponseEntity<>(new ResponseDto<>(1, "회원 탈퇴 완료", null), HttpStatus.OK);
+        } catch (CustomApiException e) {
+            return new ResponseEntity<>(new ResponseDto<>(-1, e.getMessage(), null), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new ResponseDto<>(-1, "회원 탈퇴 중 오류 발생", null), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

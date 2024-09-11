@@ -1,6 +1,9 @@
 package com.qriz.sqld.domain.user;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
@@ -16,4 +19,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // 아이디와 이메일로 계정 존재 확인
     Optional<User> findByUsernameAndEmail(String username, String email);
+
+    @Modifying
+    @Query("DELETE FROM User u WHERE u = :user")
+    void delete(@Param("user") User user);
 }

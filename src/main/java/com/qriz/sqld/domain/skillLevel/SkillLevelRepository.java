@@ -5,7 +5,10 @@ import java.util.List;
 import java.time.LocalDateTime;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.qriz.sqld.domain.skill.Skill;
 import com.qriz.sqld.domain.user.User;
@@ -25,4 +28,8 @@ public interface SkillLevelRepository extends JpaRepository<SkillLevel, Long> {
     List<SkillLevel> findByUserIdAndLastUpdatedBetween(Long userId, LocalDateTime start, LocalDateTime end);
 
     List<SkillLevel> findTop3ByUserIdOrderByCurrentAccuracyAsc(Long userId);
+
+    @Modifying
+    @Query("DELETE FROM SkillLevel sl WHERE sl.user = :user")
+    void deleteByUser(@Param("user") User user);
 }

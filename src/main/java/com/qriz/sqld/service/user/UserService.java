@@ -1,7 +1,13 @@
 package com.qriz.sqld.service.user;
 
+import com.qriz.sqld.domain.apply.UserApplyRepository;
+import com.qriz.sqld.domain.daily.UserDailyRepository;
+import com.qriz.sqld.domain.preview.UserPreviewTestRepository;
+import com.qriz.sqld.domain.skillLevel.SkillLevelRepository;
+import com.qriz.sqld.domain.survey.SurveyRepository;
 import com.qriz.sqld.domain.user.User;
 import com.qriz.sqld.domain.user.UserRepository;
+import com.qriz.sqld.domain.userActivity.UserActivityRepository;
 import com.qriz.sqld.dto.user.UserReqDto;
 import com.qriz.sqld.dto.user.UserRespDto;
 import com.qriz.sqld.handler.ex.CustomApiException;
@@ -21,9 +27,15 @@ import java.util.Optional;
 public class UserService {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final RedisUtil redisUtil;
+    private final UserRepository userRepository;
+    private final UserDailyRepository userDailyRepository;
+    private final SkillLevelRepository skillLevelRepository;
+    private final UserPreviewTestRepository userPreviewTestRepository;
+    private final UserActivityRepository userActivityRepository;
+    private final SurveyRepository surveyRepository;
+    private final UserApplyRepository userApplyRepository;
 
     // 회원 가입
     @Transactional
@@ -108,5 +120,31 @@ public class UserService {
         String encodedPassword = passwordEncoder.encode(newPassword);
         user.setPassword(encodedPassword);
         userRepository.save(user);
+    }
+
+    @Transactional
+    public void withdraw(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new CustomApiException("존재하지 않는 사용자 입니다."));
+
+        // 1. UserDaily 삭제
+        userDailyRepository.deleteByUser(user);
+
+        // 2. SkillLevel 삭제
+        skillLevelRepository.deleteByUser(user);
+
+        // 3. UserPreviewTest 삭제
+        userPreviewTestRepository.deleteByUser(user);
+
+        // 4. UserActivity 삭제
+        userActivityRepository.deleteByUser(user);
+
+        // 5. Survey 삭제
+        surveyRepository.deleteByUser(user);
+
+        // 6. UserApply 삭제
+        userApplyRepository.deleteByUser(user);
+
+        // 7. user 삭제
+        userRepository.delete(user);
     }
 }

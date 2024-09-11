@@ -5,7 +5,12 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import com.qriz.sqld.domain.user.User;
 
 @Repository
 public interface UserActivityRepository extends JpaRepository<UserActivity, Long> {
@@ -32,4 +37,8 @@ public interface UserActivityRepository extends JpaRepository<UserActivity, Long
     List<UserActivity> findByUserIdAndTestInfoOrderByQuestionNumAsc(Long userId, String testInfo);
 
     List<UserActivity> findByUserIdAndTestInfoAndDateAfter(Long userId, String testInfo, LocalDateTime date);
+
+    @Modifying
+    @Query("DELETE FROM UserActivity ua WHERE ua.user = :user")
+    void deleteByUser(@Param("user") User user);
 }

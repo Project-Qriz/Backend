@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.qriz.sqld.domain.user.User;
 
@@ -21,4 +24,8 @@ public interface SurveyRepository extends JpaRepository<Survey, Long> {
     List<Survey> findByUserAndCheckedTrue(User user);
 
     Optional<Survey> findByUserAndKnowsNothingTrue(User user);
+
+    @Modifying
+    @Query("DELETE FROM Survey s WHERE s.user = :user")
+    void deleteByUser(@Param("user") User user);
 }
