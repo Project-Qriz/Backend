@@ -10,6 +10,8 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
+import org.springframework.data.annotation.CreatedDate;
+
 import com.qriz.sqld.domain.user.User;
 
 import lombok.AllArgsConstructor;
@@ -40,6 +42,16 @@ public class UserExamSession {
     // 완료 여부
     private boolean completed;
 
+    // 완료 횟수
+    private int completedCount;
+
     // 완료 날짜
+    @CreatedDate
     private LocalDate completionDate;
+
+    public void updateTestStatus(boolean isCompleted) {
+        this.completedCount++;
+        this.completed = true;
+        this.completionDate = LocalDate.now();
+    }
 }

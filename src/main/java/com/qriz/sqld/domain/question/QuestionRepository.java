@@ -92,4 +92,13 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
                         @Param("skillIds") List<Long> skillIds,
                         @Param("category") int category,
                         @Param("limit") int limit);
+
+        /**
+         * 카테고리와 세션으로 문제들을 조회하는 메소드
+         *
+         * @param category 문제 카테고리 (3: exam)
+         * @param session  세션 (예: "1회차", "2회차")
+         * @return 해당하는 Question 리스트
+         */
+        List<Question> findByCategoryAndExamSessionOrderById(int category, String examSession);
 }
