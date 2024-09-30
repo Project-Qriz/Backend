@@ -11,7 +11,7 @@ import com.qriz.sqld.domain.clip.ClipRepository;
 import com.qriz.sqld.domain.clip.Clipped;
 import com.qriz.sqld.domain.daily.UserDaily;
 import com.qriz.sqld.domain.daily.UserDailyRepository;
-import com.qriz.sqld.dto.daily.DailyResultDetailDto;
+import com.qriz.sqld.dto.daily.ResultDetailDto;
 import com.qriz.sqld.dto.daily.DailyScoreDto;
 import com.qriz.sqld.dto.daily.DaySubjectDetailsDto;
 import com.qriz.sqld.dto.daily.UserDailyDto;
@@ -260,7 +260,7 @@ public class DailyService {
      * @return
      */
     @Transactional(readOnly = true)
-    public DailyResultDetailDto getDailyResultDetail(Long userId, String dayNumber, Long questionId) {
+    public ResultDetailDto getDailyResultDetail(Long userId, String dayNumber, Long questionId) {
         log.info("Getting daily result detail for userId: {}, dayNumber: {}, questionId: {}", userId, dayNumber,
                 questionId);
 
@@ -280,7 +280,7 @@ public class DailyService {
         Question question = userActivity.getQuestion();
         Skill skill = question.getSkill();
 
-        DailyResultDetailDto result = DailyResultDetailDto.builder()
+        ResultDetailDto result = ResultDetailDto.builder()
                 .skillName(skill.getKeyConcepts())
                 .question(question.getQuestion())
                 .option1(question.getOption1())

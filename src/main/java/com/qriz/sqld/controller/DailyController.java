@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.qriz.sqld.config.auth.LoginUser;
 import com.qriz.sqld.dto.ResponseDto;
-import com.qriz.sqld.dto.daily.DailyResultDetailDto;
+import com.qriz.sqld.dto.daily.ResultDetailDto;
 import com.qriz.sqld.dto.daily.DaySubjectDetailsDto;
 import com.qriz.sqld.dto.daily.UserDailyDto;
 import com.qriz.sqld.dto.daily.WeeklyTestResultDto;
@@ -87,7 +87,7 @@ public class DailyController {
         public ResponseEntity<?> getDailyResultDetail(@PathVariable String dayNumber,
                         @PathVariable Long questionId,
                         @AuthenticationPrincipal LoginUser loginUser) {
-                DailyResultDetailDto resultDetail = dailyService.getDailyResultDetail(loginUser.getUser().getId(),
+                ResultDetailDto resultDetail = dailyService.getDailyResultDetail(loginUser.getUser().getId(),
                                 dayNumber,
                                 questionId);
                 return new ResponseEntity<>(new ResponseDto<>(1, "데일리 결과 상세 조회 성공", resultDetail), HttpStatus.OK);

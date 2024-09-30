@@ -11,7 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class DailyResultDetailDto {
+public class ResultDetailDto {
     private String skillName;
     private String question;
     private String option1;

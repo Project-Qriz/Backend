@@ -27,14 +27,14 @@ public class DaySubjectDetailsDto {
             this.items = new ArrayList<>();
         }
 
-        public void addScore(String keyConcepts, double score) {
+        public void addScore(String type, double score) {
             ItemScore existingItem = items.stream()
-                    .filter(item -> item.getType().equals(keyConcepts))
+                    .filter(item -> item.getType().equals(type))
                     .findFirst()
                     .orElse(null);
 
             if (existingItem == null) {
-                items.add(new ItemScore(keyConcepts, score));
+                items.add(new ItemScore(type, score));
             } else {
                 existingItem.addScore(score);
             }
