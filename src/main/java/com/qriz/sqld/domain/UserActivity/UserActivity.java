@@ -46,7 +46,7 @@ public class UserActivity {
 
     /**
      * 테스트 정보
-     * (Preview Test, dayNumber)
+     * (Preview Test, dayNumber, session)
      */
     private String testInfo;
 

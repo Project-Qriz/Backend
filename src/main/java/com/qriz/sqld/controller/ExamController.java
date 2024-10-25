@@ -12,10 +12,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.qriz.sqld.config.auth.LoginUser;
 import com.qriz.sqld.dto.ResponseDto;
-import com.qriz.sqld.dto.daily.DailyResultDetailDto;
 import com.qriz.sqld.dto.daily.DaySubjectDetailsDto;
 import com.qriz.sqld.dto.daily.ResultDetailDto;
 import com.qriz.sqld.dto.daily.WeeklyTestResultDto;
+import com.qriz.sqld.dto.exam.ExamResultListDto;
 import com.qriz.sqld.dto.exam.ExamTestResult;
 import com.qriz.sqld.dto.test.TestReqDto;
 import com.qriz.sqld.service.exam.ExamService;
@@ -60,7 +60,7 @@ public class ExamController {
     }
 
     /**
-     * 오늘의 공부 결과 - 문제 상세보기
+     * 모의고사 공부 결과 - 문제 상세보기
      * 
      * @param session    모의고사 회차 정보
      * @param questionId 문제 아이디
@@ -78,21 +78,6 @@ public class ExamController {
     }
 
     /**
-     * 특정 Day 가 포함된 주의 과목별 테스트 결과 점수
-     * 
-     * @param session
-     * @param loginUser
-     * @return
-     */
-    @GetMapping("/detailed-weekly-result/{dayNumber}")
-    public ResponseEntity<?> getDetailedWeeklyTestResult(@PathVariable String session,
-            @AuthenticationPrincipal LoginUser loginUser) {
-        WeeklyTestResultDto result = examService.getDetailedWeeklyTestResult(loginUser.getUser().getId(),
-                session);
-        return new ResponseEntity<>(new ResponseDto<>(1, "주간 과목점수 비교 조회 성공", result), HttpStatus.OK);
-    }
-
-    /**
      * 특정 모의고사 회차의 과목별 세부 항목 점수, 문제 풀이 결과 조회
      * 
      * @param session
@@ -102,8 +87,8 @@ public class ExamController {
     @GetMapping("/subject-details/{session}")
     public ResponseEntity<?> getDaySubjectDetails(@PathVariable String session,
             @AuthenticationPrincipal LoginUser loginUser) {
-        DaySubjectDetailsDto.Response details = examService.getExamSubjectDetails(loginUser.getUser().getId(),
-        session);
+        ExamTestResult.Response details = examService.getExamSubjectDetails(loginUser.getUser().getId(),
+                session);
         return new ResponseEntity<>(new ResponseDto<>(1, "과목별 세부 항목 점수, 문제 풀이 결과 조회 성공", details),
                 HttpStatus.OK);
     }

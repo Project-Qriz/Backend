@@ -12,7 +12,7 @@ import com.qriz.sqld.domain.userActivity.UserActivity;
 import com.qriz.sqld.domain.userActivity.UserActivityRepository;
 import com.qriz.sqld.dto.clip.ClipReqDto;
 import com.qriz.sqld.dto.clip.ClipRespDto;
-import com.qriz.sqld.dto.daily.DailyResultDetailDto;
+import com.qriz.sqld.dto.daily.ResultDetailDto;
 import com.qriz.sqld.handler.ex.CustomApiException;
 import com.qriz.sqld.service.daily.DailyService;
 
@@ -80,7 +80,7 @@ public class ClipService {
     }
 
     @Transactional(readOnly = true)
-    public DailyResultDetailDto getClippedQuestionDetail(Long userId, Long clipId) {
+    public ResultDetailDto getClippedQuestionDetail(Long userId, Long clipId) {
         log.info("Fetching clipped question detail for userId: {} and clipId: {}", userId, clipId);
 
         Clipped clipped = clipRepository.findById(clipId)
@@ -117,7 +117,7 @@ public class ClipService {
         log.info("Extracted day number: {}", testInfo);
 
         try {
-            DailyResultDetailDto detailDto = dailyService.getDailyResultDetail(userId, testInfo, question.getId());
+            ResultDetailDto detailDto = dailyService.getDailyResultDetail(userId, testInfo, question.getId());
 
             // 추가된 정보 설정
             detailDto.setTestInfo(testInfo);

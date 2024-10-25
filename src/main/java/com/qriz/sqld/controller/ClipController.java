@@ -18,7 +18,7 @@ import com.qriz.sqld.config.auth.LoginUser;
 import com.qriz.sqld.dto.ResponseDto;
 import com.qriz.sqld.dto.clip.ClipReqDto;
 import com.qriz.sqld.dto.clip.ClipRespDto;
-import com.qriz.sqld.dto.daily.DailyResultDetailDto;
+import com.qriz.sqld.dto.daily.ResultDetailDto;
 import com.qriz.sqld.handler.ex.CustomApiException;
 import com.qriz.sqld.service.clip.ClipService;
 
@@ -71,7 +71,7 @@ public class ClipController {
             @AuthenticationPrincipal LoginUser loginUser,
             @PathVariable Long clipId) {
         try {
-            DailyResultDetailDto detailDto = clipService.getClippedQuestionDetail(loginUser.getUser().getId(), clipId);
+            ResultDetailDto detailDto = clipService.getClippedQuestionDetail(loginUser.getUser().getId(), clipId);
             return new ResponseEntity<>(new ResponseDto<>(1, "오답노트 문제 상세 조회 성공", detailDto), HttpStatus.OK);
         } catch (CustomApiException e) {
             log.error("Error getting clipped question detail for user: {} and clip: {}", loginUser.getUser().getId(),

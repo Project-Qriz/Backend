@@ -15,8 +15,8 @@ public class ExamTestResult {
     @Getter
     @AllArgsConstructor
     public static class Response {
-        private String dayNumber;
-        private List<SubjectDetails> userDailyInfoList;
+        private String session;
+        private List<SubjectDetails> userExamInfoList;
         private List<ResultDto> subjectResultsList;
     }
 

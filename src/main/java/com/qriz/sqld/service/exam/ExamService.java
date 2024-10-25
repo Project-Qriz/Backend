@@ -1,15 +1,11 @@
 package com.qriz.sqld.service.exam;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
-
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.qriz.sqld.domain.clip.ClipRepository;
 import com.qriz.sqld.domain.clip.Clipped;
+import com.qriz.sqld.domain.daily.UserDaily;
 import com.qriz.sqld.domain.exam.UserExamSession;
 import com.qriz.sqld.domain.exam.UserExamSessionRepository;
 import com.qriz.sqld.domain.question.Question;
@@ -30,6 +27,8 @@ import com.qriz.sqld.domain.userActivity.UserActivityRepository;
 import com.qriz.sqld.dto.daily.DailyScoreDto;
 import com.qriz.sqld.dto.daily.ResultDetailDto;
 import com.qriz.sqld.dto.daily.WeeklyTestResultDto;
+import com.qriz.sqld.dto.exam.ExamResultListDto;
+import com.qriz.sqld.dto.exam.ExamScoreDto;
 import com.qriz.sqld.dto.exam.ExamTestResult;
 import com.qriz.sqld.dto.test.TestReqDto;
 import com.qriz.sqld.dto.test.TestRespDto;
@@ -235,47 +234,54 @@ public class ExamService {
     }
 
     /**
-     * 특정 회차의 과목별 테스트 결과 점수
+     * 특정 회차의 테스트 결과 점수
      * 
      * @param userId
      * @param session
      * @return
      */
-    public WeeklyTestResultDto getDetailedTestResult(Long userId, String session) {
-        log.info("사용자 ID: {}, 회차: {}에 대한 상세 테스트 결과 조회 시작", userId, session);
+    @Transactional(readOnly = true)
+    public ExamTestResult.Response getExamSubjectDetails(Long userId, String session) {
+        log.info("Starting getDaySubjectDetails for userId: {} and session: {}", userId, session);
 
         UserExamSession userExamSession = userExamSessionRepository.findByUserIdAndSession(userId, session)
-                .orElseThrow(() -> new CustomApiException("해당 회차의 사용자 시험 세션을 찾을 수 없습니다: " + session));
+                .orElseThrow(() -> new CustomApiException("해당 회차의 모의고사 세션을 찾을 수 없습니다."));
 
         if (!userExamSession.isCompleted()) {
-            throw new CustomApiException("시험 세션이 완료되지 않았습니다");
+            throw new CustomApiException("해당 회차의 모의고사가 완료되지 않았습니다.");
         }
 
-        List<UserActivity> activities = userActivityRepository.findByUserIdAndTestInfoOrderByQuestionNumAsc(userId, session);
+        List<UserActivity> activities = userActivityRepository.findByUserIdAndTestInfoOrderByQuestionNumAsc(userId,
+                session);
 
         if (activities.isEmpty()) {
-            throw new CustomApiException("해당 회차에 대한 활동 기록이 없습니다");
+            throw new CustomApiException("해당 회차에 대한 활동 기록이 없습니다.");
         }
 
-        Map<String, DailyScoreDto> dailyScores = new HashMap<>();
-        DailyScoreDto scoreDto = new DailyScoreDto();
+        Map<String, ExamTestResult.SubjectDetails> subjectDetailsMap = new HashMap<>();
+        List<ExamTestResult.ResultDto> subjectResultsList = new ArrayList<>();
 
         for (UserActivity activity : activities) {
-            log.debug("활동 ID: {}에 대한 처리 중", activity.getId());
-            
-            if (activity.getQuestion() != null && activity.getQuestion().getSkill() != null) {
-                String skillTitle = activity.getQuestion().getSkill().getTitle();
-                Double score = activity.getScore();
-                log.debug("스킬: {}, 점수: {}에 대한 점수 추가 중", skillTitle, score);
-                scoreDto.addScore(skillTitle, score);
-            } else {
-                log.warn("활동 ID: {}에 대한 문제 또는 스킬 정보가 누락되었습니다", activity.getId());
-            }
+            Question question = activity.getQuestion();
+            Skill skill = question.getSkill();
+
+            String subjectTitle = skill.getTitle(); // 직접 Skill의 title 사용
+            ExamTestResult.SubjectDetails subjectDetails = subjectDetailsMap.computeIfAbsent(subjectTitle,
+                    k -> new ExamTestResult.SubjectDetails(subjectTitle));
+
+            subjectDetails.addScore(skill.getKeyConcepts(), activity.getScore());
+
+            subjectResultsList.add(new ExamTestResult.ResultDto(
+                    skill.getKeyConcepts(),
+                    question.getQuestion(),
+                    activity.isCorrection()));
         }
 
-        dailyScores.put(session, scoreDto);
+        subjectDetailsMap.values().forEach(ExamTestResult.SubjectDetails::adjustTotalScore);
 
-        log.info("상세 테스트 결과 조회 완료");
-        return new WeeklyTestResultDto(dailyScores);
+        List<ExamTestResult.SubjectDetails> userExamInfoList = new ArrayList<>(subjectDetailsMap.values());
+
+        log.info("Completed processing for getDaySubjectDetails");
+        return new ExamTestResult.Response(session, userExamInfoList, subjectResultsList);
     }
 }
