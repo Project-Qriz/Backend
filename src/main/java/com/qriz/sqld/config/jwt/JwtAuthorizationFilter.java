@@ -26,34 +26,81 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
         super(authenticationManager);
     }
 
-    // JWT 토큰 헤더를 추가하지 않아도 해당 필터는 통과는 할 수 있지만, 결국 시큐리티단에서 세션 값 검증에 실패함.
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
 
         if (isHeaderVerify(request, response)) {
-            // 토큰이 존재함
-            log.debug("디버그 : 토큰이 존재함");
+            String accessToken = request.getHeader(JwtVO.HEADER).replace(JwtVO.TOKEN_PREFIX, "");
+            String refreshToken = request.getHeader(JwtVO.REFRESH_HEADER);
 
-            String token = request.getHeader(JwtVO.HEADER).replace(JwtVO.TOKEN_PREFIX, "");
-            LoginUser loginUser = JwtProcess.verify(token);
-            log.debug("디버그 : 토큰이 검증이 완료됨");
+            try {
+                // Access Token 검증
+                if (JwtProcess.isTokenValid(accessToken)) {
+                    // Access Token이 유효한 경우
+                    LoginUser loginUser = JwtProcess.verify(accessToken);
 
-            // 임시 세션 (UserDetails 타입 or username)
-            Authentication authentication = new UsernamePasswordAuthenticationToken(loginUser, null,
-                    loginUser.getAuthorities()); // id, role 만 존재
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            log.debug("디버그 : 임시 세션이 생성됨");
+                    // 만료가 임박한 경우 갱신
+                    if (JwtProcess.isTokenExpiringNear(accessToken)) {
+                        String newToken = JwtProcess.extendAccessToken(loginUser);
+                        response.setHeader(JwtVO.HEADER, newToken);
+                        log.debug("디버그 : Access Token 자동 갱신 완료");
+                    }
+
+                    authenticateUser(loginUser);
+                } else {
+                    // Access Token이 만료된 경우, Refresh Token으로 갱신 시도
+                    if (refreshToken != null && refreshToken.startsWith(JwtVO.TOKEN_PREFIX)) {
+                        refreshToken = refreshToken.replace(JwtVO.TOKEN_PREFIX, "");
+
+                        if (JwtProcess.isTokenValid(refreshToken)) {
+                            LoginUser loginUser = JwtProcess.verify(refreshToken);
+                            String newAccessToken = JwtProcess.createAccessToken(loginUser);
+                            response.setHeader(JwtVO.HEADER, newAccessToken);
+
+                            // Refresh Token도 만료가 임박한 경우 같이 갱신
+                            if (JwtProcess.isTokenExpiringNear(refreshToken)) {
+                                String newRefreshToken = JwtProcess.createRefreshToken(loginUser);
+                                response.setHeader(JwtVO.REFRESH_HEADER, newRefreshToken);
+                                log.debug("디버그 : Access Token과 Refresh Token 모두 갱신 완료");
+                            } else {
+                                log.debug("디버그 : Access Token 갱신 완료");
+                            }
+
+                            authenticateUser(loginUser);
+                        } else {
+                            log.error("디버그 : Refresh Token이 만료됨");
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Refresh token expired");
+                            return;
+                        }
+                    } else {
+                        log.error("디버그 : 유효한 Refresh Token이 없음");
+                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "No valid refresh token");
+                        return;
+                    }
+                }
+
+            } catch (Exception e) {
+                log.error("디버그 : 토큰 검증 실패", e);
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
+                return;
+            }
         }
+
         chain.doFilter(request, response);
+    }
+
+    private void authenticateUser(LoginUser loginUser) {
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                loginUser,
+                null,
+                loginUser.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        log.debug("디버그 : 토큰 검증 완료 및 임시 세션 생성됨");
     }
 
     private boolean isHeaderVerify(HttpServletRequest request, HttpServletResponse response) {
         String header = request.getHeader(JwtVO.HEADER);
-        if (header == null || !header.startsWith(JwtVO.TOKEN_PREFIX)) {
-            return false;
-        } else {
-            return true;
-        }
+        return header != null && header.startsWith(JwtVO.TOKEN_PREFIX);
     }
 }

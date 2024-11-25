@@ -1,4 +1,4 @@
-package com.qriz.sqld.domain.userActivity;
+package com.qriz.sqld.domain.UserActivity;
 
 import java.time.LocalDateTime;
 import java.util.List;

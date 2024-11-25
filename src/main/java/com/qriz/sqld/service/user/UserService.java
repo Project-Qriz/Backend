@@ -7,11 +7,10 @@ import com.qriz.sqld.domain.skillLevel.SkillLevelRepository;
 import com.qriz.sqld.domain.survey.SurveyRepository;
 import com.qriz.sqld.domain.user.User;
 import com.qriz.sqld.domain.user.UserRepository;
-import com.qriz.sqld.domain.userActivity.UserActivityRepository;
 import com.qriz.sqld.dto.user.UserReqDto;
+import com.qriz.sqld.domain.UserActivity.UserActivityRepository;
 import com.qriz.sqld.dto.user.UserRespDto;
 import com.qriz.sqld.handler.ex.CustomApiException;
-import com.qriz.sqld.util.RedisUtil;
 
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -28,7 +27,6 @@ public class UserService {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final BCryptPasswordEncoder passwordEncoder;
-    private final RedisUtil redisUtil;
     private final UserRepository userRepository;
     private final UserDailyRepository userDailyRepository;
     private final SkillLevelRepository skillLevelRepository;
@@ -51,12 +49,6 @@ public class UserService {
 
         // 3. dto 응답
         return new UserRespDto.JoinRespDto(userPS);
-    }
-
-    // 로그 아웃
-    public void logout(String username) {
-        redisUtil.deleteData("RT:" + username);
-        redisUtil.deleteData("AT:" + username);
     }
 
     // 아이디 찾기

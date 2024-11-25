@@ -1,6 +1,5 @@
 package com.qriz.sqld;
 
-import com.qriz.sqld.util.RedisUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,9 +17,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 class QrizApplicationTests {
 
     @Autowired
-    private RedisUtil redisUtil;
-
-    @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
     @Test
@@ -35,8 +31,6 @@ class QrizApplicationTests {
         String refreshTokenKey = "RT:" + username;
         String accessTokenValue = "testAccessToken";
         String refreshTokenValue = "testRefreshToken";
-        redisUtil.setData(accessTokenKey, accessTokenValue);
-        redisUtil.setData(refreshTokenKey, refreshTokenValue);
 
         // 로그아웃 요청 보내기
         RestTemplate restTemplate = new RestTemplate();
@@ -55,8 +49,5 @@ class QrizApplicationTests {
         assertThat(response.getStatusCodeValue()).isEqualTo(200);
         assertThat(response.getBody()).contains("로그아웃 성공");
 
-        // Redis에서 키가 삭제되었는지 확인
-        assertThat(redisUtil.getData(accessTokenKey)).isNull();
-        assertThat(redisUtil.getData(refreshTokenKey)).isNull();
     }
 }

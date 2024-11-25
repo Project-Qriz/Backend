@@ -39,24 +39,31 @@ public class Question {
     private String examSession;
 
     // 문항
+    @Column(columnDefinition = "LONGTEXT")
     private String question;
 
     // 선택지 1
+    @Column(columnDefinition = "LONGTEXT")
     private String option1;
 
     // 선택지 2
+    @Column(columnDefinition = "LONGTEXT")
     private String option2;
 
     // 선택지 3
+    @Column(columnDefinition = "LONGTEXT")
     private String option3;
 
     // 선택지 4
+    @Column(columnDefinition = "LONGTEXT")
     private String option4;
 
     // 정답 (선택지 1/선택지 2/선택지 3/선택지 4)
+    @Column(columnDefinition = "LONGTEXT")
     private String answer;
 
     // 해설
+    @Column(columnDefinition = "LONGTEXT")
     private String solution;
 
     // 난이도

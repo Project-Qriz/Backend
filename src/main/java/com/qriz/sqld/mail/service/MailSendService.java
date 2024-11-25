@@ -1,58 +1,117 @@
 package com.qriz.sqld.mail.service;
 
+import java.time.LocalDateTime;
 import java.util.Random;
-import java.util.UUID;
-
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.qriz.sqld.util.RedisUtil;
-
+import com.qriz.sqld.mail.domain.EmailVerification;
+import com.qriz.sqld.mail.domain.EmailVerificationRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RequiredArgsConstructor
 @Service
 public class MailSendService {
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
     private final EmailService emailService;
-    private final RedisUtil redisUtil;
-    private int authNumber;
-
+    private final EmailVerificationRepository verificationRepository;
     private static final String LOGO_PATH = "src/main/resources/static/images/logo.png";
+    private static final String SENDER_EMAIL = "ori178205@gmail.com";
 
     // 인증번호 확인
+    @Transactional
     public boolean CheckAuthNum(String email, String authNum) {
-        if (redisUtil.getData(authNum) == null) {
-            return false;
-        } else if (redisUtil.getData(authNum).equals(email)) {
-            return true;
-        } else {
-            return false;
-        }
+        return verificationRepository
+                .findByEmailAndAuthNumberAndVerifiedFalse(email, authNum)
+                .map(verification -> {
+                    // 만료 시간 체크
+                    if (verification.isExpired()) {
+                        verificationRepository.delete(verification);
+                        log.debug("인증번호가 만료되었습니다. email: {}", email);
+                        return false;
+                    }
+
+                    // 인증 성공 처리
+                    verification.verify();
+                    verificationRepository.save(verification);
+                    log.debug("인증 성공. email: {}", email);
+                    return true;
+                })
+                .orElseGet(() -> {
+                    log.debug("유효하지 않은 인증번호. email: {}, authNum: {}", email, authNum);
+                    return false;
+                });
     }
 
-    // 임의의 6자리 양수를 반환
-    public void makeRandomNumber() {
+    // 인증번호 생성
+    private String makeRandomNumber() {
         Random r = new Random();
-        authNumber = r.nextInt(900000) + 100000;
+        int number = r.nextInt(900000) + 100000;
+        return String.valueOf(number);
     }
 
     // 이메일 전송
+    @Transactional
     public String joinEmail(String email) {
-        makeRandomNumber();
-        String setFrom = "ori178205@gmail.com";
-        String toMail = email;
+        // 이전 인증 정보 삭제
+        verificationRepository.deleteByEmail(email);
+
+        // 새 인증번호 생성
+        String authNumber = makeRandomNumber();
+
+        // 이메일 내용 생성 및 전송
         String title = "인증번호를 확인해 주세요!";
-        String content = generateHtmlContent(Integer.toString(authNumber));
+        String content = generateHtmlContent(authNumber);
 
         try {
-            emailService.sendEmailWithInlineImage(setFrom, toMail, title, content, LOGO_PATH, "logo");
-        } catch (Exception e) {
-            // 로그 처리 또는 예외 처리
-            e.printStackTrace();
-        }
+            emailService.sendEmailWithInlineImage(
+                    SENDER_EMAIL,
+                    email,
+                    title,
+                    content,
+                    LOGO_PATH,
+                    "logo");
 
-        redisUtil.setDataExpire(Integer.toString(authNumber), toMail, 60 * 3L);
-        return Integer.toString(authNumber);
+            // DB에 인증 정보 저장 (3분 유효)
+            EmailVerification verification = EmailVerification.builder()
+                    .email(email)
+                    .authNumber(authNumber)
+                    .expiryDate(LocalDateTime.now().plusMinutes(3))
+                    .verified(false)
+                    .build();
+
+            verificationRepository.save(verification);
+            log.debug("인증 이메일 발송 성공. email: {}", email);
+
+            return authNumber;
+        } catch (Exception e) {
+            log.error("이메일 발송 실패. email: {}", email, e);
+            throw new RuntimeException("이메일 발송에 실패했습니다.", e);
+        }
+    }
+
+    // 비밀번호 재설정 링크 생성
+    @Transactional
+    public String generatePasswordResetUrl(String email) {
+        String authNumber = makeRandomNumber();
+
+        // 이전 인증 정보 삭제
+        verificationRepository.deleteByEmail(email);
+
+        // 새 인증 정보 저장
+        EmailVerification verification = EmailVerification.builder()
+                .email(email)
+                .authNumber(authNumber)
+                .expiryDate(LocalDateTime.now().plusMinutes(3))
+                .verified(false)
+                .build();
+
+        verificationRepository.save(verification);
+
+        return "http://localhost:8081/api/v1/reset-password?auth=" + authNumber + "&email=" + email;
     }
 
     private String generateHtmlContent(String authNumber) {
@@ -83,7 +142,8 @@ public class MailSendService {
                 "              </td>\n" +
                 "            </tr>\n" +
                 "            <tr>\n" +
-                "              <td style=\"font-weight: semibold; font-size: 16px; color: #666666; padding: 0 30px 40px 30px;\">\n" +
+                "              <td style=\"font-weight: semibold; font-size: 16px; color: #666666; padding: 0 30px 40px 30px;\">\n"
+                +
                 "                아래 인증번호를 인증번호 입력 창에<br>입력해주세요.\n" +
                 "              </td>\n" +
                 "            </tr>\n" +
@@ -109,18 +169,11 @@ public class MailSendService {
                 "                이 코드를 요청하지 않은 경우, 즉시 암호를 변경하시기 바랍니다.\n" +
                 "              </td>\n" +
                 "            </tr>\n" +
-                "            </tr>\n" +
                 "          </table>\n" +
                 "        </td>\n" +
                 "      </tr>\n" +
                 "    </table>\n" +
                 "  </body>\n" +
                 "</html>";
-    }
-
-    public String generatePasswordReseUrl(String email) {
-        String token = UUID.randomUUID().toString();
-        redisUtil.setDataExpire(token, email, 60 * 3L); // 토큰을 Redis 에 저장, 3 분간 유효
-        return "http://localhost:8081/api/v1/reset-password?token=" + token;
     }
 }

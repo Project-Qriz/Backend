@@ -5,11 +5,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.qriz.sqld.domain.UserActivity.UserActivity;
+import com.qriz.sqld.domain.UserActivity.UserActivityRepository;
 import com.qriz.sqld.domain.clip.ClipRepository;
 import com.qriz.sqld.domain.clip.Clipped;
 import com.qriz.sqld.domain.question.Question;
-import com.qriz.sqld.domain.userActivity.UserActivity;
-import com.qriz.sqld.domain.userActivity.UserActivityRepository;
 import com.qriz.sqld.dto.clip.ClipReqDto;
 import com.qriz.sqld.dto.clip.ClipRespDto;
 import com.qriz.sqld.dto.daily.ResultDetailDto;
@@ -55,28 +55,112 @@ public class ClipService {
 
     @Transactional(readOnly = true)
     public List<ClipRespDto> getClippedQuestions(Long userId, List<String> keyConcepts, boolean onlyIncorrect,
-            Integer category) {
-        Integer latestDayNumber = clipRepository.findLatestDayNumberByUserId(userId);
-        if (latestDayNumber == null) {
-            return new ArrayList<>(); // 클립된 문제가 없는 경우 빈 리스트 반환
+            Integer category, String testInfo) {
+        
+        log.info(
+                "Filtering clips with params - userId: {}, keyConcepts: {}, onlyIncorrect: {}, category: {}, testInfo: {}",
+                userId, keyConcepts, onlyIncorrect, category, testInfo);
+
+        List<Clipped> clippedList;
+        
+        // 조건별로 적절한 Repository 메서드 호출
+        if (testInfo != null) {
+            clippedList = clipRepository.findByUserIdAndTestInfoOrderByQuestionNum(userId, testInfo);
+        } else if (category != null) {
+            if (keyConcepts != null && !keyConcepts.isEmpty()) {
+                clippedList = clipRepository.findByUserIdAndKeyConceptsAndCategory(userId, keyConcepts, category);
+            } else {
+                clippedList = clipRepository.findByUserIdAndCategory(userId, category);
+            }
+        } else if (keyConcepts != null && !keyConcepts.isEmpty()) {
+            clippedList = clipRepository.findByUserIdAndKeyConcepts(userId, keyConcepts);
+        } else {
+            clippedList = clipRepository.findByUserActivity_User_IdOrderByDateDesc(userId);
         }
-        String dayNumber = "Day" + latestDayNumber;
-        return getFilteredClippedQuestions(userId, keyConcepts, onlyIncorrect, category, dayNumber);
+
+        // 오답만 필터링
+        if (onlyIncorrect) {
+            clippedList = clippedList.stream()
+                    .filter(clip -> !clip.getUserActivity().isCorrection())
+                    .collect(Collectors.toList());
+        }
+
+        log.info("Found {} clips after filtering", clippedList.size());
+
+        return clippedList.stream()
+                .map(ClipRespDto::new)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ClipRespDto> getClippedQuestions(Long userId, List<String> keyConcepts, boolean onlyIncorrect,
+            Integer category) {
+        return getClippedQuestions(userId, keyConcepts, onlyIncorrect, category, null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> findAllTestInfosByUserId(Long userId) {
+        return clipRepository.findDistinctTestInfosByUserId(userId);
     }
 
     @Transactional(readOnly = true)
     public List<ClipRespDto> getFilteredClippedQuestions(Long userId, List<String> keyConcepts, boolean onlyIncorrect,
-            Integer category, String dayNumber) {
-        List<Clipped> clippedList = clipRepository.findByUserIdAndDayNumberOrderByQuestionNum(userId, dayNumber);
+            Integer category, String testInfo) {
+        List<Clipped> clippedList;
 
-        return clippedList.stream()
+        log.info(
+                "Filtering clips with params - userId: {}, keyConcepts: {}, onlyIncorrect: {}, category: {}, testInfo: {}",
+                userId, keyConcepts, onlyIncorrect, category, testInfo);
+
+        if (testInfo != null) {
+            clippedList = clipRepository.findByUserIdAndTestInfoOrderByQuestionNum(userId, testInfo);
+        } else {
+            if (keyConcepts == null || keyConcepts.isEmpty()) {
+                if (onlyIncorrect) {
+                    if (category == null) {
+                        clippedList = clipRepository.findIncorrectByUserId(userId);
+                    } else {
+                        clippedList = clipRepository.findIncorrectByUserIdAndCategory(userId, category);
+                        log.info("Found {} incorrect clips for category {}", clippedList.size(), category);
+                    }
+                } else {
+                    if (category == null) {
+                        clippedList = clipRepository.findByUserActivity_User_IdOrderByDateDesc(userId);
+                    } else {
+                        clippedList = clipRepository.findByUserIdAndCategory(userId, category);
+                        log.info("Found {} clips for category {}", clippedList.size(), category);
+                    }
+                }
+            } else {
+                if (onlyIncorrect) {
+                    if (category == null) {
+                        clippedList = clipRepository.findIncorrectByUserIdAndKeyConcepts(userId, keyConcepts);
+                    } else {
+                        clippedList = clipRepository.findIncorrectByUserIdAndKeyConceptsAndCategory(userId, keyConcepts,
+                                category);
+                    }
+                } else {
+                    if (category == null) {
+                        clippedList = clipRepository.findByUserIdAndKeyConcepts(userId, keyConcepts);
+                    } else {
+                        clippedList = clipRepository.findByUserIdAndKeyConceptsAndCategory(userId, keyConcepts,
+                                category);
+                    }
+                }
+            }
+        }
+
+        log.info("Raw clipped list size: {}", clippedList.size());
+
+        List<ClipRespDto> result = clippedList.stream()
                 .filter(clipped -> (keyConcepts == null || keyConcepts.isEmpty()
                         || keyConcepts.contains(clipped.getUserActivity().getQuestion().getSkill().getKeyConcepts())))
-                .filter(clipped -> (!onlyIncorrect || !clipped.getUserActivity().isCorrection()))
-                .filter(clipped -> (category == null
-                        || clipped.getUserActivity().getQuestion().getCategory() == category))
                 .map(ClipRespDto::new)
                 .collect(Collectors.toList());
+
+        log.info("Final result size after filtering: {}", result.size());
+
+        return result;
     }
 
     @Transactional(readOnly = true)
