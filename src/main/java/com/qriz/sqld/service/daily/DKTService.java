@@ -1,7 +1,5 @@
 package com.qriz.sqld.service.daily;
 
-import com.qriz.sqld.domain.userActivity.UserActivity;
-
 import lombok.RequiredArgsConstructor;
 
 import org.slf4j.Logger;
@@ -10,6 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import com.qriz.sqld.domain.UserActivity.UserActivity;
 
 import java.util.HashMap;
 import java.util.List;

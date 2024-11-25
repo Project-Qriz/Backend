@@ -52,12 +52,6 @@ public class UserController {
         return new ResponseEntity<>(new ResponseDto<>(1, "회원가입 성공", joinRespDto), HttpStatus.CREATED);
     }
 
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestParam String username) {
-        userService.logout(username);
-        return ResponseEntity.ok("로그아웃 성공");
-    }
-
     // 아이디 찾기
     @GetMapping("/find-username")
     public ResponseEntity<?> findUSername(@RequestBody @Valid UserReqDto.FindUsernameReqDto findUsernameReqDto,
@@ -82,10 +76,10 @@ public class UserController {
         }
 
         // 해당 계정이 있는지 확인
-        Optional<User> userOpt = userRepository.findByUsernameAndEmail(findPwdReqDto.getUsername(),
+        Optional<User> userOpt = userRepository.findByEmail(
                 findPwdReqDto.getEmail());
 
-        logger.info("사용자 아이디: '{}' 와 이메일: '{}'", findPwdReqDto.getUsername(),
+        logger.info("사용자 아이디: '{}' 와 이메일: '{}'",
                 findPwdReqDto.getEmail());
 
         try {
@@ -94,7 +88,7 @@ public class UserController {
                 // 계정이 확인되면 이메일 전송
                 // 사용자 정보를 세션에 저장
                 HttpSession session = request.getSession();
-                session.setAttribute("username", findPwdReqDto.getUsername());
+                session.setAttribute("email", findPwdReqDto.getEmail());
                 session.setMaxInactiveInterval(300); // 세션 유지 시간 5분
 
                 mailService.joinEmail(findPwdReqDto.getEmail());

@@ -2,11 +2,9 @@ package com.qriz.sqld.config;
 
 import com.qriz.sqld.config.jwt.JwtAuthenticationFilter;
 import com.qriz.sqld.config.jwt.JwtAuthorizationFilter;
+import com.qriz.sqld.config.jwt.JwtVO;
 import com.qriz.sqld.domain.user.UserEnum;
-import com.qriz.sqld.handler.logout.CustomLogoutHandler;
-import com.qriz.sqld.handler.logout.CustomLogoutSuccessHandler;
 import com.qriz.sqld.util.CustomResponseUtil;
-import com.qriz.sqld.util.RedisUtil;
 
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -32,26 +30,24 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final RedisUtil redisUtil;
-    
+
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         logger.debug("디버그 : BCryptPasswordEncoder 빈 등록됨");
         return new BCryptPasswordEncoder();
     }
-    
+
     @Bean
     public DefaultAuthorizationCodeTokenResponseClient defaultAuthorizationCodeTokenResponseClient() {
         return new DefaultAuthorizationCodeTokenResponseClient();
     }
-    
-    // JWT 필터 등록이 필요함
+
+    // JWT 필터 등록
     public class CustomSecurityFilterManager extends AbstractHttpConfigurer<CustomSecurityFilterManager, HttpSecurity> {
         @Override
         public void configure(HttpSecurity builder) throws Exception {
             AuthenticationManager authenticationManager = builder.getSharedObject(AuthenticationManager.class);
-            JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(authenticationManager,
-                    redisUtil);
+            JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(authenticationManager);
             builder.addFilter(jwtAuthenticationFilter);
             builder.addFilter(new JwtAuthorizationFilter(authenticationManager));
             super.configure(builder);
@@ -69,7 +65,6 @@ public class SecurityConfig {
         // jSessionId를 서버쪽에서 관리안함
         http.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         http.formLogin(login -> login.disable());
-        // httpBasic은 브라우저가 팝업창을 이용해서 사용자 인증을 진행한다.
         http.httpBasic(basic -> basic.disable());
 
         // 필터 적용
@@ -85,6 +80,7 @@ public class SecurityConfig {
             CustomResponseUtil.fail(response, "권한이 없습니다", HttpStatus.FORBIDDEN);
         }));
 
+        // URL 권한 설정
         http.authorizeRequests(requests -> requests
                 .antMatchers("/api/v1/**").authenticated()
                 .antMatchers("/api/admin/v1/**").hasRole("" + UserEnum.ADMIN)
@@ -94,8 +90,9 @@ public class SecurityConfig {
         // 로그아웃
         http.logout(logout -> logout
                 .logoutUrl("/api/logout")
-                .addLogoutHandler(new CustomLogoutHandler(redisUtil))
-                .logoutSuccessHandler(new CustomLogoutSuccessHandler())
+                .logoutSuccessHandler((request, response, authentication) -> {
+                    CustomResponseUtil.success(response, "로그아웃 성공");
+                })
                 .invalidateHttpSession(true)
                 .clearAuthentication(true)
                 .deleteCookies("JSESSIONID"));
@@ -110,7 +107,11 @@ public class SecurityConfig {
         configuration.addAllowedMethod("*"); // GET, POST, PUT, DELETE (Javascript 요청 허용)
         configuration.addAllowedOriginPattern("*"); // 모든 IP 주소 허용
         configuration.setAllowCredentials(true); // 클라이언트에서 쿠키 요청 허용
-        configuration.addExposedHeader("Authorization");
+
+        // JWT 관련 헤더 노출 설정
+        configuration.addExposedHeader(JwtVO.HEADER); // Authorization 헤더
+        configuration.addExposedHeader(JwtVO.REFRESH_HEADER); // Refresh-Token 헤더
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

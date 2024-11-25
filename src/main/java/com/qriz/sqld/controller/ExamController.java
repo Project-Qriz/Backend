@@ -12,10 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.qriz.sqld.config.auth.LoginUser;
 import com.qriz.sqld.dto.ResponseDto;
-import com.qriz.sqld.dto.daily.DaySubjectDetailsDto;
 import com.qriz.sqld.dto.daily.ResultDetailDto;
-import com.qriz.sqld.dto.daily.WeeklyTestResultDto;
-import com.qriz.sqld.dto.exam.ExamResultListDto;
 import com.qriz.sqld.dto.exam.ExamTestResult;
 import com.qriz.sqld.dto.test.TestReqDto;
 import com.qriz.sqld.service.exam.ExamService;

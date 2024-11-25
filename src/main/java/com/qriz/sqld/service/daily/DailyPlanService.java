@@ -1,13 +1,13 @@
 package com.qriz.sqld.service.daily;
 
+import com.qriz.sqld.domain.UserActivity.UserActivity;
+import com.qriz.sqld.domain.UserActivity.UserActivityRepository;
 import com.qriz.sqld.domain.daily.UserDaily;
 import com.qriz.sqld.domain.daily.UserDailyRepository;
 import com.qriz.sqld.domain.skill.Skill;
 import com.qriz.sqld.domain.skill.SkillRepository;
 import com.qriz.sqld.domain.user.User;
 import com.qriz.sqld.domain.user.UserRepository;
-import com.qriz.sqld.domain.userActivity.UserActivity;
-import com.qriz.sqld.domain.userActivity.UserActivityRepository;
 import com.qriz.sqld.dto.daily.UserDailyDto;
 import com.qriz.sqld.util.WeekendPlanUtil;
 

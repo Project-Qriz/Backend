@@ -17,9 +17,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // 닉네임과 이메일로 아이디 찾기
     Optional<User> findByNicknameAndEmail(String nickname, String email);
 
-    // 아이디와 이메일로 계정 존재 확인
-    Optional<User> findByUsernameAndEmail(String username, String email);
-
     @Modifying
     @Query("DELETE FROM User u WHERE u = :user")
     void delete(@Param("user") User user);

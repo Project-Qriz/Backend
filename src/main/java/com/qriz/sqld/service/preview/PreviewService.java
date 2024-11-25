@@ -2,6 +2,8 @@ package com.qriz.sqld.service.preview;
 
 import com.qriz.sqld.domain.question.Question;
 import com.qriz.sqld.domain.question.QuestionRepository;
+import com.qriz.sqld.domain.UserActivity.UserActivity;
+import com.qriz.sqld.domain.UserActivity.UserActivityRepository;
 import com.qriz.sqld.domain.preview.UserPreviewTest;
 import com.qriz.sqld.domain.skill.Skill;
 import com.qriz.sqld.domain.skill.SkillRepository;
@@ -11,8 +13,6 @@ import com.qriz.sqld.domain.survey.Survey;
 import com.qriz.sqld.domain.survey.SurveyRepository;
 import com.qriz.sqld.domain.user.User;
 import com.qriz.sqld.domain.user.UserRepository;
-import com.qriz.sqld.domain.userActivity.UserActivity;
-import com.qriz.sqld.domain.userActivity.UserActivityRepository;
 import com.qriz.sqld.dto.preview.PreviewTestResult;
 import com.qriz.sqld.dto.preview.QuestionDto;
 import com.qriz.sqld.dto.preview.ResultDto;

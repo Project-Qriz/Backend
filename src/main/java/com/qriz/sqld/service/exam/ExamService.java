@@ -12,9 +12,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.qriz.sqld.domain.UserActivity.UserActivity;
+import com.qriz.sqld.domain.UserActivity.UserActivityRepository;
 import com.qriz.sqld.domain.clip.ClipRepository;
 import com.qriz.sqld.domain.clip.Clipped;
-import com.qriz.sqld.domain.daily.UserDaily;
 import com.qriz.sqld.domain.exam.UserExamSession;
 import com.qriz.sqld.domain.exam.UserExamSessionRepository;
 import com.qriz.sqld.domain.question.Question;
@@ -22,13 +23,7 @@ import com.qriz.sqld.domain.question.QuestionRepository;
 import com.qriz.sqld.domain.skill.Skill;
 import com.qriz.sqld.domain.user.User;
 import com.qriz.sqld.domain.user.UserRepository;
-import com.qriz.sqld.domain.userActivity.UserActivity;
-import com.qriz.sqld.domain.userActivity.UserActivityRepository;
-import com.qriz.sqld.dto.daily.DailyScoreDto;
 import com.qriz.sqld.dto.daily.ResultDetailDto;
-import com.qriz.sqld.dto.daily.WeeklyTestResultDto;
-import com.qriz.sqld.dto.exam.ExamResultListDto;
-import com.qriz.sqld.dto.exam.ExamScoreDto;
 import com.qriz.sqld.dto.exam.ExamTestResult;
 import com.qriz.sqld.dto.test.TestReqDto;
 import com.qriz.sqld.dto.test.TestRespDto;
@@ -50,23 +45,42 @@ public class ExamService {
 
     @Transactional(readOnly = true)
     public ExamTestResult getExamQuestionsBySession(Long userId, String session) {
-        UserExamSession userExamSession = userExamSessionRepository.findByUserIdAndSession(userId, session)
-                .orElseThrow(() -> new CustomApiException("해당 회차의 모의고사 세션을 찾을 수 없습니다."));
+        // 1. 해당 회차의 세션이 있는지 확인하고 없으면 생성
+        UserExamSession userExamSession = userExamSessionRepository
+                .findByUserIdAndSession(userId, session)
+                .orElseGet(() -> {
+                    User user = userRepository.findById(userId)
+                            .orElseThrow(() -> new CustomApiException("사용자를 찾을 수 없습니다."));
+                    UserExamSession newSession = new UserExamSession();
+                    newSession.setUser(user);
+                    newSession.setSession(session);
+                    newSession.setCompleted(false);
+                    newSession.setCompletedCount(0);
+                    return userExamSessionRepository.save(newSession);
+                });
 
-        if (userExamSession.isCompleted()) {
-            throw new CustomApiException("이미 완료된 모의고사입니다.");
-        }
-
+        // 2. 해당 회차의 문제들을 불러옴 (category=3은 모의고사를 의미)
         List<Question> examQuestions = questionRepository.findByCategoryAndExamSessionOrderById(3, session);
 
         if (examQuestions.isEmpty()) {
             throw new CustomApiException("해당 회차의 모의고사 문제를 찾을 수 없습니다.");
         }
 
+        // 3. 문제들을 DTO로 변환
         List<TestRespDto.ExamRespDto> questionDtos = examQuestions.stream()
-                .map(this::convertToExamRespDto)
+                .map(question -> new TestRespDto.ExamRespDto(
+                        question.getId(),
+                        question.getSkill().getId(),
+                        question.getCategory(),
+                        question.getQuestion(),
+                        question.getOption1(),
+                        question.getOption2(),
+                        question.getOption3(),
+                        question.getOption4(),
+                        question.getTimeLimit()))
                 .collect(Collectors.toList());
 
+        // 4. 총 제한 시간 계산
         int totalTimeLimit = examQuestions.stream()
                 .mapToInt(Question::getTimeLimit)
                 .sum();
@@ -74,21 +88,8 @@ public class ExamService {
         return new ExamTestResult(questionDtos, totalTimeLimit);
     }
 
-    private TestRespDto.ExamRespDto convertToExamRespDto(Question question) {
-        return new TestRespDto.ExamRespDto(
-                question.getId(),
-                question.getSkill().getId(),
-                question.getCategory(),
-                question.getQuestion(),
-                question.getOption1(),
-                question.getOption2(),
-                question.getOption3(),
-                question.getOption4(),
-                question.getTimeLimit());
-    }
-
     /**
-     * 데일리 테스트 제출 처리
+     * 모의고사 제출 처리
      * 
      * @param user             현재 사용자
      * @param testSubmitReqDto 테스트 제출 데이터

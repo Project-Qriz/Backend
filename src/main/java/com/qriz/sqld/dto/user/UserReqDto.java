@@ -71,9 +71,6 @@ public class UserReqDto {
     @Setter
     public static class FindPwdReqDto {
         @NotEmpty
-        private String username;
-        
-        @NotEmpty
         private String email;
     }
 
