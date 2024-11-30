@@ -1,10 +1,11 @@
 package com.qriz.sqld.mail.util;
 
-import com.qriz.sqld.mail.domain.EmailVerificationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.qriz.sqld.mail.domain.EmailVerification.EmailVerificationRepository;
 
 import java.time.LocalDateTime;
 
