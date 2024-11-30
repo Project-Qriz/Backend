@@ -55,8 +55,7 @@ public class UserService {
     @Transactional
     public UserRespDto.FindUsernameRespDto findUsername(UserReqDto.FindUsernameReqDto findUsernameReqDto) {
         // 1. 입력 닉네임과 이메일에 해당하는 계정이 있는지 검사
-        Optional<User> user = userRepository.findByNicknameAndEmail(findUsernameReqDto.getNickname(),
-                findUsernameReqDto.getEmail());
+        Optional<User> user = userRepository.findByEmail(findUsernameReqDto.getEmail());
 
         // 2. 사용자가 존재하지 않을 경우 예외 처리
         if (!user.isPresent()) {
@@ -70,7 +69,7 @@ public class UserService {
     @Transactional
     public UserRespDto.ChangePwdRespDto changePwd(String username, String password) {
         // 1. 사용자 찾기
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new CustomApiException("사용자를 찾을 수 없습니다."));
 
         // 2. 비밀번호 인코딩

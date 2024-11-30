@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Collections;
@@ -46,9 +47,12 @@ public class DailyPlanService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        List<Skill> allSkills = skillRepository.findAllByOrderByFrequencyDesc();
-        LocalDate startDate = LocalDate.now();
+        // frequency 내림차순으로 정렬된 스킬 리스트 가져오기
+        List<Skill> sortedSkills = skillRepository.findAll().stream()
+                .sorted(Comparator.comparing(Skill::getFrequency).reversed())
+                .collect(Collectors.toList());
 
+        LocalDate startDate = LocalDate.now();
         List<UserDaily> dailyPlans = new ArrayList<>();
 
         for (int day = 1; day <= 30; day++) {
@@ -58,29 +62,52 @@ public class DailyPlanService {
             userDaily.setCompleted(false);
             userDaily.setPlanDate(startDate.plusDays(day - 1));
 
-            if (day <= 21) {
+            if (day <= 21) { // Week 1-3
                 if (day % 7 == 6 || day % 7 == 0) {
-                    // 주말 (6일, 7일차): 복습
+                    // 주말: 복습일 (Day 6,7, 13,14, 20,21)
                     userDaily.setPlannedSkills(new ArrayList<>());
                     userDaily.setReviewDay(true);
                 } else {
-                    // 평일: 출제 빈도수에 기반한 개념
-                    int skillIndex = (day - 1) * 2 % allSkills.size();
-                    Skill skill1 = allSkills.get(skillIndex);
-                    Skill skill2 = allSkills.get((skillIndex + 1) % allSkills.size());
-                    userDaily.setPlannedSkills(List.of(skill1, skill2));
-                    userDaily.setReviewDay(false);
+                    // 평일: 순차적으로 스킬 할당 (frequency 순서대로)
+                    int weekday = getWeekdayCount(day);
+                    if (weekday > 0 && weekday <= 15) { // 총 15일의 평일
+                        int skillIndex = (weekday - 1) * 2; // 각 평일마다 2개의 스킬
+                        List<Skill> daySkills = Arrays.asList(
+                                sortedSkills.get(skillIndex), // frequency 상위 스킬
+                                sortedSkills.get(skillIndex + 1) // frequency 차상위 스킬
+                        );
+                        userDaily.setPlannedSkills(daySkills);
+                        userDaily.setReviewDay(false);
+                    }
                 }
             } else {
-                // Week 4: DKT 기반 문제 추천을 위한 준비
-                userDaily.setPlannedSkills(null); // null로 설정하여 DKT 기반 추천임을 나타냄
-                userDaily.setReviewDay(false); // 리뷰 데이가 아님을 나타냄
+                // Week 4 (Day 22-30): 종합 복습 및 모의 테스트 준비
+                userDaily.setPlannedSkills(null);
+                userDaily.setReviewDay(false);
             }
 
             dailyPlans.add(userDaily);
         }
 
         userDailyRepository.saveAll(dailyPlans);
+    }
+
+    /**
+     * 주어진 날짜의 평일 카운트를 반환
+     * 예: Day1 = 1, Day2 = 2, ..., Day5 = 5
+     * Day8 = 6, Day9 = 7, ..., Day12 = 10
+     * Day15 = 11, Day16 = 12, ..., Day19 = 15
+     */
+    private int getWeekdayCount(int day) {
+        if (day % 7 == 6 || day % 7 == 0)
+            return 0; // 주말
+
+        int week = (day - 1) / 7; // 0-based week number
+        int dayInWeek = day % 7; // 1-5
+        if (dayInWeek == 0)
+            dayInWeek = 7;
+
+        return week * 5 + dayInWeek;
     }
 
     public boolean canAccessDay(Long userId, String currentDayNumber) {

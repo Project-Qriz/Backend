@@ -7,6 +7,8 @@ import com.qriz.sqld.dto.ResponseDto;
 import com.qriz.sqld.dto.user.UserReqDto;
 import com.qriz.sqld.dto.user.UserRespDto;
 import com.qriz.sqld.handler.ex.CustomApiException;
+import com.qriz.sqld.mail.domain.EmailVerification.EmailVerification;
+import com.qriz.sqld.mail.domain.EmailVerification.EmailVerificationRepository;
 import com.qriz.sqld.mail.service.MailSendService;
 import com.qriz.sqld.service.user.UserService;
 
@@ -22,15 +24,11 @@ import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 
@@ -44,6 +42,7 @@ public class UserController {
     private final UserService userService;
     private final UserRepository userRepository;
     private final MailSendService mailService;
+    private final EmailVerificationRepository verificationRepository;
 
     // 회원 가입
     @PostMapping("/join")
@@ -52,86 +51,74 @@ public class UserController {
         return new ResponseEntity<>(new ResponseDto<>(1, "회원가입 성공", joinRespDto), HttpStatus.CREATED);
     }
 
-    // 아이디 찾기
-    @GetMapping("/find-username")
-    public ResponseEntity<?> findUSername(@RequestBody @Valid UserReqDto.FindUsernameReqDto findUsernameReqDto,
-            BindingResult bindingResult) {
-        UserRespDto.FindUsernameRespDto findUsernameRespDto = userService.findUsername(findUsernameReqDto);
-        return new ResponseEntity<>(new ResponseDto<>(1, "아이디 찾기 성공", findUsernameRespDto), HttpStatus.OK);
+    @PostMapping("/find-username")
+    public ResponseEntity<?> findUsername(@RequestBody @Valid UserReqDto.FindUsernameReqDto findUsernameReqDto) {
+        mailService.sendUsernameEmail(findUsernameReqDto.getEmail());
+        return new ResponseEntity<>(
+                new ResponseDto<>(1, "입력하신 이메일로 아이디가 전송되었습니다.", null),
+                HttpStatus.OK);
     }
 
     // 비밀번호 찾기
     @PostMapping("/find-pwd")
-    public ResponseEntity<?> findPwd(@RequestBody @Valid UserReqDto.FindPwdReqDto findPwdReqDto,
-            BindingResult bindingResult, HttpServletRequest request) {
+    public ResponseEntity<?> findPassword(@Valid @RequestBody UserReqDto.FindPwdReqDto findPwdReqDto) {
+        // 1. 사용자 존재 확인
+        userRepository.findByEmail(findPwdReqDto.getEmail())
+                .orElseThrow(() -> new CustomApiException("해당 이메일로 등록된 계정이 없습니다."));
 
-        if (bindingResult.hasErrors()) {
-            List<String> errorMessages = bindingResult.getAllErrors()
-                    .stream()
-                    .map(ObjectError::getDefaultMessage)
-                    .collect(Collectors.toList());
+        // 2. 비밀번호 재설정 이메일 발송
+        mailService.sendPasswordResetEmail(findPwdReqDto.getEmail());
 
-            // 클라이언트에 에러 응답 전송
-            return ResponseEntity.badRequest().body(new ResponseDto<>(-1, "입력값 검증 실패", errorMessages));
+        return ResponseEntity.ok(
+                new ResponseDto<>(1, "비밀번호 재설정 링크가 이메일로 발송되었습니다.", null));
+    }
+
+    @PostMapping("/pwd-reset")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody UserReqDto.ResetPasswordReqDto resetPasswordReqDto) {
+        // 1. 토큰 검증
+        EmailVerification verification = verificationRepository
+                .findByEmailAndAuthNumberAndVerifiedFalse(resetPasswordReqDto.getEmail(),
+                        resetPasswordReqDto.getToken())
+                .orElseThrow(() -> new CustomApiException("유효하지 않거나 만료된 링크입니다."));
+
+        if (verification.isExpired()) {
+            verificationRepository.delete(verification);
+            throw new CustomApiException("링크가 만료되었습니다. 비밀번호 찾기를 다시 시도해주세요.");
         }
 
-        // 해당 계정이 있는지 확인
-        Optional<User> userOpt = userRepository.findByEmail(
-                findPwdReqDto.getEmail());
+        // 2. 비밀번호 변경
+        userService.resetPassword(resetPasswordReqDto.getEmail(), resetPasswordReqDto.getNewPassword());
 
-        logger.info("사용자 아이디: '{}' 와 이메일: '{}'",
-                findPwdReqDto.getEmail());
+        // 3. 검증 정보 업데이트
+        verification.verify();
+        verificationRepository.save(verification);
 
-        try {
-            if (userOpt.isPresent()) {
-
-                // 계정이 확인되면 이메일 전송
-                // 사용자 정보를 세션에 저장
-                HttpSession session = request.getSession();
-                session.setAttribute("email", findPwdReqDto.getEmail());
-                session.setMaxInactiveInterval(300); // 세션 유지 시간 5분
-
-                mailService.joinEmail(findPwdReqDto.getEmail());
-
-                return new ResponseEntity<>(new ResponseDto<>(1, "해당 이메일로 인증번호가 전송되었습니다.", null), HttpStatus.OK);
-            } else {
-                return ResponseEntity.badRequest()
-                        .body(new ResponseDto<>(-1, "해당 계정이 존재하지 않습니다. 아이디 혹은 이메일을 확인해주세요.", null));
-            }
-        } catch (CustomApiException e) {
-            logger.error("디버깅", e.getMessage());
-            return new ResponseEntity<>(new ResponseDto<>(-1, "에러: " + e.getMessage(), null), HttpStatus.UNAUTHORIZED);
-        } catch (Exception e) {
-            logger.error("예외 처리", e.getMessage());
-            return new ResponseEntity<>(new ResponseDto<>(-1, "예외 발생", null), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        return ResponseEntity.ok(
+                new ResponseDto<>(1, "비밀번호가 성공적으로 변경되었습니다.", null));
     }
 
     // 비밀번호 변경
     @PostMapping(value = { "/v1/change-pwd", "/change-pwd" })
-    public ResponseEntity<?> changePwd(@RequestBody @Valid UserReqDto.ChangePwdReqDto changePwdReqDto,
-            BindingResult bindingResult, HttpSession session) {
+    public ResponseEntity<?> changePwd(
+            @AuthenticationPrincipal LoginUser loginUser,
+            @RequestBody @Valid UserReqDto.ChangePwdReqDto changePwdReqDto,
+            BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
             List<String> errorMessages = bindingResult.getAllErrors()
                     .stream()
                     .map(ObjectError::getDefaultMessage)
                     .collect(Collectors.toList());
-
-            // 클라이언트에 에러 응답 전송
-            return ResponseEntity.badRequest().body(new ResponseDto<>(-1, "입력값 검증 실패", errorMessages));
+            return ResponseEntity.badRequest()
+                    .body(new ResponseDto<>(-1, "입력값 검증 실패", errorMessages));
         }
 
-        // 1. 세션에서 사용자 식별 정보 확인
-        String username = (String) session.getAttribute("username");
-        if (username == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("인증 시간이 만료되었습니다. 재시도 해주세요");
-        }
-        // 2. 비밀번호 변경
-        UserRespDto.ChangePwdRespDto changePwdRespDto = userService.changePwd(username, changePwdReqDto.getPassword());
-        // 3. 비밀번호 변경 후 세션 무효화
-        session.invalidate();
-        return new ResponseEntity<>(new ResponseDto<>(1, "비밀번호 변경 성공", changePwdRespDto), HttpStatus.OK);
+        UserRespDto.ChangePwdRespDto changePwdRespDto = userService.changePwd(loginUser.getUser().getEmail(),
+                changePwdReqDto.getPassword());
+
+        // 401 응답으로 클라이언트가 로그아웃 처리하도록 함
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ResponseDto<>(1, "비밀번호가 변경되었습니다. 다시 로그인해 주세요.", changePwdRespDto));
     }
 
     // 아이디 중복 확인
