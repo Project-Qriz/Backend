@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.qriz.sqld.dto.ResponseDto;
@@ -63,22 +62,5 @@ public class EmailController {
                     new ResponseDto<>(-1, "인증번호가 유효하지 않거나 만료되었습니다.", null),
                     HttpStatus.BAD_REQUEST);
         }
-    }
-
-    @PostMapping("/reset-password")
-    public ResponseEntity<?> resetPassword(@RequestBody @Valid EmailCheckDto emailCheckDto,
-            @RequestParam("newPassword") String newPassword) {
-        boolean isVerified = mailService.CheckAuthNum(emailCheckDto.getEmail(), emailCheckDto.getAuthNum());
-
-        if (!isVerified) {
-            return new ResponseEntity<>(
-                    new ResponseDto<>(-1, "인증번호가 유효하지 않거나 만료되었습니다.", null),
-                    HttpStatus.BAD_REQUEST);
-        }
-
-        userService.resetPassword(emailCheckDto.getEmail(), newPassword);
-        return new ResponseEntity<>(
-                new ResponseDto<>(1, "비밀번호가 성공적으로 변경되었습니다.", null),
-                HttpStatus.OK);
     }
 }
