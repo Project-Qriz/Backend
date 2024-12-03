@@ -92,13 +92,14 @@ public class UserReqDto {
 
     @Getter
     @Setter
-    public class ResetPasswordReqDto {
+    public static class ResetPasswordReqDto {
         @Email
         private String email;
         @NotEmpty
         private String token;
         @NotEmpty
-        @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=*!])(?=\\\\S+$).{8,16}$")
+        @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=*!])(?=\\S+$).{8,16}$", 
+                 message = "비밀번호는 8자 이상이며, 영문, 숫자, 특수문자를 포함해야 합니다.")
         private String newPassword;
     }
 }
