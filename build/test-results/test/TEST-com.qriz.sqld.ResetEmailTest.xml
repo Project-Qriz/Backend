@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.qriz.sqld.ResetEmailTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2024-12-03T12:04:36" hostname="DESKTOP-FRJRV6O" time="0.286">
+  <properties/>
+  <testcase name="비밀번호 재설정 - 잘못된 비밀번호 형식" classname="com.qriz.sqld.ResetEmailTest" time="0.177"/>
+  <testcase name="비밀번호 재설정 - 성공 케이스" classname="com.qriz.sqld.ResetEmailTest" time="0.086"/>
+  <testcase name="비밀번호 재설정 - 유효하지 않은 토큰" classname="com.qriz.sqld.ResetEmailTest" time="0.006"/>
+  <testcase name="비밀번호 재설정 - 만료된 토큰" classname="com.qriz.sqld.ResetEmailTest" time="0.007"/>
+  <testcase name="비밀번호 재설정 - 이미 사용된 토큰" classname="com.qriz.sqld.ResetEmailTest" time="0.006"/>
+  <system-out><![CDATA[21:04:29.356 [Test worker] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating CacheAwareContextLoaderDelegate from class [org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate]
+21:04:29.368 [Test worker] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating BootstrapContext using constructor [public org.springframework.test.context.support.DefaultBootstrapContext(java.lang.Class,org.springframework.test.context.CacheAwareContextLoaderDelegate)]
+21:04:29.397 [Test worker] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating TestContextBootstrapper for test class [com.qriz.sqld.ResetEmailTest] from class [org.springframework.boot.test.context.SpringBootTestContextBootstrapper]
+21:04:29.407 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper - Neither @ContextConfiguration nor @ContextHierarchy found for test class [com.qriz.sqld.ResetEmailTest], using SpringBootContextLoader
+21:04:29.411 [Test worker] DEBUG org.springframework.test.context.support.AbstractContextLoader - Did not detect default resource location for test class [com.qriz.sqld.ResetEmailTest]: class path resource [com/qriz/sqld/ResetEmailTest-context.xml] does not exist
+21:04:29.411 [Test worker] DEBUG org.springframework.test.context.support.AbstractContextLoader - Did not detect default resource location for test class [com.qriz.sqld.ResetEmailTest]: class path resource [com/qriz/sqld/ResetEmailTestContext.groovy] does not exist
+21:04:29.411 [Test worker] INFO org.springframework.test.context.support.AbstractContextLoader - Could not detect default resource locations for test class [com.qriz.sqld.ResetEmailTest]: no resource found for suffixes {-context.xml, Context.groovy}.
+21:04:29.412 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.qriz.sqld.ResetEmailTest]: ResetEmailTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+21:04:29.466 [Test worker] DEBUG org.springframework.test.context.support.ActiveProfilesUtils - Could not find an 'annotation declaring class' for annotation type [org.springframework.test.context.ActiveProfiles] and class [com.qriz.sqld.ResetEmailTest]
+21:04:29.510 [Test worker] DEBUG org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider - Identified candidate component class: file [C:\Users\user\Desktop\QRIZ\SQLD\Start\BE-v5\build\classes\java\main\com\qriz\sqld\QrizApplication.class]
+21:04:29.511 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.qriz.sqld.QrizApplication for test class com.qriz.sqld.ResetEmailTest
+21:04:29.608 [Test worker] DEBUG org.springframework.boot.test.context.SpringBootTestContextBootstrapper - @TestExecutionListeners is not present for class [com.qriz.sqld.ResetEmailTest]: using defaults.
+21:04:29.609 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper - Loaded default TestExecutionListener class names from location [META-INF/spring.factories]: [org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener, org.springframework.security.test.context.support.ReactorContextTestExecutionListener, org.springframework.boot.test.autoconfigure.restdocs.RestDocsTestExecutionListener, org.springframework.boot.test.autoconfigure.web.client.MockRestServiceServerResetTestExecutionListener, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrintOnlyOnFailureTestExecutionListener, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverTestExecutionListener, org.springframework.boot.test.autoconfigure.webservices.client.MockWebServiceServerTestExecutionListener, org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener, org.springframework.boot.test.mock.mockito.ResetMocksTestExecutionListener, org.springframework.test.context.web.ServletTestExecutionListener, org.springframework.test.context.support.DirtiesContextBeforeModesTestExecutionListener, org.springframework.test.context.event.ApplicationEventsTestExecutionListener, org.springframework.test.context.support.DependencyInjectionTestExecutionListener, org.springframework.test.context.support.DirtiesContextTestExecutionListener, org.springframework.test.context.transaction.TransactionalTestExecutionListener, org.springframework.test.context.jdbc.SqlScriptsTestExecutionListener, org.springframework.test.context.event.EventPublishingTestExecutionListener]
+21:04:29.627 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper - Using TestExecutionListeners: [org.springframework.test.context.web.ServletTestExecutionListener@14a54ef6, org.springframework.test.context.support.DirtiesContextBeforeModesTestExecutionListener@20921b9b, org.springframework.test.context.event.ApplicationEventsTestExecutionListener@867ba60, org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener@5ba745bc, org.springframework.boot.test.autoconfigure.SpringBootDependencyInjectionTestExecutionListener@654b72c0, org.springframework.test.context.support.DirtiesContextTestExecutionListener@55b5e331, org.springframework.test.context.transaction.TransactionalTestExecutionListener@6034e75d, org.springframework.test.context.jdbc.SqlScriptsTestExecutionListener@15fc442, org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener@3f3c7bdb, org.springframework.test.context.event.EventPublishingTestExecutionListener@456abb66, org.springframework.security.test.context.support.ReactorContextTestExecutionListener@2a3a299, org.springframework.boot.test.autoconfigure.restdocs.RestDocsTestExecutionListener@7da10b5b, org.springframework.boot.test.autoconfigure.web.client.MockRestServiceServerResetTestExecutionListener@219f4597, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrintOnlyOnFailureTestExecutionListener@31be6b49, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverTestExecutionListener@2e16b08d, org.springframework.boot.test.autoconfigure.webservices.client.MockWebServiceServerTestExecutionListener@5b989dc7, org.springframework.boot.test.mock.mockito.ResetMocksTestExecutionListener@70d8de]
+21:04:29.630 [Test worker] DEBUG org.springframework.test.context.support.AbstractDirtiesContextTestExecutionListener - Before test class: context [DefaultTestContext@78d39a69 testClass = ResetEmailTest, testInstance = [null], testMethod = [null], testException = [null], mergedContextConfiguration = [WebMergedContextConfiguration@3c818ac4 testClass = ResetEmailTest, locations = '{}', classes = '{class com.qriz.sqld.QrizApplication}', contextInitializerClasses = '[]', activeProfiles = '{}', propertySourceLocations = '{}', propertySourceProperties = '{org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true}', contextCustomizers = set[org.springframework.boot.test.autoconfigure.actuate.metrics.MetricsExportContextCustomizerFactory$DisableMetricExportContextCustomizer@64df9a61, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@4b3fa0b3, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizerFactory$Customizer@2c7d121c, [ImportsContextCustomizer@5b69d40d key = [org.springframework.boot.test.autoconfigure.web.servlet.MockMvcAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebClientAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebDriverAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcSecurityConfiguration, org.springframework.boot.test.autoconfigure.web.reactive.WebTestClientAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@180e6ac4, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@319988b0, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@5fa38654, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@2cf92cc7, org.springframework.boot.test.context.SpringBootTestArgs@1, org.springframework.boot.test.context.SpringBootTestWebEnvironment@11bb571c], resourceBasePath = 'src/main/webapp', contextLoader = 'org.springframework.boot.test.context.SpringBootContextLoader', parent = [null]], attributes = map['org.springframework.test.context.web.ServletTestExecutionListener.activateListener' -> true]], class annotated with @DirtiesContext [false] with mode [null].
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::               (v2.7.16)
+
+2024-12-03 21:04:30.075  INFO 12840 --- [    Test worker] com.qriz.sqld.ResetEmailTest             : Starting ResetEmailTest using Java 11.0.19 on DESKTOP-FRJRV6O with PID 12840 (started by user in C:\Users\user\Desktop\QRIZ\SQLD\Start\BE-v5)
+2024-12-03 21:04:30.076  INFO 12840 --- [    Test worker] com.qriz.sqld.ResetEmailTest             : No active profile set, falling back to 1 default profile: "default"
+2024-12-03 21:04:30.972  INFO 12840 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2024-12-03 21:04:30.974  INFO 12840 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2024-12-03 21:04:31.224  INFO 12840 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 243 ms. Found 14 JPA repository interfaces.
+2024-12-03 21:04:31.242  INFO 12840 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2024-12-03 21:04:31.243  INFO 12840 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-12-03 21:04:31.277  INFO 12840 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.UserActivity.UserActivityRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 21:04:31.277  INFO 12840 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.application.ApplicationRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 21:04:31.278  INFO 12840 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.apply.UserApplyRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 21:04:31.279  INFO 12840 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.clip.ClipRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 21:04:31.279  INFO 12840 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.daily.UserDailyRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 21:04:31.280  INFO 12840 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.exam.UserExamSessionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 21:04:31.280  INFO 12840 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.preview.UserPreviewTestRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 21:04:31.280  INFO 12840 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.question.QuestionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 21:04:31.281  INFO 12840 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.skill.SkillRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 21:04:31.281  INFO 12840 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.skillLevel.SkillLevelRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 21:04:31.281  INFO 12840 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.survey.SurveyRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 21:04:31.283  INFO 12840 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.user.UserRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 21:04:31.284  INFO 12840 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.mail.domain.EmailVerification.EmailVerificationRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 21:04:31.285  INFO 12840 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.mail.domain.PasswordResetToken.PasswordResetTokenRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 21:04:31.285  INFO 12840 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 31 ms. Found 0 Redis repository interfaces.
+2024-12-03 21:04:32.557  INFO 12840 --- [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2024-12-03 21:04:32.613  INFO 12840 --- [    Test worker] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 5.6.15.Final
+2024-12-03 21:04:32.653  INFO 12840 --- [    Test worker] o.hibernate.annotations.common.Version   : HCANN000001: Hibernate Commons Annotations {5.1.2.Final}
+2024-12-03 21:04:32.760  INFO 12840 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2024-12-03 21:04:32.845  INFO 12840 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2024-12-03 21:04:32.891  INFO 12840 --- [    Test worker] org.hibernate.dialect.Dialect            : HHH000400: Using dialect: org.hibernate.dialect.MariaDB53Dialect
+2024-12-03 21:04:33.596  INFO 12840 --- [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform]
+2024-12-03 21:04:33.607  INFO 12840 --- [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2024-12-03 21:04:34.324  WARN 12840 --- [    Test worker] o.h.dialect.function.TemplateRenderer    : HHH000174: Function template anticipated 3 arguments, but 2 arguments encountered
+2024-12-03 21:04:35.196  INFO 12840 --- [    Test worker] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@2cf29dce, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@5cdd5ff9, org.springframework.security.web.context.SecurityContextPersistenceFilter@37bafef8, org.springframework.security.web.header.HeaderWriterFilter@7785430c, org.springframework.web.filter.CorsFilter@2b55ac77, org.springframework.security.web.authentication.logout.LogoutFilter@620ba2b0, com.qriz.sqld.config.jwt.JwtAuthenticationFilter@1c5c0d2a, com.qriz.sqld.config.jwt.JwtAuthorizationFilter@24f8ff82, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@4756c8f3, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@3cc9bde9, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@12ec5e73, org.springframework.security.web.session.SessionManagementFilter@184b24d4, org.springframework.security.web.access.ExceptionTranslationFilter@41a3656f, org.springframework.security.web.access.intercept.FilterSecurityInterceptor@35cc5b75]
+2024-12-03 21:04:35.708  INFO 12840 --- [    Test worker] o.s.b.a.h2.H2ConsoleAutoConfiguration    : H2 console available at '/h2-console'. Database available at 'jdbc:mariadb://localhost/qriz?user=root&password=***'
+2024-12-03 21:04:36.582  INFO 12840 --- [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2024-12-03 21:04:36.582  INFO 12840 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2024-12-03 21:04:36.583  INFO 12840 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+Hibernate: 
+    select
+        count(*) as col_0_0_ 
+    from
+        skill skill0_
+2024-12-03 21:04:36.631  INFO 12840 --- [    Test worker] com.qriz.sqld.ResetEmailTest             : Started ResetEmailTest in 6.844 seconds (JVM running for 8.252)
+2024-12-03 21:04:36.813  WARN 12840 --- [    Test worker] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.web.bind.MethodArgumentNotValidException: Validation failed for argument [0] in public org.springframework.http.ResponseEntity<?> com.qriz.sqld.controller.UserController.resetPassword(com.qriz.sqld.dto.user.UserReqDto$ResetPasswordReqDto): [Field error in object 'resetPasswordReqDto' on field 'newPassword': rejected value [weak]; codes [Pattern.resetPasswordReqDto.newPassword,Pattern.newPassword,Pattern.java.lang.String,Pattern]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [resetPasswordReqDto.newPassword,newPassword]; arguments []; default message [newPassword],[Ljavax.validation.constraints.Pattern$Flag;@1c7094eb,^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=*!])(?=\S+$).{8,16}$]; default message [비밀번호는 8자 이상이며, 영문, 숫자, 특수문자를 포함해야 합니다.]] ]
+
+MockHttpServletRequest:
+      HTTP Method = POST
+      Request URI = /api/pwd-reset
+       Parameters = {}
+          Headers = [Content-Type:"application/json;charset=UTF-8", Content-Length:"71"]
+             Body = {"email":"test@example.com","token":"valid-token","newPassword":"weak"}
+    Session Attrs = {}
+
+Handler:
+             Type = com.qriz.sqld.controller.UserController
+           Method = com.qriz.sqld.controller.UserController#resetPassword(ResetPasswordReqDto)
+
+Async:
+    Async started = false
+     Async result = null
+
+Resolved Exception:
+             Type = org.springframework.web.bind.MethodArgumentNotValidException
+
+ModelAndView:
+        View name = null
+             View = null
+            Model = null
+
+FlashMap:
+       Attributes = null
+
+MockHttpServletResponse:
+           Status = 400
+    Error message = null
+          Headers = [Vary:"Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers", X-Content-Type-Options:"nosniff", X-XSS-Protection:"1; mode=block", Cache-Control:"no-cache, no-store, max-age=0, must-revalidate", Pragma:"no-cache", Expires:"0"]
+     Content type = null
+             Body = 
+    Forwarded URL = null
+   Redirected URL = null
+          Cookies = []
+
+MockHttpServletRequest:
+      HTTP Method = POST
+      Request URI = /api/pwd-reset
+       Parameters = {}
+          Headers = [Content-Type:"application/json;charset=UTF-8", Content-Length:"82"]
+             Body = {"email":"test@example.com","token":"valid-token","newPassword":"newPassword123!"}
+    Session Attrs = {}
+
+Handler:
+             Type = com.qriz.sqld.controller.UserController
+           Method = com.qriz.sqld.controller.UserController#resetPassword(ResetPasswordReqDto)
+
+Async:
+    Async started = false
+     Async result = null
+
+Resolved Exception:
+             Type = null
+
+ModelAndView:
+        View name = null
+             View = null
+            Model = null
+
+FlashMap:
+       Attributes = null
+
+MockHttpServletResponse:
+           Status = 401
+    Error message = null
+          Headers = [Vary:"Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers", Content-Type:"application/json;charset=UTF-8", X-Content-Type-Options:"nosniff", X-XSS-Protection:"1; mode=block", Cache-Control:"no-cache, no-store, max-age=0, must-revalidate", Pragma:"no-cache", Expires:"0"]
+     Content type = application/json;charset=UTF-8
+             Body = {"code":1,"msg":"비밀번호가 성공적으로 변경되었습니다. 다시 로그인해 주세요.","data":null}
+    Forwarded URL = null
+   Redirected URL = null
+          Cookies = []
+
+MockHttpServletRequest:
+      HTTP Method = POST
+      Request URI = /api/pwd-reset
+       Parameters = {}
+          Headers = [Content-Type:"application/json;charset=UTF-8", Content-Length:"82"]
+             Body = {"email":"test@example.com","token":"valid-token","newPassword":"newPassword123!"}
+    Session Attrs = {}
+
+Handler:
+             Type = com.qriz.sqld.controller.UserController
+           Method = com.qriz.sqld.controller.UserController#resetPassword(ResetPasswordReqDto)
+
+Async:
+    Async started = false
+     Async result = null
+
+Resolved Exception:
+             Type = null
+
+ModelAndView:
+        View name = null
+             View = null
+            Model = null
+
+FlashMap:
+       Attributes = null
+
+MockHttpServletResponse:
+           Status = 400
+    Error message = null
+          Headers = [Vary:"Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers", Content-Type:"application/json;charset=UTF-8", X-Content-Type-Options:"nosniff", X-XSS-Protection:"1; mode=block", Cache-Control:"no-cache, no-store, max-age=0, must-revalidate", Pragma:"no-cache", Expires:"0"]
+     Content type = application/json;charset=UTF-8
+             Body = {"code":-1,"msg":"유효하지 않거나 만료된 링크입니다.","data":null}
+    Forwarded URL = null
+   Redirected URL = null
+          Cookies = []
+
+MockHttpServletRequest:
+      HTTP Method = POST
+      Request URI = /api/pwd-reset
+       Parameters = {}
+          Headers = [Content-Type:"application/json;charset=UTF-8", Content-Length:"82"]
+             Body = {"email":"test@example.com","token":"valid-token","newPassword":"newPassword123!"}
+    Session Attrs = {}
+
+Handler:
+             Type = com.qriz.sqld.controller.UserController
+           Method = com.qriz.sqld.controller.UserController#resetPassword(ResetPasswordReqDto)
+
+Async:
+    Async started = false
+     Async result = null
+
+Resolved Exception:
+             Type = null
+
+ModelAndView:
+        View name = null
+             View = null
+            Model = null
+
+FlashMap:
+       Attributes = null
+
+MockHttpServletResponse:
+           Status = 400
+    Error message = null
+          Headers = [Vary:"Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers", Content-Type:"application/json;charset=UTF-8", X-Content-Type-Options:"nosniff", X-XSS-Protection:"1; mode=block", Cache-Control:"no-cache, no-store, max-age=0, must-revalidate", Pragma:"no-cache", Expires:"0"]
+     Content type = application/json;charset=UTF-8
+             Body = {"code":-1,"msg":"링크가 만료되었습니다. 비밀번호 찾기를 다시 시도해주세요.","data":null}
+    Forwarded URL = null
+   Redirected URL = null
+          Cookies = []
+
+MockHttpServletRequest:
+      HTTP Method = POST
+      Request URI = /api/pwd-reset
+       Parameters = {}
+          Headers = [Content-Type:"application/json;charset=UTF-8", Content-Length:"82"]
+             Body = {"email":"test@example.com","token":"valid-token","newPassword":"newPassword123!"}
+    Session Attrs = {}
+
+Handler:
+             Type = com.qriz.sqld.controller.UserController
+           Method = com.qriz.sqld.controller.UserController#resetPassword(ResetPasswordReqDto)
+
+Async:
+    Async started = false
+     Async result = null
+
+Resolved Exception:
+             Type = null
+
+ModelAndView:
+        View name = null
+             View = null
+            Model = null
+
+FlashMap:
+       Attributes = null
+
+MockHttpServletResponse:
+           Status = 400
+    Error message = null
+          Headers = [Vary:"Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers", Content-Type:"application/json;charset=UTF-8", X-Content-Type-Options:"nosniff", X-XSS-Protection:"1; mode=block", Cache-Control:"no-cache, no-store, max-age=0, must-revalidate", Pragma:"no-cache", Expires:"0"]
+     Content type = application/json;charset=UTF-8
+             Body = {"code":-1,"msg":"유효하지 않거나 만료된 링크입니다.","data":null}
+    Forwarded URL = null
+   Redirected URL = null
+          Cookies = []
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
         @Index(name = "idx_email_authNumber", columnList = "email,authNumber")
 })
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

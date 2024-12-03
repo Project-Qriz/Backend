@@ -19,6 +19,8 @@ import lombok.AccessLevel;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PasswordResetToken {
+    public static final int EXPIRATION_MINUTES = 30;  // 추가: 만료 시간 상수
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -184,36 +184,43 @@ public class MailSendService {
 
     @Transactional
     public void sendPasswordResetEmail(String email) {
-        // 이전 인증 정보 삭제
-        verificationRepository.deleteByEmail(email);
+        // 이전 토큰 삭제
+        resetTokenRepository.deleteByEmail(email);
 
-        // 인증 토큰 생성 (UUID 사용)
+        // 새 토큰 생성
         String resetToken = UUID.randomUUID().toString();
 
-        // 인증 정보 저장
+        // 토큰 정보 저장
         PasswordResetToken passwordResetToken = PasswordResetToken.builder()
                 .email(email)
-                .token(resetToken) // token 필드를 resetToken으로 사용
-                .expiryDate(LocalDateTime.now().plusMinutes(30)) // 30분 유효
+                .token(resetToken)
+                .expiryDate(LocalDateTime.now().plusMinutes(PasswordResetToken.EXPIRATION_MINUTES))
                 .used(false)
                 .build();
 
         resetTokenRepository.save(passwordResetToken);
 
         // 딥링크 생성
-        String resetLink = String.format("yourapp://reset-password?token=%s&email=%s", resetToken, email);
+        String resetLink = String.format("qriz://password-reset?token=%s&email=%s", resetToken, email);
 
-        // 이메일 발송
-        String title = "비밀번호 재설정";
-        String content = generatePasswordResetEmailContent(resetLink);
+        // 개발 환경에서만 토큰 값 로그 출력
+        log.debug("Generated reset token for testing: {}", resetToken);
 
-        emailService.sendEmailWithInlineImage(
-                SENDER_EMAIL,
-                email,
-                title,
-                content,
-                LOGO_PATH,
-                "logo");
+        try {
+            // 이메일 발송
+            emailService.sendEmailWithInlineImage(
+                    SENDER_EMAIL,
+                    email,
+                    "비밀번호 재설정",
+                    generatePasswordResetEmailContent(resetLink),
+                    LOGO_PATH,
+                    "logo");
+            log.debug("비밀번호 재설정 이메일 발송 성공. email: {}", email);
+        } catch (Exception e) {
+            log.error("비밀번호 재설정 이메일 발송 실패. email: {}", email, e);
+            resetTokenRepository.delete(passwordResetToken); // 실패시 토큰 삭제
+            throw new CustomApiException("이메일 발송에 실패했습니다. 다시 시도해 주세요.");
+        }
     }
 
     // 비밀번호 재설정 토큰 검증
@@ -267,12 +274,17 @@ public class MailSendService {
                 "            </tr>\n" +
                 "            <tr>\n" +
                 "              <td style=\"padding: 0 30px;\">\n" +
-                "                <a href=\"" + resetLink
-                + "\" style=\"display: inline-block; background-color: #3A6EFE; color: #ffffff; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-weight: bold;\">비밀번호 재설정하기</a>\n"
+                "                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\">\n" +
+                "                  <tr>\n" +
+                "                    <td style=\"text-align: center;\">\n" +
+                "                      <a href=\"" + resetLink
+                + "\" style=\"display: inline-block; min-width: 180px; background-color: #3A6EFE; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: bold;\">비밀번호 재설정하기</a>\n"
                 +
+                "                    </td>\n" +
+                "                  </tr>\n" +
+                "                </table>\n" +
                 "              </td>\n" +
                 "            </tr>\n" +
-                "            <tr>\n" +
                 "              <td style=\"font-size: 14px; color: #999999; padding: 30px 30px 0 30px;\">\n" +
                 "                본 링크는 30분 동안만 유효합니다.<br>\n" +
                 "                비밀번호 재설정을 요청하지 않으셨다면, 이 메일을 무시하셔도 됩니다.\n" +
