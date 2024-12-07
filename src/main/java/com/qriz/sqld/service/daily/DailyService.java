@@ -283,6 +283,7 @@ public class DailyService {
         ResultDetailDto result = ResultDetailDto.builder()
                 .skillName(skill.getKeyConcepts())
                 .question(question.getQuestion())
+                .question(question.getDescription())
                 .option1(question.getOption1())
                 .option2(question.getOption2())
                 .option3(question.getOption3())

@@ -84,6 +84,7 @@ public class DailyPlanService {
                 // Week 4 (Day 22-30): 종합 복습 및 모의 테스트 준비
                 userDaily.setPlannedSkills(null);
                 userDaily.setReviewDay(false);
+                userDaily.setComprehensiveReviewDay(true);
             }
 
             dailyPlans.add(userDaily);

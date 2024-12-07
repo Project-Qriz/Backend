@@ -23,6 +23,7 @@ public class UserDailyDto {
     private LocalDate completionDate;
     private List<SkillDto> plannedSkills;
     private boolean reviewDay;
+    private boolean comprehensiveReviewDay;
 
     public UserDailyDto(UserDaily userDaily) {
         this.id = userDaily.getId();
@@ -34,6 +35,7 @@ public class UserDailyDto {
                 .map(SkillDto::new)
                 .collect(Collectors.toList());
         this.reviewDay = userDaily.isReviewDay();
+        this.comprehensiveReviewDay = userDaily.isComprehensiveReviewDay();
     }
 
     @Getter

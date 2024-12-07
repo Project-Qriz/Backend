@@ -68,22 +68,11 @@ public class ExamService {
 
         // 3. 문제들을 DTO로 변환
         List<TestRespDto.ExamRespDto> questionDtos = examQuestions.stream()
-                .map(question -> new TestRespDto.ExamRespDto(
-                        question.getId(),
-                        question.getSkill().getId(),
-                        question.getCategory(),
-                        question.getQuestion(),
-                        question.getOption1(),
-                        question.getOption2(),
-                        question.getOption3(),
-                        question.getOption4(),
-                        question.getTimeLimit()))
+                .map(TestRespDto.ExamRespDto::new)
                 .collect(Collectors.toList());
 
         // 4. 총 제한 시간 계산
-        int totalTimeLimit = examQuestions.stream()
-                .mapToInt(Question::getTimeLimit)
-                .sum();
+        int totalTimeLimit = 5400;
 
         return new ExamTestResult(questionDtos, totalTimeLimit);
     }
@@ -219,6 +208,7 @@ public class ExamService {
         ResultDetailDto result = ResultDetailDto.builder()
                 .skillName(skill.getKeyConcepts())
                 .question(question.getQuestion())
+                .question(question.getDescription())
                 .option1(question.getOption1())
                 .option2(question.getOption2())
                 .option3(question.getOption3())
