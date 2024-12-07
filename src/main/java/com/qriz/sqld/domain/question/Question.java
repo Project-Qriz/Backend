@@ -42,6 +42,10 @@ public class Question {
     @Column(columnDefinition = "LONGTEXT")
     private String question;
 
+    // 부가 설명 (상황, 테이블 구조 등)
+    @Column(columnDefinition = "LONGTEXT")
+    private String description;
+
     // 선택지 1
     @Column(columnDefinition = "LONGTEXT")
     private String option1;
