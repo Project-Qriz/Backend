@@ -55,6 +55,9 @@ public class UserDaily {
     // 복습날짜 확인
     private boolean reviewDay;
 
+    // 종합 복습 날짜 여부
+    private boolean comprehensiveReviewDay;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_daily_skills",
             joinColumns = @JoinColumn(name = "daily_id"),

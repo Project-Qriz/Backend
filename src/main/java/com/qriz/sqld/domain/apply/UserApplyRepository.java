@@ -22,4 +22,8 @@ public interface UserApplyRepository extends JpaRepository<UserApply, Long> {
     @Modifying
     @Query("DELETE FROM UserApply ua WHERE ua.user = :user")
     void deleteByUser(@Param("user") User user);
+
+    @Query("SELECT ua FROM UserApply ua WHERE ua.user.id = :userId AND ua.application.id = :applicationId")
+    Optional<UserApply> findByUserIdAndApplicationId(@Param("userId") Long userId,
+            @Param("applicationId") Long applicationId);
 }

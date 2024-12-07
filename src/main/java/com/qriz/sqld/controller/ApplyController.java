@@ -22,39 +22,50 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api")
+@RequestMapping("/api/v1")
 public class ApplyController {
 
     private final ApplyService applyService;
 
     // 시험 접수 목록 조회
-    @GetMapping("/v1/application-list")
+    @GetMapping("/application-list")
     public ResponseEntity<?> getApplicationList() {
         ApplicationRespDto.ApplyListRespDto applyListRespDto = applyService.applyList();
         return new ResponseEntity<>(new ResponseDto<>(1, "시험 접수 목록 불러오기 성공", applyListRespDto), HttpStatus.OK);
     }
 
     // 시험 접수
-    @PostMapping("/v1/apply")
+    @PostMapping("/apply")
     public ResponseEntity<?> apply(@AuthenticationPrincipal LoginUser loginUser,
             @RequestBody @Valid ApplicationReqDto.ApplyReqDto applyReqDto) {
 
         System.out.println("applyReqDto = " + applyReqDto);
         ApplicationRespDto.ApplyRespDto applyRespDto = applyService.apply(applyReqDto, loginUser);
-        return new ResponseEntity<>(new ResponseDto<>(1, "등록 시험 조회", applyRespDto), HttpStatus.OK);
+        return new ResponseEntity<>(new ResponseDto<>(1, "시험 등록 성공", applyRespDto), HttpStatus.OK);
     }
 
     // 등록한 시험 접수 정보 조회
-    @GetMapping("/v1/applied")
+    @GetMapping("/applied")
     public ResponseEntity<?> getApplied(@AuthenticationPrincipal LoginUser loginUser) {
         ApplicationRespDto.ApplyRespDto applyRespDto = applyService.getApplied(loginUser.getUser().getId());
         return new ResponseEntity<>(new ResponseDto<>(1, "등록 시험 조회", applyRespDto), HttpStatus.OK);
     }
 
     // 등록한 시험에 대한 D-Day
-    @GetMapping("/v1/applied/d-day")
+    @GetMapping("/applied/d-day")
     public ResponseEntity<?> getDDay(@AuthenticationPrincipal LoginUser loginUser) {
         ApplicationRespDto.ExamDDayRespDto examDDayRespDto = applyService.getDDay(loginUser.getUser().getId());
         return new ResponseEntity<>(new ResponseDto<>(1, "남은 D-Day 계산 성공", examDDayRespDto), HttpStatus.OK);
+    }
+
+    // 접수 정보 변경
+    @PostMapping("/apply-modify")
+    public ResponseEntity<?> modifyApplication(
+            @AuthenticationPrincipal LoginUser loginUser,
+            @RequestBody @Valid ApplicationReqDto.ModifyReqDto modifyReqDto) {
+        ApplicationRespDto.ApplyRespDto modifyRespDto = applyService.modifyApplication(modifyReqDto, loginUser);
+        return new ResponseEntity<>(
+                new ResponseDto<>(1, "시험 접수 변경 성공", modifyRespDto),
+                HttpStatus.OK);
     }
 }
