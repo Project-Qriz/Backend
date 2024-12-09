@@ -10,6 +10,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
+import com.qriz.sqld.domain.exam.UserExamSession;
 import com.qriz.sqld.domain.question.Question;
 import com.qriz.sqld.domain.user.User;
 
@@ -44,6 +45,10 @@ public class UserActivity {
     @JoinColumn(name = "question_id")
     private Question question;
 
+    @ManyToOne
+    @JoinColumn(name = "exam_session_id")
+    private UserExamSession examSession;
+
     /**
      * 테스트 정보
      * (Preview Test, dayNumber, session)
@@ -58,6 +63,7 @@ public class UserActivity {
     /**
      * 사용자가 체크한 정답
      */
+    @Column(columnDefinition = "TEXT")
     private String checked;
 
     /**

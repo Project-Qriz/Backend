@@ -1,10 +1,17 @@
 package com.qriz.sqld.service.exam;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -24,8 +31,8 @@ import com.qriz.sqld.domain.skill.Skill;
 import com.qriz.sqld.domain.user.User;
 import com.qriz.sqld.domain.user.UserRepository;
 import com.qriz.sqld.dto.daily.ResultDetailDto;
+import com.qriz.sqld.dto.exam.ExamReqDto;
 import com.qriz.sqld.dto.exam.ExamTestResult;
-import com.qriz.sqld.dto.test.TestReqDto;
 import com.qriz.sqld.dto.test.TestRespDto;
 import com.qriz.sqld.handler.ex.CustomApiException;
 
@@ -35,244 +42,322 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ExamService {
 
-    private final UserExamSessionRepository userExamSessionRepository;
-    private final QuestionRepository questionRepository;
-    private final UserRepository userRepository;
-    private final UserActivityRepository userActivityRepository;
-    private final ClipRepository clipRepository;
+        private final UserExamSessionRepository userExamSessionRepository;
+        private final QuestionRepository questionRepository;
+        private final UserRepository userRepository;
+        private final UserActivityRepository userActivityRepository;
+        private final ClipRepository clipRepository;
 
-    private final Logger log = LoggerFactory.getLogger(ExamService.class);
+        private final Logger log = LoggerFactory.getLogger(ExamService.class);
 
-    @Transactional(readOnly = true)
-    public ExamTestResult getExamQuestionsBySession(Long userId, String session) {
-        // 1. 해당 회차의 세션이 있는지 확인하고 없으면 생성
-        UserExamSession userExamSession = userExamSessionRepository
-                .findByUserIdAndSession(userId, session)
-                .orElseGet(() -> {
-                    User user = userRepository.findById(userId)
-                            .orElseThrow(() -> new CustomApiException("사용자를 찾을 수 없습니다."));
-                    UserExamSession newSession = new UserExamSession();
-                    newSession.setUser(user);
-                    newSession.setSession(session);
-                    newSession.setCompleted(false);
-                    newSession.setCompletedCount(0);
-                    return userExamSessionRepository.save(newSession);
-                });
+        @Transactional(readOnly = true)
+        public ExamTestResult getExamQuestionsBySession(Long userId, String session) {
+                // 해당 회차의 문제들을 불러옴 (category=3은 모의고사를 의미)
+                List<Question> examQuestions = questionRepository.findByCategoryAndExamSessionOrderById(3, session);
 
-        // 2. 해당 회차의 문제들을 불러옴 (category=3은 모의고사를 의미)
-        List<Question> examQuestions = questionRepository.findByCategoryAndExamSessionOrderById(3, session);
+                if (examQuestions.isEmpty()) {
+                        throw new CustomApiException("해당 회차의 모의고사 문제를 찾을 수 없습니다.");
+                }
 
-        if (examQuestions.isEmpty()) {
-            throw new CustomApiException("해당 회차의 모의고사 문제를 찾을 수 없습니다.");
+                // 문제들을 DTO로 변환
+                List<TestRespDto.ExamRespDto> questionDtos = examQuestions.stream()
+                                .map(TestRespDto.ExamRespDto::new)
+                                .collect(Collectors.toList());
+
+                // 총 제한 시간 계산
+                int totalTimeLimit = 5400;
+
+                return new ExamTestResult(questionDtos, totalTimeLimit);
         }
 
-        // 3. 문제들을 DTO로 변환
-        List<TestRespDto.ExamRespDto> questionDtos = examQuestions.stream()
-                .map(TestRespDto.ExamRespDto::new)
-                .collect(Collectors.toList());
+        /**
+         * 모의고사 제출 처리
+         * 
+         * @param user             현재 사용자
+         * @param testSubmitReqDto 테스트 제출 데이터
+         * @return 테스트 제출 결과 목록
+         */
+        @Transactional
+        public List<TestRespDto.ExamSubmitRespDto> processExamSubmission(Long userId, String session,
+                        ExamReqDto examSubmitReqDto) {
+                User user = userRepository.findById(userId)
+                                .orElseThrow(() -> new CustomApiException("사용자를 찾을 수 없습니다."));
 
-        // 4. 총 제한 시간 계산
-        int totalTimeLimit = 5400;
+                // 오늘 날짜의 세션만 삭제
+                LocalDateTime today = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
+                LocalDateTime tomorrow = today.plusDays(1);
 
-        return new ExamTestResult(questionDtos, totalTimeLimit);
-    }
+                List<UserExamSession> todaySessions = userExamSessionRepository
+                                .findByUserIdAndSessionAndCompletionDateBetween(userId, session, today, tomorrow);
 
-    /**
-     * 모의고사 제출 처리
-     * 
-     * @param user             현재 사용자
-     * @param testSubmitReqDto 테스트 제출 데이터
-     * @return 테스트 제출 결과 목록
-     */
-    @Transactional
-    public List<TestRespDto.TestSubmitRespDto> processExamSubmission(Long userId, String session,
-            TestReqDto testSubmitReqDto) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomApiException("사용자를 찾을 수 없습니다."));
+                for (UserExamSession previousSession : todaySessions) {
+                        // 관련된 UserActivity와 Clipped 엔티티도 함께 삭제
+                        List<UserActivity> activities = userActivityRepository.findByExamSession(previousSession);
+                        for (UserActivity activity : activities) {
+                                clipRepository.deleteByUserActivity(activity);
+                        }
+                        userActivityRepository.deleteByExamSession(previousSession);
+                        userExamSessionRepository.delete(previousSession);
+                }
 
-        UserExamSession userExamSession = userExamSessionRepository.findByUserIdAndSession(userId, session)
-                .orElseThrow(() -> new CustomApiException("해당 회차의 모의고사 세션을 찾을 수 없습니다."));
+                // 새로운 세션 생성
+                UserExamSession userExamSession = UserExamSession.builder()
+                                .user(user)
+                                .session(session)
+                                .attemptCount(1)
+                                .completionDate(LocalDateTime.now())
+                                .build();
 
-        if (userExamSession.isCompleted()) {
-            throw new CustomApiException("이미 완료된 모의고사입니다.");
+                userExamSessionRepository.save(userExamSession);
+
+                List<TestRespDto.ExamSubmitRespDto> results = new ArrayList<>();
+                int correctCount = 0;
+                double totalScore = 0;
+
+                for (ExamReqDto.ExamSubmitReqDto activity : examSubmitReqDto.getActivities()) {
+                        Question question = questionRepository.findById(activity.getQuestion().getQuestionId())
+                                        .orElseThrow(() -> new CustomApiException("문제를 찾을 수 없습니다."));
+
+                        UserActivity userActivity = new UserActivity();
+                        userActivity.setUser(user);
+                        userActivity.setQuestion(question);
+                        userActivity.setTestInfo(session);
+                        userActivity.setQuestionNum(activity.getQuestionNum());
+                        userActivity.setChecked(activity.getChecked());
+                        userActivity.setCorrection(question.getAnswer().equals(activity.getChecked()));
+                        userActivity.setDate(LocalDateTime.now());
+                        double score = calculateScore(activity, question);
+                        userActivity.setScore(score);
+                        userActivity.setExamSession(userExamSession);
+                        totalScore += score;
+
+                        userActivityRepository.save(userActivity);
+
+                        if (userActivity.isCorrection()) {
+                                correctCount++;
+                        }
+
+                        // Clipped 엔티티 생성 및 저장
+                        Clipped clipped = new Clipped();
+                        clipped.setUserActivity(userActivity);
+                        clipped.setDate(LocalDateTime.now());
+                        clipRepository.save(clipped);
+
+                        TestRespDto.ExamSubmitRespDto result = new TestRespDto.ExamSubmitRespDto(
+                                        userActivity.getId(),
+                                        userId,
+                                        new TestRespDto.ExamSubmitRespDto.QuestionRespDto(
+                                                        question.getId(),
+                                                        getCategoryName(question.getCategory())),
+                                        activity.getQuestionNum(),
+                                        activity.getChecked(),
+                                        userActivity.isCorrection());
+
+                        results.add(result);
+                }
+
+                // 과목별 점수 계산 후 저장
+                Map<String, Double> subjectScores = calculateSubjectScores(examSubmitReqDto.getActivities());
+                userExamSession.setSubject1Score(subjectScores.getOrDefault("1과목", 0.0));
+                userExamSession.setSubject2Score(subjectScores.getOrDefault("2과목", 0.0));
+
+                userExamSessionRepository.save(userExamSession);
+
+                return results;
         }
 
-        List<TestRespDto.TestSubmitRespDto> results = new ArrayList<>();
-        int correctCount = 0;
-        double totalScore = 0;
+        private Map<String, Double> calculateSubjectScores(List<ExamReqDto.ExamSubmitReqDto> activities) {
+                Map<String, Double> subjectScores = new HashMap<>();
 
-        for (TestReqDto.TestSubmitReqDto activity : testSubmitReqDto.getActivities()) {
-            Question question = questionRepository.findById(activity.getQuestion().getQuestionId())
-                    .orElseThrow(() -> new CustomApiException("문제를 찾을 수 없습니다."));
+                for (ExamReqDto.ExamSubmitReqDto activity : activities) {
+                        Question question = questionRepository.findById(activity.getQuestion().getQuestionId())
+                                        .orElseThrow(() -> new CustomApiException("문제를 찾을 수 없습니다."));
 
-            UserActivity userActivity = new UserActivity();
-            userActivity.setUser(user);
-            userActivity.setQuestion(question);
-            userActivity.setTestInfo(session);
-            userActivity.setQuestionNum(activity.getQuestionNum());
-            userActivity.setChecked(activity.getChecked());
-            userActivity.setTimeSpent(activity.getTimeSpent());
-            userActivity.setCorrection(question.getAnswer().equals(activity.getChecked()));
-            userActivity.setDate(LocalDateTime.now());
-            double score = calculateScore(activity, question);
-            userActivity.setScore(score);
-            totalScore += score;
+                        double score = calculateScore(activity, question);
+                        String title = question.getSkill().getTitle(); // "1과목" 또는 "2과목"
+                        subjectScores.merge(title, score, Double::sum);
+                }
 
-            userActivityRepository.save(userActivity);
-
-            if (userActivity.isCorrection()) {
-                correctCount++;
-            }
-
-            // Clipped 엔티티 생성 및 저장
-            Clipped clipped = new Clipped();
-            clipped.setUserActivity(userActivity);
-            clipped.setDate(LocalDateTime.now());
-            clipRepository.save(clipped);
-
-            TestRespDto.TestSubmitRespDto result = new TestRespDto.TestSubmitRespDto(
-                    userActivity.getId(),
-                    userId,
-                    new TestRespDto.TestSubmitRespDto.QuestionRespDto(
-                            question.getId(),
-                            getCategoryName(question.getCategory())),
-                    activity.getQuestionNum(),
-                    activity.getChecked(),
-                    activity.getTimeSpent(),
-                    userActivity.isCorrection());
-
-            results.add(result);
+                return subjectScores;
         }
 
-        // UserExamSession 업데이트
-        userExamSession.setCompleted(true);
-        userExamSession.setCompletedCount(userExamSession.getCompletedCount() + 1);
-        userExamSession.setCompletionDate(LocalDateTime.now().toLocalDate());
-        userExamSessionRepository.save(userExamSession);
-
-        return results;
-    }
-
-    private double calculateScore(TestReqDto.TestSubmitReqDto activity, Question question) {
-        return question.getAnswer().equals(activity.getChecked()) ? 2.5 : 0.0; // 40문제 기준, 맞으면 2.5점
-    }
-
-    /**
-     * 카테고리 번호에 해당하는 카테고리 이름 반환
-     * 
-     * @param category 카테고리 번호
-     * @return 카테고리 이름
-     */
-    private String getCategoryName(int category) {
-        switch (category) {
-            case 1:
-                return "진단";
-            case 2:
-                return "데일리";
-            case 3:
-                return "모의고사";
-            default:
-                return "알 수 없음";
-        }
-    }
-
-    /**
-     * 오늘의 공부 결과 - 문제 상세보기
-     * 
-     * @param userId
-     * @param session
-     * @param questionId
-     * @return
-     */
-    @Transactional(readOnly = true)
-    public ResultDetailDto getExamResultDetail(Long userId, String session, Long questionId) {
-        log.info("Getting daily result detail for userId: {}, session: {}, questionId: {}", userId, session,
-                questionId);
-
-        String testInfo = session;
-        log.info("Constructed testInfo: {}", testInfo);
-
-        UserActivity userActivity = userActivityRepository
-                .findByUserIdAndTestInfoAndQuestionId(userId, testInfo, questionId)
-                .orElseThrow(() -> {
-                    log.error("UserActivity not found for userId: {}, testInfo: {}, questionId: {}", userId, testInfo,
-                            questionId);
-                    return new CustomApiException("해당 문제의 풀이 결과를 찾을 수 없습니다.");
-                });
-
-        log.info("UserActivity found: {}", userActivity);
-
-        Question question = userActivity.getQuestion();
-        Skill skill = question.getSkill();
-
-        ResultDetailDto result = ResultDetailDto.builder()
-                .skillName(skill.getKeyConcepts())
-                .question(question.getQuestion())
-                .question(question.getDescription())
-                .option1(question.getOption1())
-                .option2(question.getOption2())
-                .option3(question.getOption3())
-                .option4(question.getOption4())
-                .answer(question.getAnswer())
-                .solution(question.getSolution())
-                .checked(userActivity.getChecked())
-                .correction(userActivity.isCorrection())
-                .build();
-
-        log.info("ExamResultDetailDto created: {}", result);
-
-        return result;
-    }
-
-    /**
-     * 특정 회차의 테스트 결과 점수
-     * 
-     * @param userId
-     * @param session
-     * @return
-     */
-    @Transactional(readOnly = true)
-    public ExamTestResult.Response getExamSubjectDetails(Long userId, String session) {
-        log.info("Starting getDaySubjectDetails for userId: {} and session: {}", userId, session);
-
-        UserExamSession userExamSession = userExamSessionRepository.findByUserIdAndSession(userId, session)
-                .orElseThrow(() -> new CustomApiException("해당 회차의 모의고사 세션을 찾을 수 없습니다."));
-
-        if (!userExamSession.isCompleted()) {
-            throw new CustomApiException("해당 회차의 모의고사가 완료되지 않았습니다.");
+        private double calculateScore(ExamReqDto.ExamSubmitReqDto activity, Question question) {
+                return question.getAnswer().equals(activity.getChecked()) ? 2 : 0.0; // 50문제 기준, 맞으면 2점
         }
 
-        List<UserActivity> activities = userActivityRepository.findByUserIdAndTestInfoOrderByQuestionNumAsc(userId,
-                session);
-
-        if (activities.isEmpty()) {
-            throw new CustomApiException("해당 회차에 대한 활동 기록이 없습니다.");
+        /**
+         * 카테고리 번호에 해당하는 카테고리 이름 반환
+         * 
+         * @param category 카테고리 번호
+         * @return 카테고리 이름
+         */
+        private String getCategoryName(int category) {
+                switch (category) {
+                        case 1:
+                                return "진단";
+                        case 2:
+                                return "데일리";
+                        case 3:
+                                return "모의고사";
+                        default:
+                                return "알 수 없음";
+                }
         }
 
-        Map<String, ExamTestResult.SubjectDetails> subjectDetailsMap = new HashMap<>();
-        List<ExamTestResult.ResultDto> subjectResultsList = new ArrayList<>();
+        /**
+         * 오늘의 공부 결과 - 문제 상세보기
+         * 
+         * @param userId
+         * @param session
+         * @param questionId
+         * @return
+         */
+        @Transactional(readOnly = true)
+        public ResultDetailDto getExamResultDetail(Long userId, String session, Long questionId) {
+                log.info("Getting daily result detail for userId: {}, session: {}, questionId: {}", userId, session,
+                                questionId);
 
-        for (UserActivity activity : activities) {
-            Question question = activity.getQuestion();
-            Skill skill = question.getSkill();
+                String testInfo = session;
+                log.info("Constructed testInfo: {}", testInfo);
 
-            String subjectTitle = skill.getTitle(); // 직접 Skill의 title 사용
-            ExamTestResult.SubjectDetails subjectDetails = subjectDetailsMap.computeIfAbsent(subjectTitle,
-                    k -> new ExamTestResult.SubjectDetails(subjectTitle));
+                UserActivity userActivity = userActivityRepository
+                                .findByUserIdAndTestInfoAndQuestionId(userId, testInfo, questionId)
+                                .orElseThrow(() -> {
+                                        log.error("UserActivity not found for userId: {}, testInfo: {}, questionId: {}",
+                                                        userId, testInfo,
+                                                        questionId);
+                                        return new CustomApiException("해당 문제의 풀이 결과를 찾을 수 없습니다.");
+                                });
 
-            subjectDetails.addScore(skill.getKeyConcepts(), activity.getScore());
+                log.info("UserActivity found: {}", userActivity);
 
-            subjectResultsList.add(new ExamTestResult.ResultDto(
-                    skill.getKeyConcepts(),
-                    question.getQuestion(),
-                    activity.isCorrection()));
+                Question question = userActivity.getQuestion();
+                Skill skill = question.getSkill();
+
+                ResultDetailDto result = ResultDetailDto.builder()
+                                .skillName(skill.getKeyConcepts())
+                                .question(question.getQuestion())
+                                .question(question.getDescription())
+                                .option1(question.getOption1())
+                                .option2(question.getOption2())
+                                .option3(question.getOption3())
+                                .option4(question.getOption4())
+                                .answer(question.getAnswer())
+                                .solution(question.getSolution())
+                                .checked(userActivity.getChecked())
+                                .correction(userActivity.isCorrection())
+                                .build();
+
+                log.info("ExamResultDetailDto created: {}", result);
+
+                return result;
         }
 
-        subjectDetailsMap.values().forEach(ExamTestResult.SubjectDetails::adjustTotalScore);
+        /**
+         * 특정 회차의 테스트 결과 점수
+         * 
+         * @param userId
+         * @param session
+         * @return
+         */
+        @Transactional(readOnly = true)
+        public ExamTestResult.Response getExamSubjectDetails(Long userId, String session) {
+                // 해당 회차의 모든 세션을 시간순으로 조회 (내림차순)
+                List<UserExamSession> userExamSessions = userExamSessionRepository
+                                .findByUserIdAndSessionOrderByCompletionDateDesc(userId, session);
 
-        List<ExamTestResult.SubjectDetails> userExamInfoList = new ArrayList<>(subjectDetailsMap.values());
+                if (userExamSessions.isEmpty()) {
+                        throw new CustomApiException("해당 회차의 모의고사 세션을 찾을 수 없습니다.");
+                }
 
-        log.info("Completed processing for getDaySubjectDetails");
-        return new ExamTestResult.Response(session, userExamInfoList, subjectResultsList);
-    }
+                // 가장 최근 세션
+                UserExamSession latestSession = userExamSessions.get(0);
+
+                // 최신 세션의 과목별 점수로 userExamInfoList 생성
+                List<ExamTestResult.SubjectDetails> userExamInfoList = new ArrayList<>();
+
+                // 1과목 details 생성
+                ExamTestResult.SubjectDetails subject1Details = new ExamTestResult.SubjectDetails("1과목");
+                Map<String, Double> subject1TypeScores = new HashMap<>();
+
+                // 2과목 details 생성
+                ExamTestResult.SubjectDetails subject2Details = new ExamTestResult.SubjectDetails("2과목");
+                Map<String, Double> subject2TypeScores = new HashMap<>();
+
+                // 최신 세션의 활동 조회
+                List<UserActivity> latestActivities = userActivityRepository.findByExamSession(latestSession);
+
+                // 각 활동의 점수를 해당 과목의 type별로 집계
+                for (UserActivity activity : latestActivities) {
+                        Question question = activity.getQuestion();
+                        Skill skill = question.getSkill();
+
+                        if (skill.getTitle().equals("1과목")) {
+                                subject1TypeScores.merge(skill.getKeyConcepts(), activity.getScore(), Double::sum);
+                        } else if (skill.getTitle().equals("2과목")) {
+                                subject2TypeScores.merge(skill.getKeyConcepts(), activity.getScore(), Double::sum);
+                        }
+                }
+
+                // 집계된 점수를 SubjectDetails에 추가
+                subject1TypeScores.forEach((type, score) -> subject1Details.addScore(type, score));
+                subject2TypeScores.forEach((type, score) -> subject2Details.addScore(type, score));
+
+                userExamInfoList.add(subject1Details);
+                userExamInfoList.add(subject2Details);
+
+                // 문제 풀이 결과 목록 생성
+                List<ExamTestResult.ResultDto> subjectResultsList = latestActivities.stream()
+                                .map(activity -> new ExamTestResult.ResultDto(
+                                                activity.getQuestionNum(),
+                                                activity.getQuestion().getSkill().getKeyConcepts(),
+                                                activity.getQuestion().getQuestion(),
+                                                activity.isCorrection()))
+                                .sorted(Comparator.comparingInt(ExamTestResult.ResultDto::getQuestionNum))
+                                .collect(Collectors.toList());
+
+                // 날짜별로 그룹화하여 각 날짜의 최신 기록만 유지
+                Map<LocalDate, UserExamSession> dateGroupedSessions = userExamSessions.stream()
+                                .filter(s -> s.getCompletionDate() != null)
+                                .collect(Collectors.groupingBy(
+                                                s -> s.getCompletionDate().toLocalDate(),
+                                                Collectors.collectingAndThen(
+                                                                Collectors.minBy(Comparator.comparing(
+                                                                                UserExamSession::getCompletionDate)
+                                                                                .reversed()),
+                                                                Optional::get)));
+
+                // 서로 다른 날짜의 기록이 2개 이상일 때만 히스토리 표시
+                List<ExamTestResult.HistoricalScore> historicalScores = new ArrayList<>();
+                if (dateGroupedSessions.size() >= 2) {
+                        AtomicInteger counter = new AtomicInteger(dateGroupedSessions.size());
+                        historicalScores = dateGroupedSessions.values().stream()
+                                        .sorted(Comparator.comparing(UserExamSession::getCompletionDate).reversed())
+                                        .map(examSession -> {
+                                                List<ExamTestResult.ItemScore> sessionScores = new ArrayList<>();
+                                                if (examSession.getSubject1Score() != null) {
+                                                        sessionScores.add(new ExamTestResult.ItemScore("1과목",
+                                                                        examSession.getSubject1Score()));
+                                                }
+                                                if (examSession.getSubject2Score() != null) {
+                                                        sessionScores.add(new ExamTestResult.ItemScore("2과목",
+                                                                        examSession.getSubject2Score()));
+                                                }
+
+                                                return new ExamTestResult.HistoricalScore(
+                                                                examSession.getCompletionDate(),
+                                                                sessionScores,
+                                                                dateGroupedSessions.size(),
+                                                                String.format("%d/%d %d차",
+                                                                                examSession.getCompletionDate()
+                                                                                                .getMonthValue(),
+                                                                                examSession.getCompletionDate()
+                                                                                                .getDayOfMonth(),
+                                                                                counter.getAndDecrement()));
+                                        })
+                                        .collect(Collectors.toList());
+                }
+
+                return new ExamTestResult.Response(session, userExamInfoList, subjectResultsList, historicalScores);
+        }
 }

@@ -1,5 +1,7 @@
 package com.qriz.sqld.dto.exam;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import com.qriz.sqld.dto.test.TestRespDto;
@@ -18,6 +20,7 @@ public class ExamTestResult {
         private String session;
         private List<SubjectDetails> userExamInfoList;
         private List<ResultDto> subjectResultsList;
+        private List<HistoricalScore> historicalScores;
     }
 
     @Getter
@@ -60,9 +63,29 @@ public class ExamTestResult {
     @Getter
     @AllArgsConstructor
     public static class ResultDto {
+        private int questionNum;
         private String skillName;
         private String question;
         private boolean correction;
+    }
+
+    @Getter
+    @AllArgsConstructor
+    public static class HistoricalScore {
+        private LocalDateTime completionDateTime;
+        private List<ItemScore> itemScores;
+        private int attemptCount;
+        private String displayName; // 새로 추가
+
+        public HistoricalScore(LocalDateTime completionDateTime, List<ItemScore> itemScores, int attemptCount) {
+            this.completionDateTime = completionDateTime;
+            this.itemScores = itemScores;
+            this.attemptCount = attemptCount;
+            this.displayName = String.format("%d/%d %d차",
+                    completionDateTime.getMonthValue(),
+                    completionDateTime.getDayOfMonth(),
+                    attemptCount);
+        }
     }
 
     @Getter
