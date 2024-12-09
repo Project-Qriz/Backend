@@ -69,7 +69,7 @@ public class ApplyService {
                                 application.getTestTime());
         }
 
-        // 등확한 시험 접수 정보 조회
+        // 등록한 시험 접수 정보 조회
         public ApplicationRespDto.ApplyRespDto getApplied(Long userId) {
                 // 1. 사용자 조회
                 UserApply userApply = userApplyRepository.findUserApplyByUserId(userId)
