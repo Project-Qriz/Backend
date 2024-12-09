@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.qriz.sqld.domain.UserActivity.UserActivity;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -97,4 +99,6 @@ public interface ClipRepository extends JpaRepository<Clipped, Long> {
                         "WHERE ua.user.id = :userId " +
                         "ORDER BY ua.testInfo")
         List<String> findDistinctTestInfosByUserId(@Param("userId") Long userId);
+
+        void deleteByUserActivity(UserActivity userActivity);
 }

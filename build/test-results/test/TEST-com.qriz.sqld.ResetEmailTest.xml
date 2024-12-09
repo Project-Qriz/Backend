@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.qriz.sqld.ResetEmailTest" tests="5" skipped="0" failures="2" errors="0" timestamp="2024-12-07T06:21:43" hostname="DESKTOP-FRJRV6O" time="0.388">
+<testsuite name="com.qriz.sqld.ResetEmailTest" tests="5" skipped="0" failures="2" errors="0" timestamp="2024-12-09T11:22:14" hostname="DESKTOP-FRJRV6O" time="0.329">
   <properties/>
-  <testcase name="비밀번호 재설정 - 잘못된 비밀번호 형식" classname="com.qriz.sqld.ResetEmailTest" time="0.244"/>
-  <testcase name="비밀번호 재설정 - 성공 케이스" classname="com.qriz.sqld.ResetEmailTest" time="0.077">
+  <testcase name="비밀번호 재설정 - 잘못된 비밀번호 형식" classname="com.qriz.sqld.ResetEmailTest" time="0.181"/>
+  <testcase name="비밀번호 재설정 - 성공 케이스" classname="com.qriz.sqld.ResetEmailTest" time="0.066">
     <failure message="java.lang.AssertionError: Status expected:&lt;401&gt; but was:&lt;400&gt;" type="java.lang.AssertionError">java.lang.AssertionError: Status expected:&lt;401&gt; but was:&lt;400&gt;
 	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
 	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
@@ -10,9 +10,9 @@
 	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
 	at com.qriz.sqld.ResetEmailTest.testPasswordReset_Success(ResetEmailTest.java:80)
 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
-	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
 	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:725)
 	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
 	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
@@ -40,7 +40,7 @@
 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
-	at java.base/java.util.ArrayList.forEach(Unknown Source)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
 	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155)
 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
@@ -50,7 +50,7 @@
 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
-	at java.base/java.util.ArrayList.forEach(Unknown Source)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
 	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155)
 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
@@ -76,14 +76,14 @@
 	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor.stop(JUnitPlatformTestClassProcessor.java:88)
 	at org.gradle.api.internal.tasks.testing.SuiteTestClassProcessor.stop(SuiteTestClassProcessor.java:62)
 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
-	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
 	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:36)
 	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:24)
 	at org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33)
 	at org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:94)
-	at jdk.proxy1/jdk.proxy1.$Proxy2.stop(Unknown Source)
+	at com.sun.proxy.$Proxy2.stop(Unknown Source)
 	at org.gradle.api.internal.tasks.testing.worker.TestWorker$3.run(TestWorker.java:193)
 	at org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:129)
 	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:100)
@@ -95,8 +95,8 @@
 	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
 </failure>
   </testcase>
-  <testcase name="비밀번호 재설정 - 유효하지 않은 토큰" classname="com.qriz.sqld.ResetEmailTest" time="0.045"/>
-  <testcase name="비밀번호 재설정 - 만료된 토큰" classname="com.qriz.sqld.ResetEmailTest" time="0.008">
+  <testcase name="비밀번호 재설정 - 유효하지 않은 토큰" classname="com.qriz.sqld.ResetEmailTest" time="0.051"/>
+  <testcase name="비밀번호 재설정 - 만료된 토큰" classname="com.qriz.sqld.ResetEmailTest" time="0.011">
     <failure message="java.lang.AssertionError: JSON path &quot;$.msg&quot; expected:&lt;링크가 만료되었습니다. 비밀번호 찾기를 다시 시도해주세요.&gt; but was:&lt;유효하지 않거나 만료된 링크입니다.&gt;" type="java.lang.AssertionError">java.lang.AssertionError: JSON path &quot;$.msg&quot; expected:&lt;링크가 만료되었습니다. 비밀번호 찾기를 다시 시도해주세요.&gt; but was:&lt;유효하지 않거나 만료된 링크입니다.&gt;
 	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
 	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
@@ -105,9 +105,9 @@
 	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
 	at com.qriz.sqld.ResetEmailTest.testPasswordReset_ExpiredToken(ResetEmailTest.java:132)
 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
-	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
 	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:725)
 	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
 	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
@@ -135,7 +135,7 @@
 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
-	at java.base/java.util.ArrayList.forEach(Unknown Source)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
 	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155)
 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
@@ -145,7 +145,7 @@
 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
-	at java.base/java.util.ArrayList.forEach(Unknown Source)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
 	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155)
 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
@@ -171,14 +171,14 @@
 	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor.stop(JUnitPlatformTestClassProcessor.java:88)
 	at org.gradle.api.internal.tasks.testing.SuiteTestClassProcessor.stop(SuiteTestClassProcessor.java:62)
 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
-	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
 	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:36)
 	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:24)
 	at org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33)
 	at org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:94)
-	at jdk.proxy1/jdk.proxy1.$Proxy2.stop(Unknown Source)
+	at com.sun.proxy.$Proxy2.stop(Unknown Source)
 	at org.gradle.api.internal.tasks.testing.worker.TestWorker$3.run(TestWorker.java:193)
 	at org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:129)
 	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:100)
@@ -190,13 +190,22 @@
 	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
 </failure>
   </testcase>
-  <testcase name="비밀번호 재설정 - 이미 사용된 토큰" classname="com.qriz.sqld.ResetEmailTest" time="0.009"/>
-  <system-out><![CDATA[2024-12-07 15:21:41.661  INFO 35536 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Neither @ContextConfiguration nor @ContextHierarchy found for test class [com.qriz.sqld.ResetEmailTest], using SpringBootContextLoader
-2024-12-07 15:21:41.662  INFO 35536 --- [    Test worker] o.s.t.c.support.AbstractContextLoader    : Could not detect default resource locations for test class [com.qriz.sqld.ResetEmailTest]: no resource found for suffixes {-context.xml, Context.groovy}.
-2024-12-07 15:21:41.662  INFO 35536 --- [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.qriz.sqld.ResetEmailTest]: ResetEmailTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-2024-12-07 15:21:41.680  INFO 35536 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.qriz.sqld.QrizApplication for test class com.qriz.sqld.ResetEmailTest
-2024-12-07 15:21:41.682  INFO 35536 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Loaded default TestExecutionListener class names from location [META-INF/spring.factories]: [org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener, org.springframework.security.test.context.support.ReactorContextTestExecutionListener, org.springframework.boot.test.autoconfigure.restdocs.RestDocsTestExecutionListener, org.springframework.boot.test.autoconfigure.web.client.MockRestServiceServerResetTestExecutionListener, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrintOnlyOnFailureTestExecutionListener, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverTestExecutionListener, org.springframework.boot.test.autoconfigure.webservices.client.MockWebServiceServerTestExecutionListener, org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener, org.springframework.boot.test.mock.mockito.ResetMocksTestExecutionListener, org.springframework.test.context.web.ServletTestExecutionListener, org.springframework.test.context.support.DirtiesContextBeforeModesTestExecutionListener, org.springframework.test.context.event.ApplicationEventsTestExecutionListener, org.springframework.test.context.support.DependencyInjectionTestExecutionListener, org.springframework.test.context.support.DirtiesContextTestExecutionListener, org.springframework.test.context.transaction.TransactionalTestExecutionListener, org.springframework.test.context.jdbc.SqlScriptsTestExecutionListener, org.springframework.test.context.event.EventPublishingTestExecutionListener]
-2024-12-07 15:21:41.683  INFO 35536 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Using TestExecutionListeners: [org.springframework.test.context.web.ServletTestExecutionListener@67c64b9c, org.springframework.test.context.support.DirtiesContextBeforeModesTestExecutionListener@311d8595, org.springframework.test.context.event.ApplicationEventsTestExecutionListener@688c914e, org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener@6f05d5f2, org.springframework.boot.test.autoconfigure.SpringBootDependencyInjectionTestExecutionListener@3acae925, org.springframework.test.context.support.DirtiesContextTestExecutionListener@67a6f2c4, org.springframework.test.context.transaction.TransactionalTestExecutionListener@6bac199f, org.springframework.test.context.jdbc.SqlScriptsTestExecutionListener@2a47fb5d, org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener@47a9bcf1, org.springframework.test.context.event.EventPublishingTestExecutionListener@17c95612, org.springframework.security.test.context.support.ReactorContextTestExecutionListener@1ca2d595, org.springframework.boot.test.autoconfigure.restdocs.RestDocsTestExecutionListener@92a584f, org.springframework.boot.test.autoconfigure.web.client.MockRestServiceServerResetTestExecutionListener@36e23af, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrintOnlyOnFailureTestExecutionListener@5e4a9c16, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverTestExecutionListener@544ee437, org.springframework.boot.test.autoconfigure.webservices.client.MockWebServiceServerTestExecutionListener@ffd26d1, org.springframework.boot.test.mock.mockito.ResetMocksTestExecutionListener@7dfc0fda]
+  <testcase name="비밀번호 재설정 - 이미 사용된 토큰" classname="com.qriz.sqld.ResetEmailTest" time="0.012"/>
+  <system-out><![CDATA[20:22:06.729 [Test worker] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating CacheAwareContextLoaderDelegate from class [org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate]
+20:22:06.741 [Test worker] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating BootstrapContext using constructor [public org.springframework.test.context.support.DefaultBootstrapContext(java.lang.Class,org.springframework.test.context.CacheAwareContextLoaderDelegate)]
+20:22:06.772 [Test worker] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating TestContextBootstrapper for test class [com.qriz.sqld.ResetEmailTest] from class [org.springframework.boot.test.context.SpringBootTestContextBootstrapper]
+20:22:06.784 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper - Neither @ContextConfiguration nor @ContextHierarchy found for test class [com.qriz.sqld.ResetEmailTest], using SpringBootContextLoader
+20:22:06.787 [Test worker] DEBUG org.springframework.test.context.support.AbstractContextLoader - Did not detect default resource location for test class [com.qriz.sqld.ResetEmailTest]: class path resource [com/qriz/sqld/ResetEmailTest-context.xml] does not exist
+20:22:06.788 [Test worker] DEBUG org.springframework.test.context.support.AbstractContextLoader - Did not detect default resource location for test class [com.qriz.sqld.ResetEmailTest]: class path resource [com/qriz/sqld/ResetEmailTestContext.groovy] does not exist
+20:22:06.788 [Test worker] INFO org.springframework.test.context.support.AbstractContextLoader - Could not detect default resource locations for test class [com.qriz.sqld.ResetEmailTest]: no resource found for suffixes {-context.xml, Context.groovy}.
+20:22:06.789 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.qriz.sqld.ResetEmailTest]: ResetEmailTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+20:22:06.848 [Test worker] DEBUG org.springframework.test.context.support.ActiveProfilesUtils - Could not find an 'annotation declaring class' for annotation type [org.springframework.test.context.ActiveProfiles] and class [com.qriz.sqld.ResetEmailTest]
+20:22:06.892 [Test worker] DEBUG org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider - Identified candidate component class: file [C:\Users\user\Desktop\QRIZ\SQLD\Start\BE-v6\build\classes\java\main\com\qriz\sqld\QrizApplication.class]
+20:22:06.893 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.qriz.sqld.QrizApplication for test class com.qriz.sqld.ResetEmailTest
+20:22:06.977 [Test worker] DEBUG org.springframework.boot.test.context.SpringBootTestContextBootstrapper - @TestExecutionListeners is not present for class [com.qriz.sqld.ResetEmailTest]: using defaults.
+20:22:06.977 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper - Loaded default TestExecutionListener class names from location [META-INF/spring.factories]: [org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener, org.springframework.security.test.context.support.ReactorContextTestExecutionListener, org.springframework.boot.test.autoconfigure.restdocs.RestDocsTestExecutionListener, org.springframework.boot.test.autoconfigure.web.client.MockRestServiceServerResetTestExecutionListener, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrintOnlyOnFailureTestExecutionListener, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverTestExecutionListener, org.springframework.boot.test.autoconfigure.webservices.client.MockWebServiceServerTestExecutionListener, org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener, org.springframework.boot.test.mock.mockito.ResetMocksTestExecutionListener, org.springframework.test.context.web.ServletTestExecutionListener, org.springframework.test.context.support.DirtiesContextBeforeModesTestExecutionListener, org.springframework.test.context.event.ApplicationEventsTestExecutionListener, org.springframework.test.context.support.DependencyInjectionTestExecutionListener, org.springframework.test.context.support.DirtiesContextTestExecutionListener, org.springframework.test.context.transaction.TransactionalTestExecutionListener, org.springframework.test.context.jdbc.SqlScriptsTestExecutionListener, org.springframework.test.context.event.EventPublishingTestExecutionListener]
+20:22:06.994 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper - Using TestExecutionListeners: [org.springframework.test.context.web.ServletTestExecutionListener@1f9d6c7b, org.springframework.test.context.support.DirtiesContextBeforeModesTestExecutionListener@6df20ade, org.springframework.test.context.event.ApplicationEventsTestExecutionListener@4fbb001b, org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener@4010d494, org.springframework.boot.test.autoconfigure.SpringBootDependencyInjectionTestExecutionListener@341a8659, org.springframework.test.context.support.DirtiesContextTestExecutionListener@4943defe, org.springframework.test.context.transaction.TransactionalTestExecutionListener@5eefa415, org.springframework.test.context.jdbc.SqlScriptsTestExecutionListener@181d7f28, org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener@78d50a3c, org.springframework.test.context.event.EventPublishingTestExecutionListener@2fb69ff6, org.springframework.security.test.context.support.ReactorContextTestExecutionListener@cda4919, org.springframework.boot.test.autoconfigure.restdocs.RestDocsTestExecutionListener@7f4d9395, org.springframework.boot.test.autoconfigure.web.client.MockRestServiceServerResetTestExecutionListener@2f19f2aa, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrintOnlyOnFailureTestExecutionListener@344b8190, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverTestExecutionListener@6a078481, org.springframework.boot.test.autoconfigure.webservices.client.MockWebServiceServerTestExecutionListener@79c5636f, org.springframework.boot.test.mock.mockito.ResetMocksTestExecutionListener@1929425f]
+20:22:06.997 [Test worker] DEBUG org.springframework.test.context.support.AbstractDirtiesContextTestExecutionListener - Before test class: context [DefaultTestContext@219f4597 testClass = ResetEmailTest, testInstance = [null], testMethod = [null], testException = [null], mergedContextConfiguration = [WebMergedContextConfiguration@31be6b49 testClass = ResetEmailTest, locations = '{}', classes = '{class com.qriz.sqld.QrizApplication}', contextInitializerClasses = '[]', activeProfiles = '{}', propertySourceLocations = '{}', propertySourceProperties = '{org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true}', contextCustomizers = set[org.springframework.boot.test.autoconfigure.actuate.metrics.MetricsExportContextCustomizerFactory$DisableMetricExportContextCustomizer@7d3430a7, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@4b3fa0b3, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizerFactory$Customizer@e260766, [ImportsContextCustomizer@2e16b08d key = [org.springframework.boot.test.autoconfigure.web.servlet.MockMvcAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebClientAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcWebDriverAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration, org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcSecurityConfiguration, org.springframework.boot.test.autoconfigure.web.reactive.WebTestClientAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@62e70ea3, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@63648ee9, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@7078433e, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@4eed46ee, org.springframework.boot.test.context.SpringBootTestArgs@1, org.springframework.boot.test.context.SpringBootTestWebEnvironment@68034211], resourceBasePath = 'src/main/webapp', contextLoader = 'org.springframework.boot.test.context.SpringBootContextLoader', parent = [null]], attributes = map['org.springframework.test.context.web.ServletTestExecutionListener.activateListener' -> true]], class annotated with @DirtiesContext [false] with mode [null].
 
   .   ____          _            __ _ _
  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
@@ -206,47 +215,736 @@
  =========|_|==============|___/=/_/_/_/
  :: Spring Boot ::               (v2.7.16)
 
-2024-12-07 15:21:41.715  INFO 35536 --- [    Test worker] com.qriz.sqld.ResetEmailTest             : Starting ResetEmailTest using Java 17.0.13 on DESKTOP-FRJRV6O with PID 35536 (started by user in C:\Users\user\Desktop\QRIZ\SQLD\Start\BE-v6)
-2024-12-07 15:21:41.715  INFO 35536 --- [    Test worker] com.qriz.sqld.ResetEmailTest             : No active profile set, falling back to 1 default profile: "default"
-2024-12-07 15:21:41.948  INFO 35536 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
-2024-12-07 15:21:41.949  INFO 35536 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2024-12-07 15:21:42.011  INFO 35536 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 61 ms. Found 14 JPA repository interfaces.
-2024-12-07 15:21:42.014  INFO 35536 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
-2024-12-07 15:21:42.015  INFO 35536 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data Redis repositories in DEFAULT mode.
-2024-12-07 15:21:42.035  INFO 35536 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.UserActivity.UserActivityRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2024-12-07 15:21:42.035  INFO 35536 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.application.ApplicationRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2024-12-07 15:21:42.036  INFO 35536 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.apply.UserApplyRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2024-12-07 15:21:42.036  INFO 35536 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.clip.ClipRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2024-12-07 15:21:42.036  INFO 35536 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.daily.UserDailyRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2024-12-07 15:21:42.036  INFO 35536 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.exam.UserExamSessionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2024-12-07 15:21:42.036  INFO 35536 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.preview.UserPreviewTestRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2024-12-07 15:21:42.036  INFO 35536 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.question.QuestionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2024-12-07 15:21:42.036  INFO 35536 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.skill.SkillRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2024-12-07 15:21:42.036  INFO 35536 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.skillLevel.SkillLevelRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2024-12-07 15:21:42.036  INFO 35536 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.survey.SurveyRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2024-12-07 15:21:42.037  INFO 35536 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.user.UserRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2024-12-07 15:21:42.037  INFO 35536 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.mail.domain.EmailVerification.EmailVerificationRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2024-12-07 15:21:42.037  INFO 35536 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.mail.domain.PasswordResetToken.PasswordResetTokenRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2024-12-07 15:21:42.037  INFO 35536 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 22 ms. Found 0 Redis repository interfaces.
-2024-12-07 15:21:42.287  INFO 35536 --- [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
-2024-12-07 15:21:42.294  INFO 35536 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Starting...
-2024-12-07 15:21:42.299  INFO 35536 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Start completed.
-2024-12-07 15:21:42.300  INFO 35536 --- [    Test worker] org.hibernate.dialect.Dialect            : HHH000400: Using dialect: org.hibernate.dialect.MariaDB53Dialect
-2024-12-07 15:21:42.469  INFO 35536 --- [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform]
-2024-12-07 15:21:42.470  INFO 35536 --- [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
-2024-12-07 15:21:42.661  WARN 35536 --- [    Test worker] o.h.dialect.function.TemplateRenderer    : HHH000174: Function template anticipated 3 arguments, but 2 arguments encountered
-2024-12-07 15:21:43.019  INFO 35536 --- [    Test worker] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@413069a0, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@19db3c2e, org.springframework.security.web.context.SecurityContextPersistenceFilter@81bc4da, org.springframework.security.web.header.HeaderWriterFilter@6626ae40, org.springframework.web.filter.CorsFilter@180f49c5, org.springframework.security.web.authentication.logout.LogoutFilter@70efd6cf, com.qriz.sqld.config.jwt.JwtAuthenticationFilter@38138629, com.qriz.sqld.config.jwt.JwtAuthorizationFilter@7a2c95e2, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@33dc36d5, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@3afca969, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@3ad6ecc5, org.springframework.security.web.session.SessionManagementFilter@684f20ea, org.springframework.security.web.access.ExceptionTranslationFilter@6ad11552, org.springframework.security.web.access.intercept.FilterSecurityInterceptor@40fc181d]
-2024-12-07 15:21:43.185  INFO 35536 --- [    Test worker] o.s.b.a.h2.H2ConsoleAutoConfiguration    : H2 console available at '/h2-console'. Database available at 'jdbc:mariadb://localhost/qriz?user=root&password=***'
-2024-12-07 15:21:43.497  INFO 35536 --- [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
-2024-12-07 15:21:43.498  INFO 35536 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
-2024-12-07 15:21:43.500  INFO 35536 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2024-12-09 20:22:07.429  INFO 35760 --- [    Test worker] com.qriz.sqld.ResetEmailTest             : Starting ResetEmailTest using Java 11.0.19 on DESKTOP-FRJRV6O with PID 35760 (started by user in C:\Users\user\Desktop\QRIZ\SQLD\Start\BE-v6)
+2024-12-09 20:22:07.430  INFO 35760 --- [    Test worker] com.qriz.sqld.ResetEmailTest             : No active profile set, falling back to 1 default profile: "default"
+2024-12-09 20:22:08.425  INFO 35760 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2024-12-09 20:22:08.427  INFO 35760 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2024-12-09 20:22:08.633  INFO 35760 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 199 ms. Found 14 JPA repository interfaces.
+2024-12-09 20:22:08.645  INFO 35760 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2024-12-09 20:22:08.646  INFO 35760 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-12-09 20:22:08.680  INFO 35760 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.UserActivity.UserActivityRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-09 20:22:08.681  INFO 35760 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.application.ApplicationRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-09 20:22:08.681  INFO 35760 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.apply.UserApplyRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-09 20:22:08.681  INFO 35760 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.clip.ClipRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-09 20:22:08.682  INFO 35760 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.daily.UserDailyRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-09 20:22:08.682  INFO 35760 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.exam.UserExamSessionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-09 20:22:08.682  INFO 35760 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.preview.UserPreviewTestRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-09 20:22:08.683  INFO 35760 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.question.QuestionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-09 20:22:08.683  INFO 35760 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.skill.SkillRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-09 20:22:08.683  INFO 35760 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.skillLevel.SkillLevelRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-09 20:22:08.684  INFO 35760 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.survey.SurveyRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-09 20:22:08.686  INFO 35760 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.domain.user.UserRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-09 20:22:08.687  INFO 35760 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.mail.domain.EmailVerification.EmailVerificationRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-09 20:22:08.687  INFO 35760 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.qriz.sqld.mail.domain.PasswordResetToken.PasswordResetTokenRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-09 20:22:08.687  INFO 35760 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 34 ms. Found 0 Redis repository interfaces.
+2024-12-09 20:22:09.992  INFO 35760 --- [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2024-12-09 20:22:10.040  INFO 35760 --- [    Test worker] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 5.6.15.Final
+2024-12-09 20:22:10.077  INFO 35760 --- [    Test worker] o.hibernate.annotations.common.Version   : HCANN000001: Hibernate Commons Annotations {5.1.2.Final}
+2024-12-09 20:22:10.176  INFO 35760 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2024-12-09 20:22:10.269  INFO 35760 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2024-12-09 20:22:10.308  INFO 35760 --- [    Test worker] org.hibernate.dialect.Dialect            : HHH000400: Using dialect: org.hibernate.dialect.MariaDB53Dialect
+Hibernate: 
+    
+    alter table clipped 
+       drop 
+       foreign key FKj4yhv9em1dyk98v650t0vcesu
+Hibernate: 
+    
+    alter table notice 
+       drop 
+       foreign key FK6hu3mfrsmpbqjk44w2fq5t5us
+Hibernate: 
+    
+    alter table question 
+       drop 
+       foreign key FKj54ar4evgaah10lcrp320d56e
+Hibernate: 
+    
+    alter table skill_level 
+       drop 
+       foreign key FKk8yy30pvpxxp3etl7olmfesh6
+Hibernate: 
+    
+    alter table skill_level 
+       drop 
+       foreign key FK6w2lsqtf81e0cb9jtj22ucpk3
+Hibernate: 
+    
+    alter table survey 
+       drop 
+       foreign key FK7t91cf7vs9s3x4ntp7mf36hu2
+Hibernate: 
+    
+    alter table survey 
+       drop 
+       foreign key FK92gyhe01cej7nwm64taxcka2k
+Hibernate: 
+    
+    alter table user_daily_skills 
+       drop 
+       foreign key FKqsti5mxf269cn2j69664uctlf
+Hibernate: 
+    
+    alter table user_daily_skills 
+       drop 
+       foreign key FK7k9qpf5st2wiqnee4ip54tbfh
+Hibernate: 
+    
+    alter table user_activity 
+       drop 
+       foreign key FK9v4b7dfs3th20karvcwtvlxd
+Hibernate: 
+    
+    alter table user_activity 
+       drop 
+       foreign key FK6kuph5jw71a418589sxkyvxdg
+Hibernate: 
+    
+    alter table user_activity 
+       drop 
+       foreign key FKs41is1raa3f0y5q5g0pw2rfd4
+Hibernate: 
+    
+    alter table user_apply 
+       drop 
+       foreign key FKlcfuyyws5hk5s7v48ywxam2xo
+Hibernate: 
+    
+    alter table user_apply 
+       drop 
+       foreign key FK44xientj2u3lprxxxnxrjh292
+Hibernate: 
+    
+    alter table user_daily 
+       drop 
+       foreign key FK70uj1hxyvi0eal3rknixw25qc
+Hibernate: 
+    
+    alter table user_exam_session 
+       drop 
+       foreign key FKa2f409kd1ktt70su1gg7e96gr
+Hibernate: 
+    
+    alter table user_preview_test 
+       drop 
+       foreign key FKiiicdn7apn4bof4ogyimpont4
+Hibernate: 
+    
+    alter table user_preview_test 
+       drop 
+       foreign key FKko87lvfc68yhwbe5frq06hco2
+Hibernate: 
+    
+    drop table if exists application
+Hibernate: 
+    
+    drop table if exists clipped
+Hibernate: 
+    
+    drop table if exists concept
+Hibernate: 
+    
+    drop table if exists email_verifications
+Hibernate: 
+    
+    drop table if exists notice
+Hibernate: 
+    
+    drop table if exists password_reset_tokens
+Hibernate: 
+    
+    drop table if exists question
+Hibernate: 
+    
+    drop table if exists skill
+Hibernate: 
+    
+    drop table if exists skill_level
+Hibernate: 
+    
+    drop table if exists survey
+Hibernate: 
+    
+    drop table if exists test_category
+Hibernate: 
+    
+    drop table if exists user_daily_skills
+Hibernate: 
+    
+    drop table if exists user_activity
+Hibernate: 
+    
+    drop table if exists user_apply
+Hibernate: 
+    
+    drop table if exists user_daily
+Hibernate: 
+    
+    drop table if exists user_exam_session
+Hibernate: 
+    
+    drop table if exists user_preview_test
+Hibernate: 
+    
+    drop table if exists users
+Hibernate: 
+    
+    drop table if exists version
+Hibernate: 
+    
+    create table application (
+       apply_id bigint not null auto_increment,
+        end_date date,
+        exam_date date,
+        start_date date,
+        test_time varchar(255),
+        primary key (apply_id)
+    ) engine=InnoDB
+Hibernate: 
+    
+    create table clipped (
+       clipped_id bigint not null auto_increment,
+        date datetime(6),
+        activity_id bigint,
+        primary key (clipped_id)
+    ) engine=InnoDB
+Hibernate: 
+    
+    create table concept (
+       concept_id bigint not null auto_increment,
+        content tinyblob,
+        key_concept_content varchar(255),
+        key_concept_name varchar(255),
+        type varchar(255),
+        primary key (concept_id)
+    ) engine=InnoDB
+Hibernate: 
+    
+    create table email_verifications (
+       id bigint not null auto_increment,
+        attempt_count integer not null,
+        auth_number varchar(6) not null,
+        created_at datetime(6) not null,
+        email varchar(100) not null,
+        expiry_date datetime(6) not null,
+        verified bit not null,
+        verified_at datetime(6),
+        primary key (id)
+    ) engine=InnoDB
+Hibernate: 
+    
+    create table notice (
+       notice_id bigint not null auto_increment,
+        content varchar(255),
+        date datetime(6),
+        title varchar(255),
+        user_id bigint,
+        primary key (notice_id)
+    ) engine=InnoDB
+Hibernate: 
+    
+    create table password_reset_tokens (
+       id bigint not null auto_increment,
+        email varchar(255) not null,
+        expiry_date datetime(6) not null,
+        token varchar(36) not null,
+        used bit not null,
+        primary key (id)
+    ) engine=InnoDB
+Hibernate: 
+    
+    create table question (
+       question_id bigint not null auto_increment,
+        answer LONGTEXT,
+        category integer not null,
+        description LONGTEXT,
+        difficulty integer,
+        exam_session varchar(255),
+        option1 LONGTEXT,
+        option2 LONGTEXT,
+        option3 LONGTEXT,
+        option4 LONGTEXT,
+        question LONGTEXT,
+        solution LONGTEXT,
+        time_limit integer,
+        skill_id bigint,
+        primary key (question_id)
+    ) engine=InnoDB
+Hibernate: 
+    
+    create table skill (
+       skill_id bigint not null auto_increment,
+        description TEXT,
+        frequency integer,
+        importance_level varchar(255),
+        key_concepts varchar(255),
+        title varchar(255),
+        type varchar(255),
+        version bigint,
+        primary key (skill_id)
+    ) engine=InnoDB
+Hibernate: 
+    
+    create table skill_level (
+       skill_level_id bigint not null auto_increment,
+        current_accuracy float not null,
+        difficulty integer,
+        last_updated datetime(6),
+        predict_accuracy float not null,
+        version bigint,
+        skill_id bigint,
+        user_id bigint,
+        primary key (skill_level_id)
+    ) engine=InnoDB
+Hibernate: 
+    
+    create table survey (
+       survey_id bigint not null auto_increment,
+        checked bit not null,
+        knows_nothing bit,
+        skill_id bigint,
+        user_id bigint,
+        primary key (survey_id)
+    ) engine=InnoDB
+Hibernate: 
+    
+    create table test_category (
+       category_id integer not null auto_increment,
+        category varchar(255),
+        primary key (category_id)
+    ) engine=InnoDB
+Hibernate: 
+    
+    create table user_daily_skills (
+       daily_id bigint not null,
+        skill_id bigint not null
+    ) engine=InnoDB
+Hibernate: 
+    
+    create table user_activity (
+       activity_id bigint not null auto_increment,
+        checked TEXT,
+        correction bit not null,
+        date datetime(6),
+        question_num integer not null,
+        score double precision,
+        test_info varchar(255),
+        time_spent integer,
+        exam_session_id bigint,
+        question_id bigint,
+        user_id bigint,
+        primary key (activity_id)
+    ) engine=InnoDB
+Hibernate: 
+    
+    create table user_apply (
+       user_apply_id bigint not null auto_increment,
+        date datetime(6),
+        apply_id bigint,
+        user_id bigint,
+        primary key (user_apply_id)
+    ) engine=InnoDB
+Hibernate: 
+    
+    create table user_daily (
+       daily_id bigint not null auto_increment,
+        attempt_count integer not null,
+        completed bit not null,
+        completion_date date,
+        comprehensive_review_day bit not null,
+        day_number varchar(255),
+        passed bit not null,
+        plan_date date,
+        retest_eligible bit not null,
+        review_day bit not null,
+        user_id bigint,
+        primary key (daily_id)
+    ) engine=InnoDB
+Hibernate: 
+    
+    create table user_exam_session (
+       exam_id bigint not null auto_increment,
+        attempt_count integer not null,
+        completion_date datetime(6),
+        session varchar(255),
+        subject1score double precision,
+        subject2score double precision,
+        user_id bigint,
+        primary key (exam_id)
+    ) engine=InnoDB
+Hibernate: 
+    
+    create table user_preview_test (
+       preview_id bigint not null auto_increment,
+        completed bit not null,
+        completion_date date,
+        skill_id bigint,
+        user_id bigint,
+        primary key (preview_id)
+    ) engine=InnoDB
+Hibernate: 
+    
+    create table users (
+       user_id bigint not null auto_increment,
+        created_at datetime(6) not null,
+        email varchar(255),
+        nickname varchar(255),
+        password varchar(255),
+        provider varchar(255),
+        provider_id varchar(255),
+        role varchar(255) not null,
+        updated_at datetime(6) not null,
+        username varchar(50) not null,
+        primary key (user_id)
+    ) engine=InnoDB
+Hibernate: 
+    
+    create table version (
+       version_id bigint not null auto_increment,
+        date date,
+        update_info varchar(255),
+        version_info float not null,
+        primary key (version_id)
+    ) engine=InnoDB
+Hibernate: create index idx_email on email_verifications (email)
+Hibernate: create index idx_email_authNumber on email_verifications (email, auth_number)
+Hibernate: 
+    
+    alter table users 
+       add constraint UK_r43af9ap4edm43mmtq01oddj6 unique (username)
+Hibernate: 
+    
+    alter table clipped 
+       add constraint FKj4yhv9em1dyk98v650t0vcesu 
+       foreign key (activity_id) 
+       references user_activity (activity_id)
+Hibernate: 
+    
+    alter table notice 
+       add constraint FK6hu3mfrsmpbqjk44w2fq5t5us 
+       foreign key (user_id) 
+       references users (user_id)
+Hibernate: 
+    
+    alter table question 
+       add constraint FKj54ar4evgaah10lcrp320d56e 
+       foreign key (skill_id) 
+       references skill (skill_id)
+Hibernate: 
+    
+    alter table skill_level 
+       add constraint FKk8yy30pvpxxp3etl7olmfesh6 
+       foreign key (skill_id) 
+       references skill (skill_id)
+Hibernate: 
+    
+    alter table skill_level 
+       add constraint FK6w2lsqtf81e0cb9jtj22ucpk3 
+       foreign key (user_id) 
+       references users (user_id)
+Hibernate: 
+    
+    alter table survey 
+       add constraint FK7t91cf7vs9s3x4ntp7mf36hu2 
+       foreign key (skill_id) 
+       references skill (skill_id)
+Hibernate: 
+    
+    alter table survey 
+       add constraint FK92gyhe01cej7nwm64taxcka2k 
+       foreign key (user_id) 
+       references users (user_id)
+Hibernate: 
+    
+    alter table user_daily_skills 
+       add constraint FKqsti5mxf269cn2j69664uctlf 
+       foreign key (skill_id) 
+       references skill (skill_id)
+Hibernate: 
+    
+    alter table user_daily_skills 
+       add constraint FK7k9qpf5st2wiqnee4ip54tbfh 
+       foreign key (daily_id) 
+       references user_daily (daily_id)
+Hibernate: 
+    
+    alter table user_activity 
+       add constraint FK9v4b7dfs3th20karvcwtvlxd 
+       foreign key (exam_session_id) 
+       references user_exam_session (exam_id)
+Hibernate: 
+    
+    alter table user_activity 
+       add constraint FK6kuph5jw71a418589sxkyvxdg 
+       foreign key (question_id) 
+       references question (question_id)
+Hibernate: 
+    
+    alter table user_activity 
+       add constraint FKs41is1raa3f0y5q5g0pw2rfd4 
+       foreign key (user_id) 
+       references users (user_id)
+Hibernate: 
+    
+    alter table user_apply 
+       add constraint FKlcfuyyws5hk5s7v48ywxam2xo 
+       foreign key (apply_id) 
+       references application (apply_id)
+Hibernate: 
+    
+    alter table user_apply 
+       add constraint FK44xientj2u3lprxxxnxrjh292 
+       foreign key (user_id) 
+       references users (user_id)
+Hibernate: 
+    
+    alter table user_daily 
+       add constraint FK70uj1hxyvi0eal3rknixw25qc 
+       foreign key (user_id) 
+       references users (user_id)
+Hibernate: 
+    
+    alter table user_exam_session 
+       add constraint FKa2f409kd1ktt70su1gg7e96gr 
+       foreign key (user_id) 
+       references users (user_id)
+Hibernate: 
+    
+    alter table user_preview_test 
+       add constraint FKiiicdn7apn4bof4ogyimpont4 
+       foreign key (skill_id) 
+       references skill (skill_id)
+Hibernate: 
+    
+    alter table user_preview_test 
+       add constraint FKko87lvfc68yhwbe5frq06hco2 
+       foreign key (user_id) 
+       references users (user_id)
+2024-12-09 20:22:11.923  INFO 35760 --- [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform]
+2024-12-09 20:22:11.934  INFO 35760 --- [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2024-12-09 20:22:12.628  WARN 35760 --- [    Test worker] o.h.dialect.function.TemplateRenderer    : HHH000174: Function template anticipated 3 arguments, but 2 arguments encountered
+2024-12-09 20:22:13.492  INFO 35760 --- [    Test worker] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@7b88dd58, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@50720344, org.springframework.security.web.context.SecurityContextPersistenceFilter@38f1f6c9, org.springframework.security.web.header.HeaderWriterFilter@6ecf239d, org.springframework.web.filter.CorsFilter@5dce3e82, org.springframework.security.web.authentication.logout.LogoutFilter@589dd717, com.qriz.sqld.config.jwt.JwtAuthenticationFilter@613aeb51, com.qriz.sqld.config.jwt.JwtAuthorizationFilter@5ce59833, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@12e8c5c4, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@27a717a7, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@1ccdc8c8, org.springframework.security.web.session.SessionManagementFilter@6fa98e98, org.springframework.security.web.access.ExceptionTranslationFilter@5545c42, org.springframework.security.web.access.intercept.FilterSecurityInterceptor@6385b07d]
+2024-12-09 20:22:13.942  INFO 35760 --- [    Test worker] o.s.b.a.h2.H2ConsoleAutoConfiguration    : H2 console available at '/h2-console'. Database available at 'jdbc:mariadb://localhost/qriz?user=root&password=***'
+2024-12-09 20:22:14.745  INFO 35760 --- [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2024-12-09 20:22:14.746  INFO 35760 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2024-12-09 20:22:14.747  INFO 35760 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
 Hibernate: 
     select
         count(*) as col_0_0_ 
     from
         skill skill0_
-2024-12-07 15:21:43.515  INFO 35536 --- [    Test worker] com.qriz.sqld.ResetEmailTest             : Started ResetEmailTest in 1.828 seconds (JVM running for 9.525)
-2024-12-07 15:21:43.754  WARN 35536 --- [    Test worker] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.web.bind.MethodArgumentNotValidException: Validation failed for argument [0] in public org.springframework.http.ResponseEntity<?> com.qriz.sqld.controller.UserController.resetPassword(com.qriz.sqld.dto.user.UserReqDto$ResetPasswordReqDto): [Field error in object 'resetPasswordReqDto' on field 'newPassword': rejected value [weak]; codes [Pattern.resetPasswordReqDto.newPassword,Pattern.newPassword,Pattern.java.lang.String,Pattern]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [resetPasswordReqDto.newPassword,newPassword]; arguments []; default message [newPassword],[Ljavax.validation.constraints.Pattern$Flag;@632f505b,^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=*!])(?=\S+$).{8,16}$]; default message [비밀번호는 8자 이상이며, 영문, 숫자, 특수문자를 포함해야 합니다.]] ]
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        skill
+        (description, frequency, importance_level, key_concepts, title, type, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+2024-12-09 20:22:14.850  INFO 35760 --- [    Test worker] com.qriz.sqld.ResetEmailTest             : Started ResetEmailTest in 7.713 seconds (JVM running for 9.027)
+2024-12-09 20:22:15.037  WARN 35760 --- [    Test worker] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.web.bind.MethodArgumentNotValidException: Validation failed for argument [0] in public org.springframework.http.ResponseEntity<?> com.qriz.sqld.controller.UserController.resetPassword(com.qriz.sqld.dto.user.UserReqDto$ResetPasswordReqDto): [Field error in object 'resetPasswordReqDto' on field 'newPassword': rejected value [weak]; codes [Pattern.resetPasswordReqDto.newPassword,Pattern.newPassword,Pattern.java.lang.String,Pattern]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [resetPasswordReqDto.newPassword,newPassword]; arguments []; default message [newPassword],[Ljavax.validation.constraints.Pattern$Flag;@3bb04b53,^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=*!])(?=\S+$).{8,16}$]; default message [비밀번호는 8자 이상이며, 영문, 숫자, 특수문자를 포함해야 합니다.]] ]
 
 MockHttpServletRequest:
       HTTP Method = POST

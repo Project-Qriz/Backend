@@ -13,7 +13,6 @@ public class TestReqDto {
     @Getter
     @Setter
     public static class TestSubmitReqDto {
-        private Long activityId;
         private Long userId;
         private QuestionReqDto question;
         private int questionNum;

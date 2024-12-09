@@ -75,6 +75,39 @@ public class TestRespDto {
 
     @Getter
     @Setter
+    public static class ExamSubmitRespDto {
+        private Long activityId;
+        private Long userId;
+        private QuestionRespDto question;
+        private int questionNum;
+        private String checked;
+        private boolean correction;
+
+        @Getter
+        @Setter
+        public static class QuestionRespDto {
+            private Long questionId;
+            private String category;
+
+            public QuestionRespDto(Long questionId, String category) {
+                this.questionId = questionId;
+                this.category = category;
+            }
+        }
+
+        public ExamSubmitRespDto(Long activityId, Long userId, QuestionRespDto question, int questionNum,
+                String checked, boolean correction) {
+            this.activityId = activityId;
+            this.userId = userId;
+            this.question = question;
+            this.questionNum = questionNum;
+            this.checked = checked;
+            this.correction = correction;
+        }
+    }
+
+    @Getter
+    @Setter
     public static class TestResultRespDto {
         private Long activityId;
         private Long userId;
