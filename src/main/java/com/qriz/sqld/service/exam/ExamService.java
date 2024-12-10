@@ -327,12 +327,12 @@ public class ExamService {
                                                                                 .reversed()),
                                                                 Optional::get)));
 
-                // 서로 다른 날짜의 기록이 2개 이상일 때만 히스토리 표시
+                // 날짜별로 그룹화하여 각 날짜의 최신 기록만 유지하고, 최신 5개만 선택
                 List<ExamTestResult.HistoricalScore> historicalScores = new ArrayList<>();
                 if (dateGroupedSessions.size() >= 2) {
-                        AtomicInteger counter = new AtomicInteger(dateGroupedSessions.size());
                         historicalScores = dateGroupedSessions.values().stream()
                                         .sorted(Comparator.comparing(UserExamSession::getCompletionDate).reversed())
+                                        .limit(5) // 최신 5개만 선택
                                         .map(examSession -> {
                                                 List<ExamTestResult.ItemScore> sessionScores = new ArrayList<>();
                                                 if (examSession.getSubject1Score() != null) {
@@ -347,13 +347,7 @@ public class ExamService {
                                                 return new ExamTestResult.HistoricalScore(
                                                                 examSession.getCompletionDate(),
                                                                 sessionScores,
-                                                                dateGroupedSessions.size(),
-                                                                String.format("%d/%d %d차",
-                                                                                examSession.getCompletionDate()
-                                                                                                .getMonthValue(),
-                                                                                examSession.getCompletionDate()
-                                                                                                .getDayOfMonth(),
-                                                                                counter.getAndDecrement()));
+                                                                dateGroupedSessions.size());
                                         })
                                         .collect(Collectors.toList());
                 }
