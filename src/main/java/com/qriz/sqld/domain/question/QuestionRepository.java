@@ -101,4 +101,7 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
          * @return 해당하는 Question 리스트
          */
         List<Question> findByCategoryAndExamSessionOrderById(int category, String examSession);
+
+        @Query("SELECT DISTINCT q.examSession FROM Question q WHERE q.category = :category AND q.examSession IS NOT NULL")
+        List<String> findDistinctExamSessionByCategory(int category);
 }
