@@ -29,8 +29,8 @@ public class ApplyController {
 
     // 시험 접수 목록 조회
     @GetMapping("/application-list")
-    public ResponseEntity<?> getApplicationList() {
-        ApplicationRespDto.ApplyListRespDto applyListRespDto = applyService.applyList();
+    public ResponseEntity<?> getApplicationList(@AuthenticationPrincipal LoginUser loginUser) {
+        ApplicationRespDto.ApplyListRespDto applyListRespDto = applyService.applyList(loginUser);
         return new ResponseEntity<>(new ResponseDto<>(1, "시험 접수 목록 불러오기 성공", applyListRespDto), HttpStatus.OK);
     }
 
@@ -47,7 +47,7 @@ public class ApplyController {
     // 등록한 시험 접수 정보 조회
     @GetMapping("/applied")
     public ResponseEntity<?> getApplied(@AuthenticationPrincipal LoginUser loginUser) {
-        ApplicationRespDto.ApplyRespDto applyRespDto = applyService.getApplied(loginUser.getUser().getId());
+        ApplicationRespDto.AppliedRespDto applyRespDto = applyService.getApplied(loginUser.getUser().getId());
         return new ResponseEntity<>(new ResponseDto<>(1, "등록 시험 조회", applyRespDto), HttpStatus.OK);
     }
 

@@ -75,16 +75,16 @@ public class ExamTestResult {
         private LocalDateTime completionDateTime;
         private List<ItemScore> itemScores;
         private int attemptCount;
-        private String displayName; // 새로 추가
+        private String displayDate;
 
         public HistoricalScore(LocalDateTime completionDateTime, List<ItemScore> itemScores, int attemptCount) {
             this.completionDateTime = completionDateTime;
             this.itemScores = itemScores;
             this.attemptCount = attemptCount;
-            this.displayName = String.format("%d/%d %d차",
-                    completionDateTime.getMonthValue(),
-                    completionDateTime.getDayOfMonth(),
-                    attemptCount);
+            
+            // MM.dd 형식으로 날짜 포맷팅
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM.dd");
+            this.displayDate = completionDateTime.format(formatter);
         }
     }
 

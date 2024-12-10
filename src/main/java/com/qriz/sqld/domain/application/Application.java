@@ -28,6 +28,8 @@ public class Application {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String examName;
+
     // 시험 접수 시작 날짜
     private LocalDate startDate;
 
@@ -37,20 +39,17 @@ public class Application {
     // 시험 날짜
     private LocalDate examDate;
 
-    // 시험 시간
-    private String testTime;
+    // 결과 발표
+    private LocalDate releaseDate;
 
     @OneToMany(mappedBy = "application")
     private List<UserApply> userApplies;
 
-    public Application(LocalDate startDate, LocalDate endDate, LocalDate examDate, String testTime) {
+    public Application(String examName, LocalDate startDate, LocalDate endDate, LocalDate examDate, LocalDate releaseDate) {
+        this.examName = examName;
         this.startDate = startDate;
         this.endDate = endDate;
         this.examDate = examDate;
-        this.testTime = testTime;
-    }
-
-    public void updateTestTime(String startTime, String endTime) {
-        this.testTime = startTime + " ~ " + endTime;
+        this.releaseDate = releaseDate;
     }
 }

@@ -31,12 +31,24 @@ public class ApplyService {
         private final Logger logger = LoggerFactory.getLogger(ApplyService.class);
 
         // 시험 접수 목록 조회
-        public ApplicationRespDto.ApplyListRespDto applyList() {
+        // 시험 접수 목록 조회
+        public ApplicationRespDto.ApplyListRespDto applyList(LoginUser loginUser) {
+                // 1. 현재 사용자가 등록한 시험 정보 조회
+                Long registeredApplicationId = null;
+                UserApply userApply = userApplyRepository.findUserApplyByUserId(loginUser.getUser().getId())
+                                .orElse(null);
+
+                if (userApply != null) {
+                        registeredApplicationId = userApply.getApplication().getId();
+                }
+
+                // 2. 전체 시험 목록 조회
                 List<Application> applications = applicationRepository.findAll();
                 List<ApplicationRespDto.ApplyListRespDto.ApplicationDetail> applicationDetails = applications.stream()
                                 .map(ApplicationRespDto.ApplyListRespDto.ApplicationDetail::new)
                                 .collect(Collectors.toList());
-                return new ApplicationRespDto.ApplyListRespDto(applicationDetails);
+
+                return new ApplicationRespDto.ApplyListRespDto(registeredApplicationId, applicationDetails);
         }
 
         // 시험 접수
@@ -59,35 +71,25 @@ public class ApplyService {
                 userApplyRepository.save(userApply);
 
                 // 4. 응답 데이터 생성
-                DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MM-dd");
                 String period = formatPeriod(application.getStartDate(), application.getEndDate());
 
                 return new ApplicationRespDto.ApplyRespDto(
-                                application.getId(),
+                                application.getExamName(),
                                 period,
                                 application.getExamDate().format(dateFormatter),
-                                application.getTestTime());
+                                application.getReleaseDate().format(dateFormatter));
         }
 
         // 등록한 시험 접수 정보 조회
-        public ApplicationRespDto.ApplyRespDto getApplied(Long userId) {
+        public ApplicationRespDto.AppliedRespDto getApplied(Long userId) {
                 // 1. 사용자 조회
                 UserApply userApply = userApplyRepository.findUserApplyByUserId(userId)
                                 .orElseThrow(() -> new CustomApiException("등록된 일정이 없어요"));
 
                 Application application = userApply.getApplication();
 
-                String testTime = application.getTestTime();
-
-                DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-                String period = formatPeriod(application.getStartDate(), application.getEndDate());
-
-                return new ApplicationRespDto.ApplyRespDto(
-                                application.getId(),
-                                period,
-                                application.getExamDate().format(dateFormatter),
-                                testTime);
+                return new ApplicationRespDto.AppliedRespDto(application);
         }
 
         // 등록한 시험에 대한 D-Day
@@ -132,13 +134,13 @@ public class ApplyService {
                 userApplyRepository.save(newUserApply);
 
                 // 5. 응답 데이터 생성
-                DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MM-dd");
                 String period = formatPeriod(newApplication.getStartDate(), newApplication.getEndDate());
 
                 return new ApplicationRespDto.ApplyRespDto(
-                                newApplication.getId(),
+                                newApplication.getExamName(),
                                 period,
                                 newApplication.getExamDate().format(dateFormatter),
-                                newApplication.getTestTime());
+                                newApplication.getReleaseDate().format(dateFormatter));
         }
 }

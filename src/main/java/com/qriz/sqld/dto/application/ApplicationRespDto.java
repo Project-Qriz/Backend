@@ -1,10 +1,7 @@
 package com.qriz.sqld.dto.application;
 
-import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.time.format.TextStyle;
 import java.util.List;
-import java.util.Locale;
 
 import com.qriz.sqld.domain.application.Application;
 
@@ -16,9 +13,11 @@ public class ApplicationRespDto {
     @Getter
     @Setter
     public static class ApplyListRespDto {
+        private Long registeredApplicationId;
         private List<ApplicationDetail> applications;
 
-        public ApplyListRespDto(List<ApplicationDetail> applications) {
+        public ApplyListRespDto(Long registeredApplicationId, List<ApplicationDetail> applications) {
+            this.registeredApplicationId = registeredApplicationId;
             this.applications = applications;
         }
 
@@ -26,19 +25,23 @@ public class ApplicationRespDto {
         @Setter
         public static class ApplicationDetail {
             private Long applyId;
+            private String examName;
             private String period;
-            private String date;
-            private String testTime;
+            private String examDate;
+            private String releaseDate;
 
             public ApplicationDetail(Application application) {
                 DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MM.dd(E)");
-                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
                 DateTimeFormatter testDateFormatter = DateTimeFormatter.ofPattern("M월 d일(E)");
-        
+                DateTimeFormatter releaseDateFormatter = DateTimeFormatter.ofPattern("M월 d일");
+
                 this.applyId = application.getId();
-                this.period = application.getStartDate().format(dateFormatter) + " ~ " + application.getEndDate().format(dateFormatter);
-                this.date = application.getExamDate().format(testDateFormatter);
-                this.testTime = application.getTestTime();
+                this.examName = application.getExamName();
+                // 접수 기간 포맷 수정
+                this.period = application.getStartDate().format(dateFormatter) + " 10:00 ~ "
+                        + application.getEndDate().format(dateFormatter) + " 18:00";
+                this.examDate = application.getExamDate().format(testDateFormatter);
+                this.releaseDate = application.getReleaseDate().format(releaseDateFormatter);
             }
         }
     }
@@ -46,16 +49,34 @@ public class ApplicationRespDto {
     @Getter
     @Setter
     public static class ApplyRespDto {
-        private Long applyId;
+        private String examName;
         private String period;
         private String examDate;
-        private String testTime;
+        private String releaseDate;
 
-        public ApplyRespDto(Long applyId, String period, String examDate, String testTime) {
-            this.applyId = applyId;
+        public ApplyRespDto(String examName, String period, String examDate, String releaseDate) {
+            this.examName = examName;
             this.period = period;
             this.examDate = examDate;
-            this.testTime = testTime;
+            this.releaseDate = releaseDate;
+        }
+    }
+
+    @Getter
+    public static class AppliedRespDto {
+        private String examName;
+        private String period;
+        private String examDate;
+
+        public AppliedRespDto(Application application) {
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MM.dd(E)");
+            DateTimeFormatter testDateFormatter = DateTimeFormatter.ofPattern("M월 d일(E)");
+
+            this.examName = application.getExamName();
+            // 접수 기간 포맷 수정
+            this.period = application.getStartDate().format(dateFormatter) + " 10:00 ~ "
+                    + application.getEndDate().format(dateFormatter) + " 18:00";
+            this.examDate = application.getExamDate().format(testDateFormatter);
         }
     }
 
