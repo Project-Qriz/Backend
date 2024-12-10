@@ -41,4 +41,6 @@ public interface UserExamSessionRepository extends JpaRepository<UserExamSession
                         String session,
                         LocalDateTime startDate,
                         LocalDateTime endDate);
+
+        List<UserExamSession> findByUserIdOrderByCompletionDateDesc(Long userId);
 }

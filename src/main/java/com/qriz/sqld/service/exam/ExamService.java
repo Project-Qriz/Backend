@@ -13,6 +13,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,8 @@ import com.qriz.sqld.domain.user.User;
 import com.qriz.sqld.domain.user.UserRepository;
 import com.qriz.sqld.dto.daily.ResultDetailDto;
 import com.qriz.sqld.dto.exam.ExamReqDto;
+import com.qriz.sqld.dto.exam.ExamRespDto;
+import com.qriz.sqld.dto.exam.ExamRespDto.SessionList;
 import com.qriz.sqld.dto.exam.ExamTestResult;
 import com.qriz.sqld.dto.test.TestRespDto;
 import com.qriz.sqld.handler.ex.CustomApiException;
@@ -353,5 +356,57 @@ public class ExamService {
                 }
 
                 return new ExamTestResult.Response(session, userExamInfoList, subjectResultsList, historicalScores);
+        }
+
+        @Transactional
+        public List<ExamRespDto.SessionList> getSessionList(Long userId, String status, String sort) {
+                // 1. 모든 모의고사 회차 정보 조회
+                List<String> allSessions = questionRepository.findDistinctExamSessionByCategory(3);
+
+                // 2. 사용자가 완료한 시험 세션 정보 조회 및 Map으로 변환
+                List<UserExamSession> userSessions = userExamSessionRepository
+                                .findByUserIdOrderByCompletionDateDesc(userId);
+                Map<String, UserExamSession> completedSessionsMap = userSessions.stream()
+                                .collect(Collectors.toMap(
+                                                UserExamSession::getSession,
+                                                session -> session,
+                                                (existing, replacement) -> existing));
+
+                // 3. 각 회차별 정보 생성 및 필터링
+                Stream<ExamRespDto.SessionList> sessionStream = allSessions.stream()
+                                .map(session -> {
+                                        UserExamSession userSession = completedSessionsMap.get(session);
+                                        boolean completed = userSession != null;
+                                        String totalScore = null;
+                                        if (completed) {
+                                                double score = userSession.getSubject1Score()
+                                                                + userSession.getSubject2Score();
+                                                totalScore = String.format("%.1f", score);
+                                        }
+
+                                        return new ExamRespDto.SessionList(
+                                                        completed,
+                                                        session,
+                                                        totalScore);
+                                });
+
+                // 4. 학습 상태에 따른 필터링
+                if ("completed".equals(status)) {
+                        sessionStream = sessionStream.filter(ExamRespDto.SessionList::isCompleted);
+                } else if ("incomplete".equals(status)) {
+                        sessionStream = sessionStream.filter(session -> !session.isCompleted());
+                }
+
+                // 5. 정렬
+                Comparator<ExamRespDto.SessionList> comparator = Comparator.comparing(
+                                session -> Integer.parseInt(session.getSession().split("회차")[0]));
+
+                if ("desc".equals(sort)) {
+                        comparator = comparator.reversed();
+                }
+
+                return sessionStream
+                                .sorted(comparator)
+                                .collect(Collectors.toList());
         }
 }
