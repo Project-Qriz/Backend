@@ -100,7 +100,7 @@ public class ExamController {
      * 
      * 전체 리스트: /api/v1/exam/session-list
      * 학습 완료: /api/v1/exam/session-list?status=completed
-     * 학스 전 + 1회차부터 정렬 /api/v1/exam/session-list?status=incomplete&sort=desc
+     * 학스 전 + 1회차부터 정렬 /api/v1/exam/session-list?status=incomplete&sort=asc
      * 
      * @param loginUser
      * @return
