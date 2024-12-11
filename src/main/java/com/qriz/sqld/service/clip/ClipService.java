@@ -19,7 +19,6 @@ import com.qriz.sqld.service.daily.DailyService;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -56,13 +55,13 @@ public class ClipService {
     @Transactional(readOnly = true)
     public List<ClipRespDto> getClippedQuestions(Long userId, List<String> keyConcepts, boolean onlyIncorrect,
             Integer category, String testInfo) {
-        
+
         log.info(
                 "Filtering clips with params - userId: {}, keyConcepts: {}, onlyIncorrect: {}, category: {}, testInfo: {}",
                 userId, keyConcepts, onlyIncorrect, category, testInfo);
 
         List<Clipped> clippedList;
-        
+
         // 조건별로 적절한 Repository 메서드 호출
         if (testInfo != null) {
             clippedList = clipRepository.findByUserIdAndTestInfoOrderByQuestionNum(userId, testInfo);
@@ -168,52 +167,33 @@ public class ClipService {
         log.info("Fetching clipped question detail for userId: {} and clipId: {}", userId, clipId);
 
         Clipped clipped = clipRepository.findById(clipId)
-                .orElseThrow(() -> {
-                    log.error("Clip not found for id: {}", clipId);
-                    return new CustomApiException("해당 오답노트 기록을 찾을 수 없습니다.");
-                });
-
-        log.info("Clipped entity found: {}", clipped);
+                .orElseThrow(() -> new CustomApiException("해당 오답노트 기록을 찾을 수 없습니다."));
 
         if (!clipped.getUserActivity().getUser().getId().equals(userId)) {
-            log.error("User {} attempted to access clip {} which belongs to user {}", userId, clipId,
-                    clipped.getUserActivity().getUser().getId());
             throw new CustomApiException("자신의 오답노트 기록만 조회할 수 있습니다.");
         }
 
         UserActivity userActivity = clipped.getUserActivity();
-        if (userActivity == null) {
-            log.error("UserActivity is null for clip: {}", clipId);
-            throw new CustomApiException("해당 문제의 풀이 기록을 찾을 수 없습니다.");
-        }
-
-        log.info("UserActivity found: {}", userActivity);
-
         Question question = userActivity.getQuestion();
-        if (question == null) {
-            log.error("Question is null for UserActivity: {}", userActivity.getId());
-            throw new CustomApiException("해당 문제를 찾을 수 없습니다.");
-        }
 
-        log.info("Question found: {}", question);
-
-        String testInfo = userActivity.getTestInfo();
-        log.info("Extracted day number: {}", testInfo);
-
-        try {
-            ResultDetailDto detailDto = dailyService.getDailyResultDetail(userId, testInfo, question.getId());
-
-            // 추가된 정보 설정
-            detailDto.setTestInfo(testInfo);
-            detailDto.setTitle(question.getSkill().getTitle());
-            detailDto.setKeyConcepts(question.getSkill().getKeyConcepts());
-
-            return detailDto;
-        } catch (Exception e) {
-            log.error("Error getting daily result detail for user: {}, day: {}, question: {}", userId, testInfo,
-                    question.getId(), e);
-            throw new CustomApiException("해당 문제의 풀이 결과를 찾을 수 없습니다.");
-        }
+        // ResultDetailDto 직접 생성
+        return ResultDetailDto.builder()
+                .skillName(question.getSkill().getKeyConcepts())
+                .question(question.getQuestion())
+                .qustionNum(userActivity.getQuestionNum())
+                .description(question.getDescription())
+                .option1(question.getOption1())
+                .option2(question.getOption2())
+                .option3(question.getOption3())
+                .option4(question.getOption4())
+                .answer(question.getAnswer())
+                .solution(question.getSolution())
+                .checked(userActivity.getChecked())
+                .correction(userActivity.isCorrection())
+                .testInfo(userActivity.getTestInfo())
+                .title(question.getSkill().getTitle())
+                .keyConcepts(question.getSkill().getKeyConcepts())
+                .build();
     }
 
     @Transactional(readOnly = true)

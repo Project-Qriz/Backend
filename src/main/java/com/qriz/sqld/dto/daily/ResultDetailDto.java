@@ -14,6 +14,7 @@ import lombok.Setter;
 public class ResultDetailDto {
     private String skillName;
     private String question;
+    private int qustionNum;
     private String description;
     private String option1;
     private String option2;
