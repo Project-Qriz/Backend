@@ -76,23 +76,24 @@ public class DailyService {
             throw new CustomApiException("이 테스트에 아직 접근할 수 없습니다.");
         }
 
-        // 이미 통과했거나 재시험 기회가 없는 경우 예외 발생
         if (userDaily.isPassed() || (userDaily.getAttemptCount() > 0 && !userDaily.isRetestEligible())) {
             throw new CustomApiException("이미 완료된 테스트이거나 재시험 자격이 없습니다.");
         }
 
-        List<Question> questions;
+        // 재시험 여부 확인
+        boolean isRetest = userDaily.getAttemptCount() > 0 && userDaily.isRetestEligible();
 
-        if (userDaily.getAttemptCount() > 0 && userDaily.isRetestEligible()) {
-            // 재시험이고 재시험 자격이 있는 경우, UserActivity에서 이전 시도의 문제들을 가져옵니다.
+        if (isRetest) {
+            // 재시험인 경우 이전 시도의 문제들과 선택지 순서를 유지
             List<UserActivity> previousActivities = userActivityRepository
                     .findByUserIdAndTestInfoOrderByQuestionNumAsc(userId, dayNumber);
 
-            questions = previousActivities.stream()
-                    .map(UserActivity::getQuestion)
+            return previousActivities.stream()
+                    .map(activity -> TestRespDto.DailyRespDto.createWithOriginalOrder(activity.getQuestion()))
                     .collect(Collectors.toList());
         } else {
-            // 첫 시도인 경우, 기존 로직을 사용하여 문제를 선택합니다.
+            // 첫 시도인 경우 문제를 가져오고 선택지를 랜덤화
+            List<Question> questions;
             if (userDaily.getPlannedSkills() == null) {
                 questions = getWeekFourQuestions(userId, userDaily);
             } else if (userDaily.isReviewDay()) {
@@ -100,11 +101,12 @@ public class DailyService {
             } else {
                 questions = getRegularDayQuestions(userDaily);
             }
-        }
 
-        return questions.stream()
-                .map(TestRespDto.DailyRespDto::new)
-                .collect(Collectors.toList());
+            // 랜덤화된 선택지로 DTO 생성
+            return questions.stream()
+                    .map(TestRespDto.DailyRespDto::new) // 랜덤화된 선택지를 가진 DTO 생성
+                    .collect(Collectors.toList());
+        }
     }
 
     private List<Question> getWeekFourQuestions(Long userId, UserDaily todayPlan) {
