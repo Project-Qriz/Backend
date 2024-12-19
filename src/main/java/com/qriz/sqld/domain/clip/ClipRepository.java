@@ -101,4 +101,11 @@ public interface ClipRepository extends JpaRepository<Clipped, Long> {
         List<String> findDistinctTestInfosByUserId(@Param("userId") Long userId);
 
         void deleteByUserActivity(UserActivity userActivity);
+
+        @Query("SELECT c FROM Clipped c " +
+                        "WHERE c.userActivity.user.id = :userId " +
+                        "AND c.userActivity.testInfo = :testInfo")
+        List<Clipped> findByUserActivity_UserIdAndUserActivity_TestInfo(
+                        @Param("userId") Long userId,
+                        @Param("testInfo") String testInfo);
 }

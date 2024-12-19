@@ -86,7 +86,7 @@ public class ExamService {
                 User user = userRepository.findById(userId)
                                 .orElseThrow(() -> new CustomApiException("사용자를 찾을 수 없습니다."));
 
-                // 오늘 날짜의 세션만 삭제
+                // 오늘 날짜의 세션만 삭제 (UserExamSession, UserActivity 관리)
                 LocalDateTime today = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
                 LocalDateTime tomorrow = today.plusDays(1);
 
@@ -94,81 +94,115 @@ public class ExamService {
                                 .findByUserIdAndSessionAndCompletionDateBetween(userId, session, today, tomorrow);
 
                 for (UserExamSession previousSession : todaySessions) {
-                        // 관련된 UserActivity와 Clipped 엔티티도 함께 삭제
                         List<UserActivity> activities = userActivityRepository.findByExamSession(previousSession);
-                        for (UserActivity activity : activities) {
-                                clipRepository.deleteByUserActivity(activity);
-                        }
                         userActivityRepository.deleteByExamSession(previousSession);
                         userExamSessionRepository.delete(previousSession);
                 }
 
+                // 오답 노트 관리 - 해당 회차의 기존 오답 노트는 모두 삭제
+                deleteExistingClippedRecords(userId, session);
+
                 // 새로운 세션 생성
+                UserExamSession userExamSession = createNewExamSession(user, session);
+
+                // 활동 기록 및 결과 생성
+                List<TestRespDto.ExamSubmitRespDto> results = processActivities(user, examSubmitReqDto,
+                                userExamSession);
+
+                // 과목별 점수 계산 및 저장
+                updateSubjectScores(userExamSession, examSubmitReqDto);
+
+                return results;
+        }
+
+        // 기존 오답 노트 삭제 메서드
+        private void deleteExistingClippedRecords(Long userId, String session) {
+                List<Clipped> existingClipped = clipRepository.findByUserActivity_UserIdAndUserActivity_TestInfo(userId,
+                                session);
+                clipRepository.deleteAll(existingClipped);
+        }
+
+        // 새로운 세션 생성 메서드
+        private UserExamSession createNewExamSession(User user, String session) {
                 UserExamSession userExamSession = UserExamSession.builder()
                                 .user(user)
                                 .session(session)
                                 .attemptCount(1)
                                 .completionDate(LocalDateTime.now())
                                 .build();
+                return userExamSessionRepository.save(userExamSession);
+        }
 
-                userExamSessionRepository.save(userExamSession);
-
+        // 활동 처리 및 결과 생성 메서드
+        private List<TestRespDto.ExamSubmitRespDto> processActivities(User user, ExamReqDto examSubmitReqDto,
+                        UserExamSession userExamSession) {
                 List<TestRespDto.ExamSubmitRespDto> results = new ArrayList<>();
-                int correctCount = 0;
-                double totalScore = 0;
 
                 for (ExamReqDto.ExamSubmitReqDto activity : examSubmitReqDto.getActivities()) {
                         Question question = questionRepository.findById(activity.getQuestion().getQuestionId())
                                         .orElseThrow(() -> new CustomApiException("문제를 찾을 수 없습니다."));
 
-                        UserActivity userActivity = new UserActivity();
-                        userActivity.setUser(user);
-                        userActivity.setQuestion(question);
-                        userActivity.setTestInfo(session);
-                        userActivity.setQuestionNum(activity.getQuestionNum());
-                        userActivity.setChecked(activity.getChecked());
-                        userActivity.setCorrection(question.getAnswer().equals(activity.getChecked()));
-                        userActivity.setDate(LocalDateTime.now());
-                        double score = calculateScore(activity, question);
-                        userActivity.setScore(score);
-                        userActivity.setExamSession(userExamSession);
-                        totalScore += score;
-
+                        // UserActivity 생성 및 저장
+                        UserActivity userActivity = createUserActivity(user, question, activity, userExamSession);
                         userActivityRepository.save(userActivity);
 
-                        if (userActivity.isCorrection()) {
-                                correctCount++;
-                        }
+                        // 오답 노트 생성
+                        createClippedRecord(userActivity);
 
-                        // Clipped 엔티티 생성 및 저장
-                        Clipped clipped = new Clipped();
-                        clipped.setUserActivity(userActivity);
-                        clipped.setDate(LocalDateTime.now());
-                        clipRepository.save(clipped);
-
-                        TestRespDto.ExamSubmitRespDto result = new TestRespDto.ExamSubmitRespDto(
-                                        userActivity.getId(),
-                                        userId,
-                                        new TestRespDto.ExamSubmitRespDto.QuestionRespDto(
-                                                        question.getId(),
-                                                        getCategoryName(question.getCategory())),
-                                        activity.getQuestionNum(),
-                                        activity.getChecked(),
-                                        userActivity.isCorrection());
-
-                        results.add(result);
+                        // 결과 DTO 생성
+                        results.add(createResultDto(userActivity, user.getId(), question));
                 }
-
-                // 과목별 점수 계산 후 저장
-                Map<String, Double> subjectScores = calculateSubjectScores(examSubmitReqDto.getActivities());
-                userExamSession.setSubject1Score(subjectScores.getOrDefault("1과목", 0.0));
-                userExamSession.setSubject2Score(subjectScores.getOrDefault("2과목", 0.0));
-
-                userExamSessionRepository.save(userExamSession);
 
                 return results;
         }
 
+        // UserActivity 생성 메서드
+        private UserActivity createUserActivity(User user, Question question,
+                        ExamReqDto.ExamSubmitReqDto activity, UserExamSession userExamSession) {
+                UserActivity userActivity = new UserActivity();
+                userActivity.setUser(user);
+                userActivity.setQuestion(question);
+                userActivity.setTestInfo(userExamSession.getSession());
+                userActivity.setQuestionNum(activity.getQuestionNum());
+                userActivity.setChecked(activity.getChecked());
+                userActivity.setCorrection(question.getAnswer().equals(activity.getChecked()));
+                userActivity.setDate(LocalDateTime.now());
+                userActivity.setScore(calculateScore(activity, question));
+                userActivity.setExamSession(userExamSession);
+                return userActivity;
+        }
+
+        // Clipped 엔티티 생성 메서드
+        private void createClippedRecord(UserActivity userActivity) {
+                Clipped clipped = new Clipped();
+                clipped.setUserActivity(userActivity);
+                clipped.setDate(LocalDateTime.now());
+                clipRepository.save(clipped);
+        }
+
+        // ResultDto 생성 메서드
+        private TestRespDto.ExamSubmitRespDto createResultDto(UserActivity userActivity,
+                        Long userId, Question question) {
+                return new TestRespDto.ExamSubmitRespDto(
+                                userActivity.getId(),
+                                userId,
+                                new TestRespDto.ExamSubmitRespDto.QuestionRespDto(
+                                                question.getId(),
+                                                getCategoryName(question.getCategory())),
+                                userActivity.getQuestionNum(),
+                                userActivity.getChecked(),
+                                userActivity.isCorrection());
+        }
+
+        // 과목별 점수 계산 및 저장
+        private void updateSubjectScores(UserExamSession userExamSession, ExamReqDto examSubmitReqDto) {
+                Map<String, Double> subjectScores = calculateSubjectScores(examSubmitReqDto.getActivities());
+                userExamSession.setSubject1Score(subjectScores.getOrDefault("1과목", 0.0));
+                userExamSession.setSubject2Score(subjectScores.getOrDefault("2과목", 0.0));
+                userExamSessionRepository.save(userExamSession);
+        }
+
+        // 과목별 점수 계산
         private Map<String, Double> calculateSubjectScores(List<ExamReqDto.ExamSubmitReqDto> activities) {
                 Map<String, Double> subjectScores = new HashMap<>();
 
