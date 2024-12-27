@@ -108,4 +108,7 @@ public interface ClipRepository extends JpaRepository<Clipped, Long> {
         List<Clipped> findByUserActivity_UserIdAndUserActivity_TestInfo(
                         @Param("userId") Long userId,
                         @Param("testInfo") String testInfo);
+
+        @Query("SELECT DISTINCT ues.session FROM UserExamSession ues WHERE ues.user.id = :userId ORDER BY ues.session DESC")
+        List<String> findCompletedSessionsByUserId(@Param("userId") Long userId);
 }

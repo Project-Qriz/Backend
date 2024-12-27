@@ -243,4 +243,13 @@ public class ClipService {
                 .days(completedDays)
                 .build();
     }
+
+    @Transactional(readOnly = true)
+    public ClipRespDto.ClippedSessionsDto getClippedSessionsDtos(Long userId) {
+        List<String> completedSessions = clipRepository.findCompletedSessionsByUserId(userId);
+
+        return ClipRespDto.ClippedSessionsDto.builder()
+                .sessions(completedSessions)
+                .build();
+    }
 }
