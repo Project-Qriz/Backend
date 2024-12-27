@@ -34,4 +34,11 @@ public class ClipRespDto {
     public static class ClippedDaysDto {
         private List<String> days; 
     }
+
+    @Getter
+    @Setter
+    @Builder
+    public static class ClippedSessionsDto {
+        private List<String> sessions;    
+    }
 }

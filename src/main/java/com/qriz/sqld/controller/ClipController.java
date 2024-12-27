@@ -87,4 +87,10 @@ public class ClipController {
         ClipRespDto.ClippedDaysDto clippedDaysDto = clipService.getClippedDaysDtos(loginUser.getUser().getId());
         return new ResponseEntity<>(new ResponseDto<>(1, "완료한 데일리 리스트 조회 성공", clippedDaysDto), HttpStatus.OK);
     }
+
+    @GetMapping("/sessions")
+    public ResponseEntity<?> getClippedSessions(@AuthenticationPrincipal LoginUser loginUser) {
+        ClipRespDto.ClippedSessionsDto clippedSessionsDto = clipService.getClippedSessionsDtos(loginUser.getUser().getId());
+        return new ResponseEntity<>(new ResponseDto<>(1, "완료한 모의고사 리스트 조회 성공", clippedSessionsDto), HttpStatus.OK);
+    }
 }
