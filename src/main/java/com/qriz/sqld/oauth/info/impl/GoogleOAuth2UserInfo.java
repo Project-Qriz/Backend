@@ -2,11 +2,12 @@ package com.qriz.sqld.oauth.info.impl;
 
 import java.util.Map;
 
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
+
 import com.qriz.sqld.oauth.info.OAuth2UserInfo;
 
 public class GoogleOAuth2UserInfo extends OAuth2UserInfo {
-
-    private Map<String, Object> attributes;
 
     public GoogleOAuth2UserInfo(Map<String, Object> attributes) {
         super(attributes);
@@ -24,11 +25,19 @@ public class GoogleOAuth2UserInfo extends OAuth2UserInfo {
 
     @Override
     public String getEmail() {
-        return (String) attributes.get("email");
-    }
-
-    @Override
-    public Long getTokenExpiration() {
-        return 3600L; // 1시간 (3600초)
+        if (attributes == null) {
+            throw new OAuth2AuthenticationException(
+                new OAuth2Error("invalid_token", "User attributes are null", null)
+            );
+        }
+        
+        String email = (String) attributes.get("email");
+        if (email == null) {
+            throw new OAuth2AuthenticationException(
+                new OAuth2Error("invalid_token", "Email not found in token", null)
+            );
+        }
+        
+        return email;
     }
 }
