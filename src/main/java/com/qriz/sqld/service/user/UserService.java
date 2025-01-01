@@ -15,9 +15,15 @@ import com.qriz.sqld.handler.ex.CustomApiException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Optional;
 
@@ -25,7 +31,7 @@ import java.util.Optional;
 @Service
 public class UserService {
 
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
     private final BCryptPasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final UserDailyRepository userDailyRepository;
@@ -34,6 +40,7 @@ public class UserService {
     private final UserActivityRepository userActivityRepository;
     private final SurveyRepository surveyRepository;
     private final UserApplyRepository userApplyRepository;
+    private final RestTemplate restTemplate;
 
     // 회원 가입
     @Transactional
@@ -115,27 +122,64 @@ public class UserService {
 
     @Transactional
     public void withdraw(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new CustomApiException("존재하지 않는 사용자 입니다."));
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new CustomApiException("존재하지 않는 사용자 입니다."));
 
-        // 1. UserDaily 삭제
+        // 소셜 연결 해제
+        if (user.getProvider() != null) {
+            disconnectSocialAccount(user);
+        }
+
+        // 기존 데이터 삭제 로직
         userDailyRepository.deleteByUser(user);
-
-        // 2. SkillLevel 삭제
         skillLevelRepository.deleteByUser(user);
-
-        // 3. UserPreviewTest 삭제
         userPreviewTestRepository.deleteByUser(user);
-
-        // 4. UserActivity 삭제
         userActivityRepository.deleteByUser(user);
-
-        // 5. Survey 삭제
         surveyRepository.deleteByUser(user);
-
-        // 6. UserApply 삭제
         userApplyRepository.deleteByUser(user);
-
-        // 7. user 삭제
         userRepository.delete(user);
+    }
+
+    private void disconnectSocialAccount(User user) {
+        switch (user.getProvider().toUpperCase()) {
+            case "GOOGLE":
+                disconnectGoogle(user);
+                break;
+            case "KAKAO":
+                disconnectKakao(user);
+                break;
+            default:
+                throw new CustomApiException("지원하지 않는 소셜 로그인 제공자입니다.");
+        }
+    }
+
+    private void disconnectGoogle(User user) {
+        try {
+            // Google의 경우 토큰 취소 엔드포인트 호출
+            String revokeEndpoint = "https://accounts.google.com/o/oauth2/revoke?token=" + user.getProviderId();
+            restTemplate.getForObject(revokeEndpoint, String.class);
+        } catch (Exception e) {
+            log.warn("Google 계정 연결 해제 중 오류 발생: {}", e.getMessage());
+            // 실패해도 계속 진행 (사용자 데이터는 삭제)
+        }
+    }
+
+    private void disconnectKakao(User user) {
+        try {
+            String kakaoApiUrl = "https://kapi.kakao.com/v1/user/unlink";
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            headers.set("Authorization", "KakaoAK " + "Admin_키");  // 관리자 키 필요
+
+            MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+            params.add("target_id_type", "user_id");
+            params.add("target_id", user.getProviderId());
+
+            HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+            restTemplate.postForObject(kakaoApiUrl, request, String.class);
+        } catch (Exception e) {
+            log.warn("Kakao 계정 연결 해제 중 오류 발생: {}", e.getMessage());
+            // 실패해도 계속 진행 (사용자 데이터는 삭제)
+        }
     }
 }
