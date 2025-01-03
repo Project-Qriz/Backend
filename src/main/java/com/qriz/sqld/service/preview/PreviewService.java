@@ -338,9 +338,29 @@ public class PreviewService {
     }
 
     private List<String> getTopConceptsToImprove(ResultDto.WeakAreaAnalysis weakAreaAnalysis) {
-        return weakAreaAnalysis.getWeakAreas().stream()
-                .limit(2)
+        List<String> topConcepts = new ArrayList<>();
+
+        // 틀린 문제에서 추출한 개념들
+        List<String> weakTopics = weakAreaAnalysis.getWeakAreas().stream()
                 .map(ResultDto.WeakArea::getTopic)
                 .collect(Collectors.toList());
+
+        // 틀린 개념 먼저 추가
+        topConcepts.addAll(weakTopics);
+
+        // 만약 틀린 개념이 2개 미만이라면, 가중치가 높은 순으로 추가
+        if (topConcepts.size() < 2) {
+            List<String> highWeightTopics = getWeights().entrySet().stream()
+                    .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
+                    .map(Map.Entry::getKey)
+                    .filter(topic -> !topConcepts.contains(topic))
+                    .collect(Collectors.toList());
+
+            // 필요한 만큼만 추가
+            int needed = 2 - topConcepts.size();
+            topConcepts.addAll(highWeightTopics.subList(0, needed));
+        }
+
+        return topConcepts;
     }
 }
