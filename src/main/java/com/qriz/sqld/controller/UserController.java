@@ -127,9 +127,10 @@ public class UserController {
      * @return
      */
     @PostMapping("/v1/withdraw")
-    public ResponseEntity<?> withdraw(@AuthenticationPrincipal LoginUser loginUser) {
+    public ResponseEntity<?> withdraw(@AuthenticationPrincipal LoginUser loginUser,
+            @RequestBody(required = false) UserReqDto.WithdrawReqDto request) {
         try {
-            userService.withdraw(loginUser.getUser().getId());
+            userService.withdraw(loginUser.getUser().getId(), request);
             return new ResponseEntity<>(new ResponseDto<>(1, "회원 탈퇴 완료", null), HttpStatus.OK);
         } catch (CustomApiException e) {
             return new ResponseEntity<>(new ResponseDto<>(-1, e.getMessage(), null), HttpStatus.BAD_REQUEST);
