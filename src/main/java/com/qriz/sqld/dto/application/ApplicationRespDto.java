@@ -83,10 +83,14 @@ public class ApplicationRespDto {
     @Getter
     @Setter
     public static class ExamDDayRespDto {
-        private Integer DDay;
+        private Integer dDay;
+        private String status; // "before": D-Day, "after": D+Day
+        private boolean isEmpty; // 등록된 일정이 없는 경우 true
 
-        public ExamDDayRespDto(Integer DDay) {
-            this.DDay = DDay;
+        public ExamDDayRespDto(Integer dDay, String status, boolean isEmpty) {
+            this.dDay = dDay;
+            this.status = status;
+            this.isEmpty = isEmpty;
         }
     }
 }

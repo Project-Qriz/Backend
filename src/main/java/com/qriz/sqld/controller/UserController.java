@@ -61,36 +61,39 @@ public class UserController {
         userRepository.findByEmail(findPwdReqDto.getEmail())
                 .orElseThrow(() -> new CustomApiException("해당 이메일로 등록된 계정이 없습니다."));
 
-        // 2. 비밀번호 재설정 이메일 발송
-        mailService.sendPasswordResetEmail(findPwdReqDto.getEmail());
+        // 2. 인증번호 생성 및 이메일 발송
+        String authNumber = mailService.sendPasswordResetEmail(findPwdReqDto.getEmail());
 
-        return ResponseEntity.ok(
-                new ResponseDto<>(1, "비밀번호 재설정 링크가 이메일로 발송되었습니다.", null));
+        return new ResponseEntity<>(
+                new ResponseDto<>(1, "비밀번호 재설정 인증번호가 이메일로 발송되었습니다.", null),
+                HttpStatus.OK);
+    }
+
+    // 비밀번호 변경관련 이메일 인증 번호 검증
+    @PostMapping("/verify-pwd-reset")
+    public ResponseEntity<?> verifyPasswordReset(@Valid @RequestBody UserReqDto.VerifyAuthNumberReqDto verifyReqDto) {
+        boolean isVerified = mailService.verifyPasswordResetCode(verifyReqDto.getAuthNumber());
+
+        if (isVerified) {
+            return new ResponseEntity<>(
+                    new ResponseDto<>(1, "인증이 완료되었습니다.", null),
+                    HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(
+                    new ResponseDto<>(-1, "인증번호가 유효하지 않거나 만료되었습니다.", null),
+                    HttpStatus.BAD_REQUEST);
+        }
     }
 
     // 비밀번호 변경
     @PostMapping("/pwd-reset")
     public ResponseEntity<?> resetPassword(@Valid @RequestBody UserReqDto.ResetPasswordReqDto resetPasswordReqDto) {
         try {
-            PasswordResetToken resetToken = passwordResetTokenRepository
-                    .findByEmailAndTokenAndUsedFalse(
-                            resetPasswordReqDto.getEmail(),
-                            resetPasswordReqDto.getToken())
-                    .orElseThrow(() -> new CustomApiException("유효하지 않거나 만료된 링크입니다."));
-
-            if (resetToken.isExpired()) {
-                throw new CustomApiException("링크가 만료되었습니다. 비밀번호 찾기를 다시 시도해주세요.");
-            }
-
             // 비밀번호 변경
-            userService.resetPassword(resetPasswordReqDto.getEmail(), resetPasswordReqDto.getNewPassword());
+            userService.resetPassword(resetPasswordReqDto.getNewPassword());
 
-            // 토큰 사용 처리
-            resetToken.setUsed(true);
-            passwordResetTokenRepository.save(resetToken);
-
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new ResponseDto<>(1, "비밀번호가 성공적으로 변경되었습니다. 다시 로그인해 주세요.", null));
+            return ResponseEntity.ok()
+                    .body(new ResponseDto<>(1, "비밀번호가 성공적으로 변경되었습니다.", null));
         } catch (CustomApiException e) {
             return ResponseEntity.badRequest()
                     .body(new ResponseDto<>(-1, e.getMessage(), null));
