@@ -2,6 +2,7 @@ package com.qriz.sqld.dto.user;
 
 import java.time.LocalDateTime;
 
+import com.qriz.sqld.domain.preview.PreviewTestStatus;
 import com.qriz.sqld.domain.user.User;
 import com.qriz.sqld.util.CustomDateUtil;
 import lombok.Getter;
@@ -17,12 +18,14 @@ public class UserRespDto {
         private String username;
         private String nickname;
         private String createdAt;
+        private PreviewTestStatus previewTestStatus;
 
         public LoginRespDto(User user) {
             this.id = user.getId();
             this.username = user.getUsername();
             this.nickname = user.getNickname();
             this.createdAt = CustomDateUtil.toStringFormat(user.getCreatedAt());
+            this.previewTestStatus = user.getPreviewTestStatus();
         }
     }
 
