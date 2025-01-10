@@ -183,63 +183,70 @@ public class MailSendService {
     }
 
     @Transactional
-    public void sendPasswordResetEmail(String email) {
-        // 이전 토큰 삭제
-        resetTokenRepository.deleteByEmail(email);
+    public String sendPasswordResetEmail(String email) {
+        // 이전 인증 정보 삭제
+        verificationRepository.deleteByEmail(email);
 
-        // 새 토큰 생성
-        String resetToken = UUID.randomUUID().toString();
+        // 새 인증번호 생성
+        String authNumber = makeRandomNumber();
 
-        // 토큰 정보 저장
-        PasswordResetToken passwordResetToken = PasswordResetToken.builder()
-                .email(email)
-                .token(resetToken)
-                .expiryDate(LocalDateTime.now().plusMinutes(PasswordResetToken.EXPIRATION_MINUTES))
-                .used(false)
-                .build();
-
-        resetTokenRepository.save(passwordResetToken);
-
-        // 딥링크 생성
-        String resetLink = String.format("qriz://password-reset?token=%s&email=%s", resetToken, email);
-
-        // 개발 환경에서만 토큰 값 로그 출력
-        log.debug("Generated reset token for testing: {}", resetToken);
+        // 이메일 내용 생성 및 전송
+        String title = "비밀번호 재설정 인증번호를 확인해 주세요.";
+        String content = generatePasswordResetEmailContent(authNumber);
 
         try {
-            // 이메일 발송
             emailService.sendEmailWithInlineImage(
                     SENDER_EMAIL,
                     email,
-                    "비밀번호 재설정",
-                    generatePasswordResetEmailContent(resetLink),
+                    title,
+                    content,
                     LOGO_PATH,
                     "logo");
-            log.debug("비밀번호 재설정 이메일 발송 성공. email: {}", email);
+
+            // DB에 인증 정보 저장 (3분 유효)
+            EmailVerification verification = EmailVerification.builder()
+                    .email(email)
+                    .authNumber(authNumber)
+                    .expiryDate(LocalDateTime.now().plusMinutes(3))
+                    .verified(false)
+                    .build();
+
+            verificationRepository.save(verification);
+            log.debug("비밀번호 재설정 인증 이메일 발송 성공. email: {}", email);
+
+            return authNumber;
         } catch (Exception e) {
             log.error("비밀번호 재설정 이메일 발송 실패. email: {}", email, e);
-            resetTokenRepository.delete(passwordResetToken); // 실패시 토큰 삭제
-            throw new CustomApiException("이메일 발송에 실패했습니다. 다시 시도해 주세요.");
+            throw new RuntimeException("이메일 발송에 실패했습니다.", e);
         }
     }
 
-    // 비밀번호 재설정 토큰 검증
+    // 비밀번호 재설정 인증번호 검증
     @Transactional
-    public boolean verifyPasswordResetToken(String email, String token) {
-        return resetTokenRepository
-                .findByEmailAndTokenAndUsedFalse(email, token)
-                .map(resetToken -> {
-                    if (resetToken.isExpired()) {
-                        resetTokenRepository.delete(resetToken);
+    public boolean verifyPasswordResetCode(String authNumber) {
+        return verificationRepository
+                .findByAuthNumberAndVerifiedFalse(authNumber)
+                .map(verification -> {
+                    // 만료 시간 체크
+                    if (verification.isExpired()) {
+                        verificationRepository.delete(verification);
+                        log.debug("인증번호가 만료되었습니다. authNumber: {}", authNumber);
                         return false;
                     }
-                    resetToken.setUsed(true);
+
+                    // 인증 성공 처리
+                    verification.verify();
+                    verificationRepository.save(verification);
+                    log.debug("인증 성공. email: {}", verification.getEmail());
                     return true;
                 })
-                .orElse(false);
+                .orElseGet(() -> {
+                    log.debug("유효하지 않은 인증번호. authNumber: {}", authNumber);
+                    return false;
+                });
     }
 
-    private String generatePasswordResetEmailContent(String resetLink) {
+    private String generatePasswordResetEmailContent(String authNumber) {
         return "<!DOCTYPE html>\n" +
                 "<html lang=\"ko\">\n" +
                 "  <head>\n" +
@@ -268,8 +275,8 @@ public class MailSendService {
                 "            <tr>\n" +
                 "              <td style=\"font-weight: regular; font-size: 16px; color: #666666; padding: 0 30px 40px 30px;\">\n"
                 +
-                "                비밀번호 재설정 링크를 보내드립니다.<br>\n" +
-                "                아래 버튼을 클릭하여 새로운 비밀번호를 설정해주세요.\n" +
+                "                비밀번호 재설정 인증번호를 보내드립니다.<br>\n" +
+                "                아래의 인증번호를 입력하여 새로운 비밀번호를 설정해주세요.\n" +
                 "              </td>\n" +
                 "            </tr>\n" +
                 "            <tr>\n" +
@@ -277,7 +284,7 @@ public class MailSendService {
                 "                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\">\n" +
                 "                  <tr>\n" +
                 "                    <td style=\"text-align: center;\">\n" +
-                "                      <a href=\"" + resetLink
+                "                      <a href=\"" + authNumber
                 + "\" style=\"display: inline-block; min-width: 180px; background-color: #3A6EFE; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: bold;\">비밀번호 재설정하기</a>\n"
                 +
                 "                    </td>\n" +
@@ -286,7 +293,7 @@ public class MailSendService {
                 "              </td>\n" +
                 "            </tr>\n" +
                 "              <td style=\"font-size: 14px; color: #999999; padding: 30px 30px 0 30px;\">\n" +
-                "                본 링크는 30분 동안만 유효합니다.<br>\n" +
+                "                본 인증번호는 3분 동안만 유효합니다.<br>\n" +
                 "                비밀번호 재설정을 요청하지 않으셨다면, 이 메일을 무시하셔도 됩니다.\n" +
                 "              </td>\n" +
                 "            </tr>\n" +

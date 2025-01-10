@@ -40,4 +40,8 @@ public interface EmailVerificationRepository extends JpaRepository<EmailVerifica
 
     // 최근 실패한 인증 시도 조회
     List<EmailVerification> findByEmailAndVerifiedFalseAndCreatedAtAfter(String email, LocalDateTime since);
+
+    Optional<EmailVerification> findFirstByVerifiedTrueOrderByExpiryDateDesc();
+
+    Optional<EmailVerification> findByAuthNumberAndVerifiedFalse(String authNumber);
 }
