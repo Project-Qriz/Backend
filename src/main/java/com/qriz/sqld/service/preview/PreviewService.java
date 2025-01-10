@@ -4,6 +4,7 @@ import com.qriz.sqld.domain.question.Question;
 import com.qriz.sqld.domain.question.QuestionRepository;
 import com.qriz.sqld.domain.UserActivity.UserActivity;
 import com.qriz.sqld.domain.UserActivity.UserActivityRepository;
+import com.qriz.sqld.domain.preview.PreviewTestStatus;
 import com.qriz.sqld.domain.preview.UserPreviewTest;
 import com.qriz.sqld.domain.skill.Skill;
 import com.qriz.sqld.domain.skill.SkillRepository;
@@ -122,6 +123,10 @@ public class PreviewService {
     @Transactional
     public void processPreviewResults(Long userId, List<TestReqDto.TestSubmitReqDto> activities) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+
+        // 프리뷰 테스트 완료 상태로 업데이트
+        user.updatePreviewTestStatus(PreviewTestStatus.PREVIEW_COMPLETED);
+        userRepository.save(user);
 
         Map<Long, List<TestReqDto.TestSubmitReqDto>> activityBySkill = activities.stream()
                 .collect(Collectors

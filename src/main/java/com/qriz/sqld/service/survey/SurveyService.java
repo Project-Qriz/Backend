@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.qriz.sqld.domain.preview.PreviewTestStatus;
 import com.qriz.sqld.domain.skill.Skill;
 import com.qriz.sqld.domain.skill.SkillRepository;
 import com.qriz.sqld.domain.survey.Survey;
@@ -42,18 +43,26 @@ public class SurveyService {
                         Survey survey = Survey.createKnowsNothingSurvey(user);
                         surveyRepository.save(survey);
 
+                        // PreviewTestStatus 업데이트 - 프리뷰 테스트 스킵
+                        user.updatePreviewTestStatus(PreviewTestStatus.PREVIEW_SKIPPED);
+                        userRepository.save(user);
+
                         // 플랜 즉시 생성
                         dailyPlanService.generateDailyPlan(userId);
 
                         return Collections.singletonList(SurveyRespDto.createKnowsNothingResponse(user.getId()));
                 }
 
-                // 기존 로직 (특정 개념 선택 시)
+                // 특정 개념 선택 시
                 List<Skill> skills = skillRepository.findByKeyConceptsIn(keyConcepts);
                 List<Survey> surveys = skills.stream()
                                 .map(skill -> new Survey(user, skill, true))
                                 .collect(Collectors.toList());
                 surveyRepository.saveAll(surveys);
+
+                // PreviewTestStatus 업데이트 - 설문조사 완료
+                user.updatePreviewTestStatus(PreviewTestStatus.SURVEY_COMPLETED);
+                userRepository.save(user);
 
                 return surveys.stream()
                                 .map(survey -> new SurveyRespDto(survey.getUser().getId(), survey.getSkill().getId(),

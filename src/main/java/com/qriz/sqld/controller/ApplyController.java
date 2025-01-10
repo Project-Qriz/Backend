@@ -78,4 +78,7 @@ public class ApplyController {
                 new ResponseDto<>(1, "시험 접수 변경 성공", modifyRespDto),
                 HttpStatus.OK);
     }
+
+    // 시험 등록 취소
+
 }
