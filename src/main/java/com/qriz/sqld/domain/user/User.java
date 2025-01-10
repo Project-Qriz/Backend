@@ -19,6 +19,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.qriz.sqld.domain.apply.UserApply;
+import com.qriz.sqld.domain.preview.PreviewTestStatus;
 import com.qriz.sqld.domain.survey.Survey;
 
 import java.util.List;
@@ -75,6 +76,9 @@ public class User {
     // OAuth Key
     private String providerId;
 
+    @Enumerated(EnumType.STRING)
+    private PreviewTestStatus previewTestStatus = PreviewTestStatus.NOT_STARTED;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<UserApply> userApplies;
 
@@ -82,7 +86,7 @@ public class User {
     private List<Survey> surveys;
 
     @Builder
-    public User(Long id, String username, String nickname, String password, String email, UserEnum role, String provider, String providerId, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public User(Long id, String username, String nickname, String password, String email, UserEnum role, String provider, String providerId, LocalDateTime createdAt, LocalDateTime updatedAt, PreviewTestStatus previewTestStatus) {
         this.id = id;
         this.username = username;
         this.nickname = nickname;
@@ -93,9 +97,14 @@ public class User {
         this.providerId = providerId;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.previewTestStatus = previewTestStatus.NOT_STARTED;
     }
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public void updatePreviewTestStatus(PreviewTestStatus status) {
+        this.previewTestStatus = status;
     }
 }

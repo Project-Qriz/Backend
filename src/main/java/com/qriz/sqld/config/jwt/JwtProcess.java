@@ -11,6 +11,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.qriz.sqld.config.auth.LoginUser;
+import com.qriz.sqld.domain.preview.PreviewTestStatus;
 import com.qriz.sqld.domain.user.User;
 import com.qriz.sqld.domain.user.UserEnum;
 
@@ -24,6 +25,10 @@ public class JwtProcess {
                 .withExpiresAt(new Date(System.currentTimeMillis() + JwtVO.ACCESS_TOKEN_EXPIRATION_TIME * 1000L))
                 .withClaim("id", loginUser.getUser().getId())
                 .withClaim("role", loginUser.getUser().getRole() + "")
+                .withClaim("previewStatus",
+                        loginUser.getUser().getPreviewTestStatus() != null
+                                ? loginUser.getUser().getPreviewTestStatus().name()
+                                : PreviewTestStatus.NOT_STARTED.name())
                 .sign(Algorithm.HMAC512(JwtVO.SECRET));
         return JwtVO.TOKEN_PREFIX + jwtToken;
     }
@@ -54,7 +59,10 @@ public class JwtProcess {
             throw new JWTVerificationException("Invalid token format");
         }
 
-        User user = User.builder().id(id).role(UserEnum.valueOf(role)).build();
+        String previewStatus = decodedJWT.getClaim("previewStatus").asString();
+
+        User user = User.builder().id(id).role(UserEnum.valueOf(role))
+                .previewTestStatus(PreviewTestStatus.valueOf(previewStatus)).build();
         return new LoginUser(user);
     }
 
@@ -75,8 +83,10 @@ public class JwtProcess {
             }
 
             // Access Token인 경우 role claim 확인
-            if ("access_token".equals(subject) && jwt.getClaim("role").isNull()) {
-                return false;
+            if ("access_token".equals(subject)) {
+                if (jwt.getClaim("role").isNull() || jwt.getClaim("previewStatus").isNull()) {
+                    return false;
+                }
             }
 
             return true;
@@ -106,6 +116,7 @@ public class JwtProcess {
                 .withExpiresAt(new Date(System.currentTimeMillis() + JwtVO.ACCESS_TOKEN_EXPIRATION_TIME * 1000L))
                 .withClaim("id", loginUser.getUser().getId())
                 .withClaim("role", loginUser.getUser().getRole() + "")
+                .withClaim("previewStatus", loginUser.getUser().getPreviewTestStatus().name())
                 .sign(Algorithm.HMAC512(JwtVO.SECRET));
         return JwtVO.TOKEN_PREFIX + jwtToken;
     }

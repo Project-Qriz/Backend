@@ -22,7 +22,13 @@ public class UserReqDto {
     @Getter
     @Setter
     public static class JoinReqDto {
-        @Pattern(regexp = "^[a-zA-Z0-9]{2,20}$", message = "영문/숫자 2~20자 이내로 작성해주세요")
+        /*
+         * 1. 길이 : 6 ~ 20 자
+         * 2. 영문과 숫자를 반드시 둘 다 포함
+         * 3. 공백 불포함
+         * 4. 특수문자 불포함
+         */
+        @Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*\\d)[a-zA-Z\\d]{6,20}$", message = "영문/숫자 2~20자 이내로 작성해주세요")
         @NotEmpty
         private String username;
 

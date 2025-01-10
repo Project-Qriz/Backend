@@ -32,7 +32,6 @@ public class ApplyService {
         private final Logger logger = LoggerFactory.getLogger(ApplyService.class);
 
         // 시험 접수 목록 조회
-        // 시험 접수 목록 조회
         public ApplicationRespDto.ApplyListRespDto applyList(LoginUser loginUser) {
                 // 1. 현재 사용자가 등록한 시험 정보 조회
                 Long registeredApplicationId = null;
