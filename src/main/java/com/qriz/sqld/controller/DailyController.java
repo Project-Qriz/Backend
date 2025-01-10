@@ -20,6 +20,7 @@ import com.qriz.sqld.dto.daily.UserDailyDto;
 import com.qriz.sqld.dto.daily.WeeklyTestResultDto;
 import com.qriz.sqld.dto.test.TestReqDto;
 import com.qriz.sqld.dto.test.TestRespDto;
+import com.qriz.sqld.handler.ex.CustomApiException;
 import com.qriz.sqld.service.daily.DailyPlanService;
 import com.qriz.sqld.service.daily.DailyService;
 
@@ -55,8 +56,13 @@ public class DailyController {
          */
         @GetMapping("/plan")
         public ResponseEntity<?> getDailyPlan(@AuthenticationPrincipal LoginUser loginUser) {
-                List<UserDailyDto> dailyPlan = dailyPlanService.getUserDailyPlan(loginUser.getUser().getId());
-                return new ResponseEntity<>(new ResponseDto<>(1, "플랜 불러오기 성공", dailyPlan), HttpStatus.OK);
+                try {
+                        List<UserDailyDto> dailyPlan = dailyPlanService.getUserDailyPlan(loginUser.getUser().getId());
+                        return new ResponseEntity<>(new ResponseDto<>(1, "플랜 불러오기 성공", dailyPlan), HttpStatus.OK);
+                } catch (CustomApiException e) {
+                        // 에러 메시지를 클라이언트에게 전달
+                        return new ResponseEntity<>(new ResponseDto<>(-1, e.getMessage(), null), HttpStatus.OK);
+                }
         }
 
         /**

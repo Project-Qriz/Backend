@@ -4,11 +4,13 @@ import com.qriz.sqld.domain.UserActivity.UserActivity;
 import com.qriz.sqld.domain.UserActivity.UserActivityRepository;
 import com.qriz.sqld.domain.daily.UserDaily;
 import com.qriz.sqld.domain.daily.UserDailyRepository;
+import com.qriz.sqld.domain.preview.PreviewTestStatus;
 import com.qriz.sqld.domain.skill.Skill;
 import com.qriz.sqld.domain.skill.SkillRepository;
 import com.qriz.sqld.domain.user.User;
 import com.qriz.sqld.domain.user.UserRepository;
 import com.qriz.sqld.dto.daily.UserDailyDto;
+import com.qriz.sqld.handler.ex.CustomApiException;
 import com.qriz.sqld.util.WeekendPlanUtil;
 
 import lombok.RequiredArgsConstructor;
@@ -290,6 +292,19 @@ public class DailyPlanService {
 
     @Transactional(readOnly = true)
     public List<UserDailyDto> getUserDailyPlan(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomApiException("사용자를 찾을 수 없습니다."));
+
+        // 프리뷰 테스트 상태 확인
+        PreviewTestStatus status = user.getPreviewTestStatus();
+
+        if (status == PreviewTestStatus.NOT_STARTED) {
+            throw new CustomApiException("설문조사를 먼저 진행해 주세요.");
+        } else if (status == PreviewTestStatus.SURVEY_COMPLETED) {
+            throw new CustomApiException("프리뷰 테스트를 완료해 주세요.");
+        }
+
+        // PREVIEW_SKIPPED 또는 PREVIEW_COMPLETED 상태일 때만 데일리 플랜 반환
         List<UserDaily> dailyPlans = userDailyRepository.findByUserIdWithPlannedSkillsOrderByPlanDateAsc(userId);
         return dailyPlans.stream()
                 .map(UserDailyDto::new)
