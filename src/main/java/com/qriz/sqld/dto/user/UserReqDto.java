@@ -5,10 +5,8 @@ import com.qriz.sqld.domain.user.UserEnum;
 import lombok.Getter;
 import lombok.Setter;
 
-import org.checkerframework.checker.units.qual.s;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Pattern;
 
@@ -94,14 +92,16 @@ public class UserReqDto {
 
     @Getter
     @Setter
+    public static class VerifyAuthNumberReqDto {
+        @NotEmpty
+        private String authNumber;
+    }
+
+    @Getter
+    @Setter
     public static class ResetPasswordReqDto {
-        @Email
-        private String email;
         @NotEmpty
-        private String token;
-        @NotEmpty
-        @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=*!])(?=\\S+$).{8,16}$", 
-                 message = "비밀번호는 8자 이상이며, 영문, 숫자, 특수문자를 포함해야 합니다.")
+        @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=*!])(?=\\S+$).{8,16}$", message = "비밀번호는 8자 이상이며, 영문, 숫자, 특수문자를 포함해야 합니다.")
         private String newPassword;
     }
 

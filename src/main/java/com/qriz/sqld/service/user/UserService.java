@@ -11,6 +11,8 @@ import com.qriz.sqld.dto.user.UserReqDto;
 import com.qriz.sqld.domain.UserActivity.UserActivityRepository;
 import com.qriz.sqld.dto.user.UserRespDto;
 import com.qriz.sqld.handler.ex.CustomApiException;
+import com.qriz.sqld.mail.domain.EmailVerification.EmailVerification;
+import com.qriz.sqld.mail.domain.EmailVerification.EmailVerificationRepository;
 
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -38,6 +40,7 @@ public class UserService {
     private final UserDailyRepository userDailyRepository;
     private final SkillLevelRepository skillLevelRepository;
     private final UserPreviewTestRepository userPreviewTestRepository;
+    private final EmailVerificationRepository verificationRepository;
     private final UserActivityRepository userActivityRepository;
     private final SurveyRepository surveyRepository;
     private final UserApplyRepository userApplyRepository;
@@ -119,12 +122,20 @@ public class UserService {
     }
 
     @Transactional
-    public void resetPassword(String email, String newPassword) {
-        User user = userRepository.findByEmail(email)
+    public void resetPassword(String newPassword) {
+        // 가장 최근에 인증된 이메일 정보로 사용자 찾기
+        EmailVerification verification = verificationRepository
+                .findFirstByVerifiedTrueOrderByExpiryDateDesc()
+                .orElseThrow(() -> new CustomApiException("인증되지 않은 요청입니다."));
+
+        User user = userRepository.findByEmail(verification.getEmail())
                 .orElseThrow(() -> new CustomApiException("사용자를 찾을 수 없습니다."));
-        String encodedPassword = passwordEncoder.encode(newPassword);
-        user.setPassword(encodedPassword);
-        userRepository.save(user);
+
+        // 비밀번호 변경
+        user.setPassword(passwordEncoder.encode(newPassword));
+
+        // 인증 정보 삭제
+        verificationRepository.delete(verification);
     }
 
     @Transactional

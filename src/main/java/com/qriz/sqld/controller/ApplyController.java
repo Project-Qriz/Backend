@@ -55,7 +55,17 @@ public class ApplyController {
     @GetMapping("/applied/d-day")
     public ResponseEntity<?> getDDay(@AuthenticationPrincipal LoginUser loginUser) {
         ApplicationRespDto.ExamDDayRespDto examDDayRespDto = applyService.getDDay(loginUser.getUser().getId());
-        return new ResponseEntity<>(new ResponseDto<>(1, "남은 D-Day 계산 성공", examDDayRespDto), HttpStatus.OK);
+
+        String message;
+        if (examDDayRespDto.isEmpty()) {
+            message = "등록된 일정이 없어요";
+        } else {
+            message = examDDayRespDto.getStatus().equals("before") ? "시험까지 남은 일수 계산 성공" : "시험 후 경과 일수 계산 성공";
+        }
+
+        return new ResponseEntity<>(
+                new ResponseDto<>(1, message, examDDayRespDto),
+                HttpStatus.OK);
     }
 
     // 접수 정보 변경

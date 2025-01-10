@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.qriz.sqld.config.auth.LoginUser;
@@ -94,15 +95,24 @@ public class ApplyService {
 
         // 등록한 시험에 대한 D-Day
         public ApplicationRespDto.ExamDDayRespDto getDDay(Long userId) {
-                UserApply userApply = userApplyRepository.findUserApplyByUserId(userId)
-                                .orElseThrow(() -> new CustomApiException("등록된 일정이 없어요"));
+                // 사용자의 시험 일정 조회
+                Optional<UserApply> userApply = userApplyRepository.findUserApplyByUserId(userId);
 
-                LocalDate examDate = userApply.getApplication().getExamDate();
+                // 등록된 일정이 없는 경우
+                if (userApply.isEmpty()) {
+                        return new ApplicationRespDto.ExamDDayRespDto(null, null, true);
+                }
+
+                LocalDate examDate = userApply.get().getApplication().getExamDate();
                 LocalDate currentDate = LocalDate.now();
 
                 long daysBetween = ChronoUnit.DAYS.between(currentDate, examDate);
 
-                return new ApplicationRespDto.ExamDDayRespDto((int) daysBetween);
+                // D-Day가 지난 경우 D+N으로 표시
+                Integer dDay = (daysBetween < 0) ? (int) Math.abs(daysBetween) : (int) daysBetween;
+                String status = (daysBetween < 0) ? "after" : "before";
+
+                return new ApplicationRespDto.ExamDDayRespDto(dDay, status, false);
         }
 
         private String formatPeriod(LocalDate startDate, LocalDate endDate) {
