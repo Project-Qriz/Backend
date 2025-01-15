@@ -33,26 +33,25 @@ public class ClipController {
 
     /**
      * 오답노트 리스트 조회
-     * 
-     * @param loginUser 로그인 사용자
-     * @return
+     * testInfo가 없으면 category에 따른 최신 데이터 반환
+     * category 2: 데일리, 3: 모의고사
      */
     @GetMapping
     public ResponseEntity<?> getClippedQuestions(
             @AuthenticationPrincipal LoginUser loginUser,
             @RequestParam(required = false) List<String> keyConcepts,
             @RequestParam(required = false, defaultValue = "false") boolean onlyIncorrect,
-            @RequestParam(required = false) Integer category,
+            @RequestParam(required = true) Integer category,
             @RequestParam(required = false) String testInfo) {
-        
+
+
         List<ClipRespDto> clippedQuestions = clipService.getClippedQuestions(
                 loginUser.getUser().getId(),
                 keyConcepts,
                 onlyIncorrect,
                 category,
-                testInfo
-        );
-        
+                testInfo);
+
         return new ResponseEntity<>(new ResponseDto<>(1, "오답노트 조회 성공", clippedQuestions), HttpStatus.OK);
     }
 
@@ -90,7 +89,8 @@ public class ClipController {
 
     @GetMapping("/sessions")
     public ResponseEntity<?> getClippedSessions(@AuthenticationPrincipal LoginUser loginUser) {
-        ClipRespDto.ClippedSessionsDto clippedSessionsDto = clipService.getClippedSessionsDtos(loginUser.getUser().getId());
+        ClipRespDto.ClippedSessionsDto clippedSessionsDto = clipService
+                .getClippedSessionsDtos(loginUser.getUser().getId());
         return new ResponseEntity<>(new ResponseDto<>(1, "완료한 모의고사 리스트 조회 성공", clippedSessionsDto), HttpStatus.OK);
     }
 }

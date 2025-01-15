@@ -19,6 +19,7 @@ import com.qriz.sqld.service.daily.DailyService;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -52,43 +53,65 @@ public class ClipService {
         clipRepository.save(clipped);
     }
 
+    /**
+     * category에 따른 최신 testInfo의 문제들 조회
+     */
     @Transactional(readOnly = true)
-    public List<ClipRespDto> getClippedQuestions(Long userId, List<String> keyConcepts, boolean onlyIncorrect,
-            Integer category, String testInfo) {
+    public List<ClipRespDto> getClippedQuestions(
+            Long userId,
+            List<String> keyConcepts,
+            boolean onlyIncorrect,
+            Integer category,
+            String testInfo) {
 
-        log.info(
-                "Filtering clips with params - userId: {}, keyConcepts: {}, onlyIncorrect: {}, category: {}, testInfo: {}",
-                userId, keyConcepts, onlyIncorrect, category, testInfo);
+        log.info("Getting clipped questions - userId: {}, category: {}, testInfo: {}",
+                userId, category, testInfo);
 
-        List<Clipped> clippedList;
-
-        // 조건별로 적절한 Repository 메서드 호출
-        if (testInfo != null) {
-            clippedList = clipRepository.findByUserIdAndTestInfoOrderByQuestionNum(userId, testInfo);
-        } else if (category != null) {
-            if (keyConcepts != null && !keyConcepts.isEmpty()) {
-                clippedList = clipRepository.findByUserIdAndKeyConceptsAndCategory(userId, keyConcepts, category);
-            } else {
-                clippedList = clipRepository.findByUserIdAndCategory(userId, category);
+        // testInfo가 없으면 해당 카테고리의 최신 testInfo 찾기
+        if (testInfo == null) {
+            if (category == 2) { // 데일리
+                // Day1, Day2, ... 중 가장 큰 번호 찾기
+                Integer latestDay = clipRepository.findLatestDayNumberByUserId(userId);
+                if (latestDay != null) {
+                    testInfo = "Day" + latestDay;
+                }
+            } else if (category == 3) { // 모의고사
+                List<String> sessions = clipRepository.findCompletedSessionsByUserId(userId);
+                if (!sessions.isEmpty()) {
+                    // 이미 내림차순 정렬되어 있으므로 첫 번째 값이 최신
+                    testInfo = sessions.get(0);
+                }
             }
-        } else if (keyConcepts != null && !keyConcepts.isEmpty()) {
-            clippedList = clipRepository.findByUserIdAndKeyConcepts(userId, keyConcepts);
-        } else {
-            clippedList = clipRepository.findByUserActivity_User_IdOrderByDateDesc(userId);
         }
 
-        // 오답만 필터링
-        if (onlyIncorrect) {
-            clippedList = clippedList.stream()
-                    .filter(clip -> !clip.getUserActivity().isCorrection())
+        List<ClipRespDto> result = new ArrayList<>();
+
+        // testInfo가 있는 경우 해당하는 문제들 조회
+        if (testInfo != null) {
+            List<Clipped> clippedList = clipRepository.findByUserIdAndTestInfoOrderByQuestionNum(userId, testInfo);
+
+            // 오답만 필터링
+            if (onlyIncorrect) {
+                clippedList = clippedList.stream()
+                        .filter(clip -> !clip.getUserActivity().isCorrection())
+                        .collect(Collectors.toList());
+            }
+
+            // 키 컨셉 필터링
+            if (keyConcepts != null && !keyConcepts.isEmpty()) {
+                clippedList = clippedList.stream()
+                        .filter(clip -> keyConcepts.contains(
+                                clip.getUserActivity().getQuestion().getSkill().getKeyConcepts()))
+                        .collect(Collectors.toList());
+            }
+
+            result = clippedList.stream()
+                    .map(ClipRespDto::new)
                     .collect(Collectors.toList());
         }
 
-        log.info("Found {} clips after filtering", clippedList.size());
-
-        return clippedList.stream()
-                .map(ClipRespDto::new)
-                .collect(Collectors.toList());
+        log.info("Found {} questions for testInfo: {}", result.size(), testInfo);
+        return result;
     }
 
     @Transactional(readOnly = true)

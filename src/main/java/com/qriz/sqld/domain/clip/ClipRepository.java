@@ -111,4 +111,41 @@ public interface ClipRepository extends JpaRepository<Clipped, Long> {
 
         @Query("SELECT DISTINCT ues.session FROM UserExamSession ues WHERE ues.user.id = :userId ORDER BY ues.session DESC")
         List<String> findCompletedSessionsByUserId(@Param("userId") Long userId);
+
+        /**
+         * 데일리 테스트의 최신 testInfo 조회
+         */
+        @Query(value = "SELECT ua.testInfo FROM Clipped c " +
+                        "JOIN c.userActivity ua " +
+                        "JOIN ua.question q " +
+                        "WHERE ua.user.id = :userId " +
+                        "AND q.category = 2 " +
+                        "AND ua.testInfo LIKE 'Day%' " +
+                        "ORDER BY CAST(SUBSTRING(ua.testInfo, 4) AS int) DESC")
+        List<String> findAllDailyTestInfosOrdered(@Param("userId") Long userId);
+
+        /**
+         * 모의고사의 최신 testInfo 조회
+         */
+        @Query("SELECT ua.testInfo FROM Clipped c " +
+                        "JOIN c.userActivity ua " +
+                        "JOIN ua.question q " +
+                        "WHERE ua.user.id = :userId " +
+                        "AND q.category = 3 " + // 모의고사 카테고리
+                        "AND ua.testInfo LIKE '%회차' " +
+                        "ORDER BY CAST(SUBSTRING(ua.testInfo, 1, LOCATE('회차', ua.testInfo) - 1) AS int) DESC")
+        List<String> findLatestExamTestInfo(@Param("userId") Long userId);
+
+        /**
+         * 특정 category의 클립 목록 조회
+         */
+        @Query("SELECT c FROM Clipped c " +
+                        "JOIN c.userActivity ua " +
+                        "JOIN ua.question q " +
+                        "WHERE ua.user.id = :userId " +
+                        "AND q.category = :category " +
+                        "ORDER BY ua.date DESC")
+        List<Clipped> findByUserIdAndCategoryOrderByDateDesc(
+                        @Param("userId") Long userId,
+                        @Param("category") Integer category);
 }
