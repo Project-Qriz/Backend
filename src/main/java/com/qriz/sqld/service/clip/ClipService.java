@@ -9,7 +9,10 @@ import com.qriz.sqld.domain.UserActivity.UserActivity;
 import com.qriz.sqld.domain.UserActivity.UserActivityRepository;
 import com.qriz.sqld.domain.clip.ClipRepository;
 import com.qriz.sqld.domain.clip.Clipped;
+import com.qriz.sqld.domain.exam.UserExamSession;
+import com.qriz.sqld.domain.exam.UserExamSessionRepository;
 import com.qriz.sqld.domain.question.Question;
+import com.qriz.sqld.domain.question.QuestionRepository;
 import com.qriz.sqld.dto.clip.ClipReqDto;
 import com.qriz.sqld.dto.clip.ClipRespDto;
 import com.qriz.sqld.dto.daily.ResultDetailDto;
@@ -29,6 +32,8 @@ public class ClipService {
 
     private final ClipRepository clipRepository;
     private final UserActivityRepository userActivityRepository;
+    private final UserExamSessionRepository userExamSessionRepository;
+    private final QuestionRepository questionRepository;
     private final DailyService dailyService;
 
     private final Logger log = LoggerFactory.getLogger(ClipService.class);
@@ -269,10 +274,28 @@ public class ClipService {
 
     @Transactional(readOnly = true)
     public ClipRespDto.ClippedSessionsDto getClippedSessionsDtos(Long userId) {
-        List<String> completedSessions = clipRepository.findCompletedSessionsByUserId(userId);
+        // 1. 모든 모의고사 회차 정보 조회
+        List<String> allSessions = questionRepository.findDistinctExamSessionByCategory(3);
 
+        // 2. 사용자가 완료한 가장 최근 세션 조회
+        UserExamSession latestSession = userExamSessionRepository
+                .findFirstByUserIdOrderByCompletionDateDesc(userId)
+                .orElse(null);
+
+        // 3. 각 세션에 대해 포맷팅된 문자열 생성
+        List<String> formattedSessions = allSessions.stream()
+                .map(session -> {
+                    if (latestSession != null && session.equals(latestSession.getSession())) {
+                        return session + " (제일 최신 회차)";
+                    }
+                    return session;
+                })
+                .collect(Collectors.toList());
+
+        // 4. 최신 세션 정보 포함하여 반환
         return ClipRespDto.ClippedSessionsDto.builder()
-                .sessions(completedSessions)
+                .sessions(formattedSessions)
+                .latestSession(latestSession != null ? latestSession.getSession() : null)
                 .build();
     }
 }
