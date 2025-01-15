@@ -43,4 +43,12 @@ public interface UserExamSessionRepository extends JpaRepository<UserExamSession
                         LocalDateTime endDate);
 
         List<UserExamSession> findByUserIdOrderByCompletionDateDesc(Long userId);
+
+        /**
+         * 사용자의 가장 최근 완료된 시험 세션을 조회하는 메서드
+         *
+         * @param userId 사용자 ID
+         * @return 가장 최근 완료된 UserExamSession, 없으면 Optional.empty()
+         */
+        Optional<UserExamSession> findFirstByUserIdOrderByCompletionDateDesc(Long userId);
 }

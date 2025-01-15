@@ -40,5 +40,6 @@ public class ClipRespDto {
     @Builder
     public static class ClippedSessionsDto {
         private List<String> sessions;    
+        private String latestSession;
     }
 }

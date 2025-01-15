@@ -9,7 +9,10 @@ import com.qriz.sqld.domain.UserActivity.UserActivity;
 import com.qriz.sqld.domain.UserActivity.UserActivityRepository;
 import com.qriz.sqld.domain.clip.ClipRepository;
 import com.qriz.sqld.domain.clip.Clipped;
+import com.qriz.sqld.domain.exam.UserExamSession;
+import com.qriz.sqld.domain.exam.UserExamSessionRepository;
 import com.qriz.sqld.domain.question.Question;
+import com.qriz.sqld.domain.question.QuestionRepository;
 import com.qriz.sqld.dto.clip.ClipReqDto;
 import com.qriz.sqld.dto.clip.ClipRespDto;
 import com.qriz.sqld.dto.daily.ResultDetailDto;
@@ -19,6 +22,7 @@ import com.qriz.sqld.service.daily.DailyService;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,6 +32,8 @@ public class ClipService {
 
     private final ClipRepository clipRepository;
     private final UserActivityRepository userActivityRepository;
+    private final UserExamSessionRepository userExamSessionRepository;
+    private final QuestionRepository questionRepository;
     private final DailyService dailyService;
 
     private final Logger log = LoggerFactory.getLogger(ClipService.class);
@@ -52,43 +58,65 @@ public class ClipService {
         clipRepository.save(clipped);
     }
 
+    /**
+     * category에 따른 최신 testInfo의 문제들 조회
+     */
     @Transactional(readOnly = true)
-    public List<ClipRespDto> getClippedQuestions(Long userId, List<String> keyConcepts, boolean onlyIncorrect,
-            Integer category, String testInfo) {
+    public List<ClipRespDto> getClippedQuestions(
+            Long userId,
+            List<String> keyConcepts,
+            boolean onlyIncorrect,
+            Integer category,
+            String testInfo) {
 
-        log.info(
-                "Filtering clips with params - userId: {}, keyConcepts: {}, onlyIncorrect: {}, category: {}, testInfo: {}",
-                userId, keyConcepts, onlyIncorrect, category, testInfo);
+        log.info("Getting clipped questions - userId: {}, category: {}, testInfo: {}",
+                userId, category, testInfo);
 
-        List<Clipped> clippedList;
-
-        // 조건별로 적절한 Repository 메서드 호출
-        if (testInfo != null) {
-            clippedList = clipRepository.findByUserIdAndTestInfoOrderByQuestionNum(userId, testInfo);
-        } else if (category != null) {
-            if (keyConcepts != null && !keyConcepts.isEmpty()) {
-                clippedList = clipRepository.findByUserIdAndKeyConceptsAndCategory(userId, keyConcepts, category);
-            } else {
-                clippedList = clipRepository.findByUserIdAndCategory(userId, category);
+        // testInfo가 없으면 해당 카테고리의 최신 testInfo 찾기
+        if (testInfo == null) {
+            if (category == 2) { // 데일리
+                // Day1, Day2, ... 중 가장 큰 번호 찾기
+                Integer latestDay = clipRepository.findLatestDayNumberByUserId(userId);
+                if (latestDay != null) {
+                    testInfo = "Day" + latestDay;
+                }
+            } else if (category == 3) { // 모의고사
+                List<String> sessions = clipRepository.findCompletedSessionsByUserId(userId);
+                if (!sessions.isEmpty()) {
+                    // 이미 내림차순 정렬되어 있으므로 첫 번째 값이 최신
+                    testInfo = sessions.get(0);
+                }
             }
-        } else if (keyConcepts != null && !keyConcepts.isEmpty()) {
-            clippedList = clipRepository.findByUserIdAndKeyConcepts(userId, keyConcepts);
-        } else {
-            clippedList = clipRepository.findByUserActivity_User_IdOrderByDateDesc(userId);
         }
 
-        // 오답만 필터링
-        if (onlyIncorrect) {
-            clippedList = clippedList.stream()
-                    .filter(clip -> !clip.getUserActivity().isCorrection())
+        List<ClipRespDto> result = new ArrayList<>();
+
+        // testInfo가 있는 경우 해당하는 문제들 조회
+        if (testInfo != null) {
+            List<Clipped> clippedList = clipRepository.findByUserIdAndTestInfoOrderByQuestionNum(userId, testInfo);
+
+            // 오답만 필터링
+            if (onlyIncorrect) {
+                clippedList = clippedList.stream()
+                        .filter(clip -> !clip.getUserActivity().isCorrection())
+                        .collect(Collectors.toList());
+            }
+
+            // 키 컨셉 필터링
+            if (keyConcepts != null && !keyConcepts.isEmpty()) {
+                clippedList = clippedList.stream()
+                        .filter(clip -> keyConcepts.contains(
+                                clip.getUserActivity().getQuestion().getSkill().getKeyConcepts()))
+                        .collect(Collectors.toList());
+            }
+
+            result = clippedList.stream()
+                    .map(ClipRespDto::new)
                     .collect(Collectors.toList());
         }
 
-        log.info("Found {} clips after filtering", clippedList.size());
-
-        return clippedList.stream()
-                .map(ClipRespDto::new)
-                .collect(Collectors.toList());
+        log.info("Found {} questions for testInfo: {}", result.size(), testInfo);
+        return result;
     }
 
     @Transactional(readOnly = true)
@@ -246,10 +274,28 @@ public class ClipService {
 
     @Transactional(readOnly = true)
     public ClipRespDto.ClippedSessionsDto getClippedSessionsDtos(Long userId) {
-        List<String> completedSessions = clipRepository.findCompletedSessionsByUserId(userId);
+        // 1. 모든 모의고사 회차 정보 조회
+        List<String> allSessions = questionRepository.findDistinctExamSessionByCategory(3);
 
+        // 2. 사용자가 완료한 가장 최근 세션 조회
+        UserExamSession latestSession = userExamSessionRepository
+                .findFirstByUserIdOrderByCompletionDateDesc(userId)
+                .orElse(null);
+
+        // 3. 각 세션에 대해 포맷팅된 문자열 생성
+        List<String> formattedSessions = allSessions.stream()
+                .map(session -> {
+                    if (latestSession != null && session.equals(latestSession.getSession())) {
+                        return session + " (제일 최신 회차)";
+                    }
+                    return session;
+                })
+                .collect(Collectors.toList());
+
+        // 4. 최신 세션 정보 포함하여 반환
         return ClipRespDto.ClippedSessionsDto.builder()
-                .sessions(completedSessions)
+                .sessions(formattedSessions)
+                .latestSession(latestSession != null ? latestSession.getSession() : null)
                 .build();
     }
 }
