@@ -61,10 +61,24 @@ public class UserService {
             throw new CustomApiException("동일한 username이 존재합니다.");
         }
 
-        // 2. 패스워드 인코딩 + 회원가입
+        // 2. 이메일 중복 검사
+        Optional<User> emailUser = userRepository.findByEmail(joinReqDto.getEmail());
+        if (emailUser.isPresent()) {
+            User existingUser = emailUser.get();
+            if (existingUser.getProvider() != null) {
+                throw new CustomApiException(
+                        String.format("이미 %s 소셜 계정으로 가입된 이메일입니다. %s 로그인을 이용해주세요.",
+                                existingUser.getProvider().toLowerCase(),
+                                existingUser.getProvider().toLowerCase()));
+            } else {
+                throw new CustomApiException("이미 가입된 이메일입니다.");
+            }
+        }
+
+        // 3. 패스워드 인코딩 + 회원가입
         User userPS = userRepository.save(joinReqDto.toEntity(passwordEncoder));
 
-        // 3. dto 응답
+        // 4. dto 응답
         return new UserRespDto.JoinRespDto(userPS);
     }
 
