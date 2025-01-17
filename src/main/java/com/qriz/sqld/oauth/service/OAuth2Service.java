@@ -1,6 +1,7 @@
 package com.qriz.sqld.oauth.service;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -68,9 +69,36 @@ public class OAuth2Service {
                                 idToken,
                                 platform);
 
-                // 사용자 조회 또는 생성
-                User user = userRepository.findByEmail(userInfo.getEmail())
-                                .orElseGet(() -> createNewUser(userInfo, provider));
+                // 해당 이메일로 가입된 계정 조회
+                Optional<User> existingUser = userRepository.findByEmail(userInfo.getEmail());
+
+                // user 변수를 조건문 밖에서 선언
+                User user;
+
+                if (existingUser.isPresent()) {
+                        user = existingUser.get(); // 기존 사용자 할당
+                        // 일반 회원가입 사용자인 경우 (provider가 null)
+                        if (user.getProvider() == null) {
+                                throw new OAuth2AuthenticationException(
+                                                new OAuth2Error(
+                                                                "email_already_exists",
+                                                                "This email is already registered as a regular member. Please use regular login.",
+                                                                null));
+                        }
+                        // 다른 소셜 로그인으로 가입한 경우
+                        if (!provider.equals(user.getProvider())) {
+                                throw new OAuth2AuthenticationException(
+                                                new OAuth2Error(
+                                                                "wrong_social_provider",
+                                                                String.format("This email is already registered with %s. Please use %s login.",
+                                                                                user.getProvider().toLowerCase(),
+                                                                                user.getProvider().toLowerCase()),
+                                                                null));
+                        }
+                } else {
+                        // 새 사용자 생성
+                        user = createNewUser(userInfo, provider);
+                }
 
                 // JWT 토큰 생성
                 LoginUser loginUser = new LoginUser(user);
