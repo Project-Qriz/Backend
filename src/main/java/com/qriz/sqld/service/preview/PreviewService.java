@@ -14,15 +14,14 @@ import com.qriz.sqld.domain.survey.Survey;
 import com.qriz.sqld.domain.survey.SurveyRepository;
 import com.qriz.sqld.domain.user.User;
 import com.qriz.sqld.domain.user.UserRepository;
+import com.qriz.sqld.dto.exam.ExamReqDto;
 import com.qriz.sqld.dto.preview.PreviewTestResult;
 import com.qriz.sqld.dto.preview.QuestionDto;
 import com.qriz.sqld.dto.preview.ResultDto;
-import com.qriz.sqld.dto.test.TestReqDto;
 import com.qriz.sqld.service.daily.DailyPlanService;
 import com.qriz.sqld.domain.preview.UserPreviewTestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -120,23 +119,22 @@ public class PreviewService {
                 totalQuestions);
     }
 
-    @Transactional
-    public void processPreviewResults(Long userId, List<TestReqDto.TestSubmitReqDto> activities) {
+    public void processPreviewResults(Long userId, List<ExamReqDto.ExamSubmitReqDto> activities) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
         // 프리뷰 테스트 완료 상태로 업데이트
         user.updatePreviewTestStatus(PreviewTestStatus.PREVIEW_COMPLETED);
         userRepository.save(user);
 
-        Map<Long, List<TestReqDto.TestSubmitReqDto>> activityBySkill = activities.stream()
+        Map<Long, List<ExamReqDto.ExamSubmitReqDto>> activityBySkill = activities.stream()
                 .collect(Collectors
                         .groupingBy(activity -> questionRepository.findById(activity.getQuestion().getQuestionId())
                                 .orElseThrow(() -> new RuntimeException("Question not found"))
                                 .getSkill().getId()));
 
-        for (Map.Entry<Long, List<TestReqDto.TestSubmitReqDto>> entry : activityBySkill.entrySet()) {
+        for (Map.Entry<Long, List<ExamReqDto.ExamSubmitReqDto>> entry : activityBySkill.entrySet()) {
             Long skillId = entry.getKey();
-            List<TestReqDto.TestSubmitReqDto> skillActivities = entry.getValue();
+            List<ExamReqDto.ExamSubmitReqDto> skillActivities = entry.getValue();
 
             Skill skill = skillRepository.findById(skillId).orElseThrow(() -> new RuntimeException("Skill not found"));
 
@@ -150,7 +148,7 @@ public class PreviewService {
             Map<Integer, Integer> difficultyTotalMap = new HashMap<>();
             Map<Integer, Integer> difficultyCorrectMap = new HashMap<>();
 
-            for (TestReqDto.TestSubmitReqDto activity : skillActivities) {
+            for (ExamReqDto.ExamSubmitReqDto activity : skillActivities) {
                 Question question = questionRepository.findById(activity.getQuestion().getQuestionId())
                         .orElseThrow(() -> new RuntimeException("Question not found"));
 
@@ -160,15 +158,11 @@ public class PreviewService {
                 userActivity.setTestInfo("Preview Test");
                 userActivity.setQuestionNum(activity.getQuestionNum());
                 userActivity.setChecked(activity.getChecked());
-                userActivity.setTimeSpent(activity.getTimeSpent());
+                userActivity.setTimeSpent(0); // ExamReqDto doesn't have timeSpent field
 
-                // 체크되지 않은 문제도 처리
                 boolean isCorrect = activity.getChecked() != null && question.getAnswer().equals(activity.getChecked());
                 userActivity.setCorrection(isCorrect);
-
-                // 정답일 경우 약 4.76점 부여 (100/21 ≈ 4.76), 체크되지 않은 경우 0점
                 userActivity.setScore(isCorrect ? 100.0 / 21 : 0.0);
-
                 userActivity.setDate(LocalDateTime.now());
 
                 userActivityRepository.save(userActivity);
@@ -180,7 +174,7 @@ public class PreviewService {
                 }
             }
 
-            // 각 난이도별 SkillLevel 업데이트 또는 생성
+            // Processing skill levels...
             for (int difficulty : difficultyTotalMap.keySet()) {
                 int total = difficultyTotalMap.get(difficulty);
                 int correct = difficultyCorrectMap.getOrDefault(difficulty, 0);
@@ -199,11 +193,11 @@ public class PreviewService {
         dailyPlanService.generateDailyPlan(userId);
     }
 
-    public ResultDto.Response analyzePreviewTestResult(Long userId, String testInfo) {
+    public ResultDto.Response analyzePreviewTestResult(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        List<UserActivity> activities = userActivityRepository.findByUserIdAndTestInfo(userId, testInfo);
+        List<UserActivity> activities = userActivityRepository.findByUserIdAndTestInfo(userId, "Preview Test");
 
         // 실전 예상 점수 계산
         double estimatedScore = calculateEstimatedScore(activities);

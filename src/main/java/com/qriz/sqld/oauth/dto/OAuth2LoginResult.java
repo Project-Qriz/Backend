@@ -11,6 +11,5 @@ import lombok.Getter;
 @AllArgsConstructor
 public class OAuth2LoginResult {
     private final String accessToken;
-    private final String refreshToken;
     private final User user;
 }

@@ -1,5 +1,6 @@
 package com.qriz.sqld.config;
 
+import com.qriz.sqld.config.auth.RefreshTokenRepository;
 import com.qriz.sqld.config.jwt.JwtAuthenticationFilter;
 import com.qriz.sqld.config.jwt.JwtAuthorizationFilter;
 import com.qriz.sqld.config.jwt.JwtVO;
@@ -30,6 +31,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -44,14 +46,20 @@ public class SecurityConfig {
 
     // JWT 필터 등록
     public class CustomSecurityFilterManager extends AbstractHttpConfigurer<CustomSecurityFilterManager, HttpSecurity> {
+
         @Override
         public void configure(HttpSecurity builder) throws Exception {
             AuthenticationManager authenticationManager = builder.getSharedObject(AuthenticationManager.class);
-            JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(authenticationManager);
+
+            // 필터 생성 시 refreshTokenRepository 주입
+            JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(authenticationManager,
+                    refreshTokenRepository);
+
             builder.addFilter(jwtAuthenticationFilter);
-            builder.addFilter(new JwtAuthorizationFilter(authenticationManager));
+            builder.addFilter(new JwtAuthorizationFilter(authenticationManager, refreshTokenRepository));
             super.configure(builder);
         }
+
     }
 
     @Bean

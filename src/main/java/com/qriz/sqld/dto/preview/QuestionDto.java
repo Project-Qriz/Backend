@@ -8,6 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class QuestionDto {
+    private Long questionId;
     private String question;
     private String option1;
     private String option2;
@@ -17,6 +18,7 @@ public class QuestionDto {
 
     public static QuestionDto from(Question question) {
         QuestionDto dto = new QuestionDto();
+        dto.setQuestionId(question.getId());
         dto.setQuestion(question.getQuestion());
         dto.setOption1(question.getOption1());
         dto.setOption2(question.getOption2());

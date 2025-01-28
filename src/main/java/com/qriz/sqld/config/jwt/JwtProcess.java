@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.qriz.sqld.config.auth.LoginUser;
 import com.qriz.sqld.domain.preview.PreviewTestStatus;
@@ -66,6 +67,26 @@ public class JwtProcess {
         return new LoginUser(user);
     }
 
+    // 만료된 토큰에서도 ID를 추출하는 메서드
+    public static LoginUser verifyAndExtractUser(String token) {
+        try {
+            DecodedJWT jwt = JWT.require(Algorithm.HMAC512(JwtVO.SECRET))
+                    .build()
+                    .verify(token);
+            return verify(token);
+        } catch (TokenExpiredException e) {
+            // 토큰이 만료되어도 정보 추출
+            try {
+                DecodedJWT jwt = JWT.decode(token);
+                Long id = jwt.getClaim("id").asLong();
+                User user = User.builder().id(id).build();
+                return new LoginUser(user);
+            } catch (Exception ex) {
+                throw new JWTVerificationException("Failed to decode expired token");
+            }
+        }
+    }
+
     // 토큰의 유효성을 검사
     public static boolean isTokenValid(String token) {
         try {
@@ -96,13 +117,13 @@ public class JwtProcess {
         }
     }
 
-    // 토큰의 만료 시간이 30분 이내로 남았는지 확인
-    public static boolean isTokenExpiringNear(String token) {
+    // 토큰 만료 시간 체크 메서드
+    public static boolean isTokenExpiringNear(String token, int minutesBeforeExpiry) {
         try {
             DecodedJWT jwt = JWT.require(Algorithm.HMAC512(JwtVO.SECRET)).build().verify(token);
             Date expiresAt = jwt.getExpiresAt();
             long timeUntilExpiration = expiresAt.getTime() - System.currentTimeMillis();
-            return timeUntilExpiration < (30 * 60 * 1000); // 30분
+            return timeUntilExpiration < (minutesBeforeExpiry * 60 * 1000);
         } catch (Exception e) {
             log.error("Token expiration check failed: ", e);
             return true;

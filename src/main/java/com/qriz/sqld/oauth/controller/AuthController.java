@@ -28,31 +28,25 @@ public class AuthController {
     @PostMapping("/social/login")
     public ResponseEntity<ResponseDto<SocialRespDto>> socialLogin(@RequestBody SocialReqDto socialReqDto) {
         try {
-            // OAuth2 로그인 처리 및 토큰 발급
             OAuth2LoginResult loginResult = oAuth2Service.processOAuth2Login(socialReqDto);
-            
-            // HTTP 헤더 설정
+
+            // HTTP 헤더 설정 - Access Token만 포함
             HttpHeaders headers = new HttpHeaders();
             headers.add(JwtVO.HEADER, JwtVO.TOKEN_PREFIX + loginResult.getAccessToken());
-            headers.add(JwtVO.REFRESH_HEADER, JwtVO.TOKEN_PREFIX + loginResult.getRefreshToken());
-            
+            // Refresh Token은 더이상 헤더에 포함하지 않음
+
             // 응답 데이터 생성
             SocialRespDto socialRespDto = SocialRespDto.fromUser(loginResult.getUser());
-            
-            log.debug("Social login successful - provider: {}, email: {}", 
-                     socialReqDto.getProvider(), loginResult.getUser().getEmail());
-            
+
             return new ResponseEntity<>(
-                new ResponseDto<>(1, "소셜 로그인 성공", socialRespDto),
-                headers,
-                HttpStatus.OK
-            );
+                    new ResponseDto<>(1, "소셜 로그인 성공", socialRespDto),
+                    headers,
+                    HttpStatus.OK);
         } catch (Exception e) {
             log.error("Social login failed", e);
             return new ResponseEntity<>(
-                new ResponseDto<>(-1, "소셜 로그인 실패: " + e.getMessage(), null),
-                HttpStatus.UNAUTHORIZED
-            );
+                    new ResponseDto<>(-1, "소셜 로그인 실패: " + e.getMessage(), null),
+                    HttpStatus.UNAUTHORIZED);
         }
     }
 }
