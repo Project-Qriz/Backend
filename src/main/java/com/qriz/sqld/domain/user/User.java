@@ -41,7 +41,7 @@ public class User {
     private Long id;
 
     // 사용자 아이디
-    @Column(unique = true, nullable = false, length = 50)
+    @Column(unique = true, nullable = false)
     private String username;
 
     // 사용자 성명
