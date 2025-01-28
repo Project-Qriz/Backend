@@ -44,7 +44,7 @@ public class UserReqDto {
         private String password;
 
         @NotEmpty
-        @Pattern(regexp = "^[a-zA-Z0-9]{2,10}@[a-zA-Z0-9]{2,6}\\.[a-zA-Z]{2,3}$", message = "이메일 형식으로 작성해주세요")
+        @Pattern(regexp = "^[a-zA-Z0-9._%+-]{2,64}@[a-zA-Z0-9.-]{2,255}\\.[a-zA-Z]{2,10}$", message = "올바른 이메일 형식을 입력해주세요.")
         private String email;
 
         @NotEmpty

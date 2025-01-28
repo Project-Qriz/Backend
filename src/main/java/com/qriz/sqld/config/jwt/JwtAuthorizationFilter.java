@@ -1,6 +1,9 @@
 package com.qriz.sqld.config.jwt;
 
 import com.qriz.sqld.config.auth.LoginUser;
+import com.qriz.sqld.config.auth.RefreshToken;
+import com.qriz.sqld.config.auth.RefreshTokenRepository;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,6 +17,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 /*
  * 모든 주소에서 동작함 (토큰 검증)
@@ -22,8 +27,12 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public JwtAuthorizationFilter(AuthenticationManager authenticationManager) {
+    private final RefreshTokenRepository refreshTokenRepository;
+
+    public JwtAuthorizationFilter(AuthenticationManager authenticationManager,
+            RefreshTokenRepository refreshTokenRepository) {
         super(authenticationManager);
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     @Override
@@ -32,56 +41,55 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
 
         if (isHeaderVerify(request, response)) {
             String accessToken = request.getHeader(JwtVO.HEADER).replace(JwtVO.TOKEN_PREFIX, "");
-            String refreshToken = request.getHeader(JwtVO.REFRESH_HEADER);
 
             try {
                 // Access Token 검증
                 if (JwtProcess.isTokenValid(accessToken)) {
-                    // Access Token이 유효한 경우
                     LoginUser loginUser = JwtProcess.verify(accessToken);
-
-                    // 만료가 임박한 경우 갱신
-                    if (JwtProcess.isTokenExpiringNear(accessToken)) {
-                        String newToken = JwtProcess.extendAccessToken(loginUser);
-                        response.setHeader(JwtVO.HEADER, newToken);
-                        log.debug("디버그 : Access Token 자동 갱신 완료");
-                    }
-
                     authenticateUser(loginUser);
                 } else {
-                    // Access Token이 만료된 경우, Refresh Token으로 갱신 시도
-                    if (refreshToken != null && refreshToken.startsWith(JwtVO.TOKEN_PREFIX)) {
-                        refreshToken = refreshToken.replace(JwtVO.TOKEN_PREFIX, "");
+                    // Access Token이 만료된 경우
+                    LoginUser loginUser = JwtProcess.verifyAndExtractUser(accessToken); // 수정된 메서드 사용
+                    Long userId = loginUser.getUser().getId();
+
+                    // RefreshToken을 DB에서 조회
+                    Optional<RefreshToken> refreshTokenOptional = refreshTokenRepository.findById(userId);
+
+                    if (refreshTokenOptional.isPresent()) {
+                        RefreshToken refreshTokenEntity = refreshTokenOptional.get();
+                        String refreshToken = refreshTokenEntity.getToken();
 
                         if (JwtProcess.isTokenValid(refreshToken)) {
-                            LoginUser loginUser = JwtProcess.verify(refreshToken);
+                            // 새로운 Access Token 발급
                             String newAccessToken = JwtProcess.createAccessToken(loginUser);
-                            response.setHeader(JwtVO.HEADER, newAccessToken);
+                            response.setHeader(JwtVO.HEADER, JwtVO.TOKEN_PREFIX + newAccessToken);
 
-                            // Refresh Token도 만료가 임박한 경우 같이 갱신
-                            if (JwtProcess.isTokenExpiringNear(refreshToken)) {
+                            // Refresh Token 만료 3일 이내 체크
+                            if (JwtProcess.isTokenExpiringNear(refreshToken, 60 * 24 * 3)) { // 3일
+                                // 새로운 Refresh Token 발급
                                 String newRefreshToken = JwtProcess.createRefreshToken(loginUser);
-                                response.setHeader(JwtVO.REFRESH_HEADER, newRefreshToken);
-                                log.debug("디버그 : Access Token과 Refresh Token 모두 갱신 완료");
-                            } else {
-                                log.debug("디버그 : Access Token 갱신 완료");
+
+                                // DB의 Refresh Token 업데이트
+                                refreshTokenEntity.updateToken(
+                                        newRefreshToken,
+                                        LocalDateTime.now().plusSeconds(JwtVO.REFRESH_TOKEN_EXPIRATION_TIME));
+                                refreshTokenRepository.save(refreshTokenEntity);
+
+                                log.debug("Refresh Token 자동 갱신 완료");
                             }
 
                             authenticateUser(loginUser);
                         } else {
-                            log.error("디버그 : Refresh Token이 만료됨");
                             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Refresh token expired");
                             return;
                         }
                     } else {
-                        log.error("디버그 : 유효한 Refresh Token이 없음");
-                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "No valid refresh token");
+                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Refresh token not found");
                         return;
                     }
                 }
-
             } catch (Exception e) {
-                log.error("디버그 : 토큰 검증 실패", e);
+                log.error("토큰 검증 실패", e);
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
                 return;
             }

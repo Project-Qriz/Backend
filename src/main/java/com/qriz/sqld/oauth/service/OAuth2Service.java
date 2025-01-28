@@ -1,5 +1,6 @@
 package com.qriz.sqld.oauth.service;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 
@@ -14,7 +15,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.qriz.sqld.config.auth.LoginUser;
+import com.qriz.sqld.config.auth.RefreshToken;
+import com.qriz.sqld.config.auth.RefreshTokenRepository;
 import com.qriz.sqld.config.jwt.JwtProcess;
+import com.qriz.sqld.config.jwt.JwtVO;
+import com.qriz.sqld.domain.preview.PreviewTestStatus;
 import com.qriz.sqld.domain.user.User;
 import com.qriz.sqld.domain.user.UserEnum;
 import com.qriz.sqld.domain.user.UserRepository;
@@ -36,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 public class OAuth2Service {
         private final UserRepository userRepository;
         private final RestTemplate restTemplate;
+        private final RefreshTokenRepository refreshTokenRepository;
 
         @Value("${oauth2.google.client-id}")
         private String googleClientId;
@@ -72,11 +78,10 @@ public class OAuth2Service {
                 // 해당 이메일로 가입된 계정 조회
                 Optional<User> existingUser = userRepository.findByEmail(userInfo.getEmail());
 
-                // user 변수를 조건문 밖에서 선언
                 User user;
 
                 if (existingUser.isPresent()) {
-                        user = existingUser.get(); // 기존 사용자 할당
+                        user = existingUser.get();
                         // 일반 회원가입 사용자인 경우 (provider가 null)
                         if (user.getProvider() == null) {
                                 throw new OAuth2AuthenticationException(
@@ -103,13 +108,19 @@ public class OAuth2Service {
                 // JWT 토큰 생성
                 LoginUser loginUser = new LoginUser(user);
                 String accessToken = JwtProcess.createAccessToken(loginUser);
+
+                // Refresh Token 생성 및 DB 저장
                 String refreshToken = JwtProcess.createRefreshToken(loginUser);
+                RefreshToken refreshTokenEntity = new RefreshToken(
+                                user.getId(),
+                                refreshToken,
+                                LocalDateTime.now().plusSeconds(JwtVO.REFRESH_TOKEN_EXPIRATION_TIME));
+                refreshTokenRepository.save(refreshTokenEntity);
 
                 log.debug("Social login successful for user: {}", user.getEmail());
 
                 return OAuth2LoginResult.builder()
                                 .accessToken(accessToken)
-                                .refreshToken(refreshToken)
                                 .user(user)
                                 .build();
         }
@@ -212,6 +223,7 @@ public class OAuth2Service {
                                 .provider(upperProvider) // 대문자로 저장
                                 .providerId(userInfo.getId())
                                 .role(UserEnum.CUSTOMER)
+                                .previewTestStatus(PreviewTestStatus.NOT_STARTED)
                                 .build();
 
                 log.debug("Creating new user with social login: {}", userInfo.getEmail());

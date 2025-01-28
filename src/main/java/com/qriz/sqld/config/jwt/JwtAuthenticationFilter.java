@@ -1,6 +1,7 @@
 package com.qriz.sqld.config.jwt;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -19,6 +20,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qriz.sqld.config.auth.LoginUser;
+import com.qriz.sqld.config.auth.RefreshToken;
+import com.qriz.sqld.config.auth.RefreshTokenRepository;
 import com.qriz.sqld.dto.user.UserReqDto;
 import com.qriz.sqld.dto.user.UserRespDto;
 import com.qriz.sqld.util.CustomResponseUtil;
@@ -27,10 +30,13 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     private AuthenticationManager authenticationManager;
+    private final RefreshTokenRepository refreshTokenRepository;
 
-    public JwtAuthenticationFilter(AuthenticationManager authenticationManager) {
+    public JwtAuthenticationFilter(AuthenticationManager authenticationManager,
+            RefreshTokenRepository refreshTokenRepository) {
         super(authenticationManager);
         this.authenticationManager = authenticationManager;
+        this.refreshTokenRepository = refreshTokenRepository;
         setFilterProcessesUrl("/api/login");
     }
 
@@ -62,16 +68,29 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
     // return authentication 잘 작동하면 successfulAuthentication 메서드 호출
     @Override
-    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,
+    protected void successfulAuthentication(HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain chain,
             Authentication authResult) throws IOException, ServletException {
         log.debug("디버그 : successfulAuthentication 호출됨");
+
         LoginUser loginUser = (LoginUser) authResult.getPrincipal();
 
+        // Access Token 생성
         String accessToken = JwtProcess.createAccessToken(loginUser);
+
+        // Refresh Token 생성
         String refreshToken = JwtProcess.createRefreshToken(loginUser);
 
+        // Refresh Token DB 저장
+        RefreshToken refreshTokenEntity = new RefreshToken(
+                loginUser.getUser().getId(),
+                refreshToken,
+                LocalDateTime.now().plusSeconds(JwtVO.REFRESH_TOKEN_EXPIRATION_TIME));
+        refreshTokenRepository.save(refreshTokenEntity);
+
+        // Access Token만 응답 헤더에 추가
         response.addHeader(JwtVO.HEADER, accessToken);
-        response.addHeader(JwtVO.REFRESH_HEADER, refreshToken);
 
         UserRespDto.LoginRespDto loginRespDto = new UserRespDto.LoginRespDto(loginUser.getUser());
         CustomResponseUtil.success(response, loginRespDto);
