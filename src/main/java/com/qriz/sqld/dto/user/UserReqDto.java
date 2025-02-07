@@ -100,6 +100,9 @@ public class UserReqDto {
     @Setter
     public static class VerifyAuthNumberReqDto {
         @NotEmpty
+        private String email;
+        
+        @NotEmpty
         private String authNumber;
     }
 
@@ -107,8 +110,12 @@ public class UserReqDto {
     @Setter
     public static class ResetPasswordReqDto {
         @NotEmpty
-        @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=*!])(?=\\S+$).{8,16}$", message = "비밀번호는 8자 이상이며, 영문, 숫자, 특수문자를 포함해야 합니다.")
+        @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$",
+                message = "비밀번호는 8자 이상, 영문자, 숫자, 특수문자를 포함해야 합니다.")
         private String newPassword;
+
+        @NotEmpty
+        private String resetToken;
     }
 
     @Getter

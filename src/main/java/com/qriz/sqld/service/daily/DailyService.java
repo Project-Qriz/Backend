@@ -174,6 +174,7 @@ public class DailyService {
             userActivity.setTimeSpent(activity.getTimeSpent());
             userActivity.setCorrection(question.getAnswer().equals(activity.getChecked()));
             userActivity.setDate(LocalDateTime.now());
+            userActivity.setUserDaily(userDaily);
             double score = calculateScore(activity, question);
             userActivity.setScore(score);
 
