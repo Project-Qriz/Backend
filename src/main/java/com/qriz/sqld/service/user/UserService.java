@@ -128,13 +128,6 @@ public class UserService {
         }
     }
 
-    // 내 정보 불러오기
-    @Transactional(readOnly = true)
-    public UserRespDto.ProfileRespDto getProfile(Long userId) {
-        User userOp = userRepository.findById(userId).orElseThrow(() -> new CustomApiException("존재하지 않는 사용자 입니다."));
-        return new UserRespDto.ProfileRespDto(userOp);
-    }
-
     @Transactional
     public void resetPassword(String newPassword, String resetToken) {
         // 토큰으로 특정 인증 정보를 찾음
@@ -221,4 +214,12 @@ public class UserService {
             log.error("Failed to disconnect Kakao account: {}", e.getMessage());
         }
     }
+
+    // 내 정보 불러오기
+    @Transactional(readOnly = true)
+    public UserRespDto.UserInfoRespDto getUserInfo(Long userId) {
+        User userOp = userRepository.findById(userId).orElseThrow(() -> new CustomApiException("존재하지 않는 사용자 입니다."));
+        return new UserRespDto.UserInfoRespDto(userOp);
+    }
+
 }

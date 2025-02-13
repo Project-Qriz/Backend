@@ -123,7 +123,7 @@ public class DailyService {
         return questionRepository.findRandomQuestionsBySkillsAndCategory(
                 todayPlan.getPlannedSkills(),
                 2, // 데일리 카테고리 값
-                10 // 데일리 테스트 문제 수
+                20 // 데일리 테스트 문제 수
         );
     }
 
@@ -159,8 +159,8 @@ public class DailyService {
                 .orElseThrow(() -> new CustomApiException("사용자를 찾을 수 없습니다."));
 
         List<TestRespDto.TestSubmitRespDto> results = new ArrayList<>();
-        int correctCount = 0;
 
+        // 각 활동(Activity)에 대해 채점 처리
         for (TestReqDto.TestSubmitReqDto activity : testSubmitReqDto.getActivities()) {
             Question question = questionRepository.findById(activity.getQuestion().getQuestionId())
                     .orElseThrow(() -> new CustomApiException("문제를 찾을 수 없습니다."));
@@ -175,6 +175,8 @@ public class DailyService {
             userActivity.setCorrection(question.getAnswer().equals(activity.getChecked()));
             userActivity.setDate(LocalDateTime.now());
             userActivity.setUserDaily(userDaily);
+
+            // 난이도별 배점을 적용하여 점수 계산
             double score = calculateScore(activity, question);
             userActivity.setScore(score);
 
@@ -191,14 +193,29 @@ public class DailyService {
                     activity.getTimeSpent(),
                     userActivity.isCorrection());
 
-            if (userActivity.isCorrection()) {
-                correctCount++;
-            }
-
             results.add(result);
         }
 
-        boolean isPassed = correctCount > 5;
+        // 전체 가능한 점수와 사용자 점수를 동적으로 산출
+        double totalPossibleScore = testSubmitReqDto.getActivities().stream()
+                .mapToDouble(activity -> {
+                    Question question = questionRepository.findById(activity.getQuestion().getQuestionId())
+                            .orElseThrow(() -> new CustomApiException("문제를 찾을 수 없습니다."));
+                    return getPointsForDifficulty(question.getDifficulty());
+                }).sum();
+
+        double userScore = testSubmitReqDto.getActivities().stream()
+                .mapToDouble(activity -> {
+                    Question question = questionRepository.findById(activity.getQuestion().getQuestionId())
+                            .orElseThrow(() -> new CustomApiException("문제를 찾을 수 없습니다."));
+                    return question.getAnswer().equals(activity.getChecked())
+                            ? getPointsForDifficulty(question.getDifficulty())
+                            : 0;
+                }).sum();
+
+        // 총점의 70% 이상이면 통과로 결정
+        boolean isPassed = userScore >= totalPossibleScore * 0.7;
+
         userDaily.updateTestStatus(isPassed);
 
         if (isPassed) {
@@ -210,7 +227,7 @@ public class DailyService {
 
         userDailyRepository.save(userDaily);
 
-        // Clipped 엔티티 저장 로직
+        // Clipped 엔티티 저장 (통과했거나 시도횟수가 2회 이상이면 클립)
         if (isPassed || userDaily.getAttemptCount() >= 2) {
             for (TestRespDto.TestSubmitRespDto result : results) {
                 UserActivity userActivity = userActivityRepository.findById(result.getActivityId())
@@ -223,16 +240,39 @@ public class DailyService {
             }
         }
 
+        // Day5, Day12, Day19 등 특정 날짜에 주말 플랜 업데이트
         int day = Integer.parseInt(dayNumber.replace("Day", ""));
-        if (day % 7 == 5 && day <= 19) { // Day5, Day12, Day19 완료 시
+        if (day % 7 == 5 && day <= 19) {
             dailyPlanService.updateWeekendPlan(userId, day);
         }
 
         return results;
     }
 
+    /**
+     * 난이도에 따라 문제의 배점을 결정하는 메서드
+     */
+    private int getPointsForDifficulty(Integer difficulty) {
+        if (difficulty == null)
+            return 5; // 기본 배점
+        switch (difficulty) {
+            case 1:
+                return 5;
+            case 2:
+                return 7;
+            case 3:
+                return 10;
+            default:
+                return 5;
+        }
+    }
+
+    /**
+     * 정답 여부에 따라 문제의 배점을 반환하는 채점 메서드
+     */
     private double calculateScore(TestReqDto.TestSubmitReqDto activity, Question question) {
-        return question.getAnswer().equals(activity.getChecked()) ? 10.0 : 0.0;
+        int points = getPointsForDifficulty(question.getDifficulty());
+        return question.getAnswer().equals(activity.getChecked()) ? points : 0;
     }
 
     /**

@@ -6,7 +6,6 @@ import com.qriz.sqld.dto.ResponseDto;
 import com.qriz.sqld.dto.user.UserReqDto;
 import com.qriz.sqld.dto.user.UserRespDto;
 import com.qriz.sqld.handler.ex.CustomApiException;
-import com.qriz.sqld.mail.domain.PasswordResetToken.PasswordResetToken;
 import com.qriz.sqld.mail.domain.PasswordResetToken.PasswordResetTokenRepository;
 import com.qriz.sqld.mail.dto.EmailRespDto;
 import com.qriz.sqld.mail.dto.EmailRespDto.VerificationResult;
@@ -124,13 +123,6 @@ public class UserController {
         }
     }
 
-    // 내 정보 불러오기
-    @GetMapping("/v1/my-profile")
-    public ResponseEntity<?> getProfile(@AuthenticationPrincipal LoginUser loginUser) {
-        UserRespDto.ProfileRespDto profileRespDto = userService.getProfile(loginUser.getUser().getId());
-        return new ResponseEntity<>(new ResponseDto<>(1, "회원 정보 불러오기 성공", profileRespDto), HttpStatus.OK);
-    }
-
     /**
      * 회원 탈퇴
      * 
@@ -148,5 +140,11 @@ public class UserController {
         } catch (Exception e) {
             return new ResponseEntity<>(new ResponseDto<>(-1, "회원 탈퇴 중 오류 발생", null), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @GetMapping("/v1/user/info")
+    public ResponseEntity<?> getUserInfo(@AuthenticationPrincipal LoginUser loginUser) {
+        UserRespDto.UserInfoRespDto userInfoRespDto = userService.getUserInfo(loginUser.getUser().getId());
+        return new ResponseEntity<>(new ResponseDto<>(1, "사용자 정보 불러오기 성공", userInfoRespDto), HttpStatus.OK);
     }
 }

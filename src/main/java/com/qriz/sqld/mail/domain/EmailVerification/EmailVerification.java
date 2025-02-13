@@ -46,7 +46,7 @@ public class EmailVerification {
     @Column(nullable = false)
     private int attemptCount;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String resetToken;
 
     @PrePersist
