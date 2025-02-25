@@ -37,7 +37,6 @@ public class ClipService {
     private final UserActivityRepository userActivityRepository;
     private final UserExamSessionRepository userExamSessionRepository;
     private final QuestionRepository questionRepository;
-    private final DailyService dailyService;
     private final UserDailyRepository userDailyRepository;
 
     private final Logger log = LoggerFactory.getLogger(ClipService.class);
@@ -197,24 +196,7 @@ public class ClipService {
         UserActivity userActivity = clipped.getUserActivity();
         Question question = userActivity.getQuestion();
 
-        // ResultDetailDto 직접 생성
-        return ResultDetailDto.builder()
-                .skillName(question.getSkill().getKeyConcepts())
-                .question(question.getQuestion())
-                .qustionNum(userActivity.getQuestionNum())
-                .description(question.getDescription())
-                .option1(question.getOption1())
-                .option2(question.getOption2())
-                .option3(question.getOption3())
-                .option4(question.getOption4())
-                .answer(question.getAnswer())
-                .solution(question.getSolution())
-                .checked(userActivity.getChecked())
-                .correction(userActivity.isCorrection())
-                .testInfo(userActivity.getTestInfo())
-                .title(question.getSkill().getTitle())
-                .keyConcepts(question.getSkill().getKeyConcepts())
-                .build();
+        return ResultDetailDto.from(question, userActivity);
     }
 
     @Transactional(readOnly = true)
