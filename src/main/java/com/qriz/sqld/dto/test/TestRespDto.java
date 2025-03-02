@@ -3,6 +3,7 @@ package com.qriz.sqld.dto.test;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 import com.qriz.sqld.domain.question.Question;
@@ -18,21 +19,26 @@ public class TestRespDto {
     @Getter
     @Setter
     @NoArgsConstructor
+    @AllArgsConstructor
+    public static class OptionDto {
+        private Long id;
+        private String content;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
     public static class DailyRespDto {
         private Long questionId;
         private Long skillId;
         private int category;
         private String question;
         private String description;
-        private String option1;
-        private String option2;
-        private String option3;
-        private String option4;
+        private List<OptionDto> options;
         private int timeLimit;
         private int difficulty;
-        // optionOrder 필드 제거
-
-        public DailyRespDto(Question questionEntity) {
+    
+        public DailyRespDto(Question questionEntity, long seed) {
             this.questionId = questionEntity.getId();
             this.skillId = questionEntity.getSkill().getId();
             this.category = questionEntity.getCategory();
@@ -40,32 +46,18 @@ public class TestRespDto {
             this.description = questionEntity.getDescription();
             this.timeLimit = questionEntity.getTimeLimit();
             this.difficulty = questionEntity.getDifficulty();
-
-            // Option 엔티티 리스트를 가져오고, 옵션 내용을 배열로 변환
             List<Option> sortedOptions = questionEntity.getSortedOptions();
-            String[] optionsArray = sortedOptions.stream()
-                    .map(Option::getContent)
-                    .toArray(String[]::new);
-
-            // 선택지 랜덤화를 수행 (랜덤화된 옵션만 반환)
-            QuestionOptions randomizedOptions = QuestionOptions.createRandomized(optionsArray);
-
-            this.option1 = randomizedOptions.getOption1();
-            this.option2 = randomizedOptions.getOption2();
-            this.option3 = randomizedOptions.getOption3();
-            this.option4 = randomizedOptions.getOption4();
-        }
-
-        // 재시험 시에도 동일하게 랜덤화된 옵션만 사용할 경우 별도의 메서드가 필요없으므로,
-        // 통일된 방식으로 생성자를 사용하면 됩니다.
-        public static DailyRespDto createWithRandomizedOrder(Question questionEntity) {
-            return new DailyRespDto(questionEntity);
+            List<Option> randomized = new ArrayList<>(sortedOptions);
+            Collections.shuffle(randomized, new Random(seed));
+            this.options = randomized.stream()
+                    .map(opt -> new OptionDto(opt.getId(), opt.getContent()))
+                    .collect(Collectors.toList());
         }
     }
 
     // 선택지 랜덤화를 위한 내부 클래스
     @Getter
-    private static class QuestionOptions {
+    public static class QuestionOptions {
         private final String option1;
         private final String option2;
         private final String option3;
@@ -79,20 +71,32 @@ public class TestRespDto {
         }
 
         /**
-         * 옵션 배열을 받아 랜덤화된 순서만 반환
+         * 기존 비결정적 랜덤화 메서드
          */
         public static QuestionOptions createRandomized(String... options) {
             List<OptionWithIndex> optionsWithIndices = new ArrayList<>();
             for (int i = 0; i < options.length; i++) {
                 optionsWithIndices.add(new OptionWithIndex(options[i], i + 1));
             }
-            // 섞어서 랜덤 순서 생성
             Collections.shuffle(optionsWithIndices);
-
             List<String> randomizedOptions = optionsWithIndices.stream()
                     .map(OptionWithIndex::getOption)
                     .collect(Collectors.toList());
+            return new QuestionOptions(randomizedOptions);
+        }
 
+        /**
+         * 시드 값을 사용한 결정적 랜덤화 메서드
+         */
+        public static QuestionOptions createRandomized(String[] options, long seed) {
+            List<OptionWithIndex> optionsWithIndices = new ArrayList<>();
+            for (int i = 0; i < options.length; i++) {
+                optionsWithIndices.add(new OptionWithIndex(options[i], i + 1));
+            }
+            Collections.shuffle(optionsWithIndices, new Random(seed));
+            List<String> randomizedOptions = optionsWithIndices.stream()
+                    .map(OptionWithIndex::getOption)
+                    .collect(Collectors.toList());
             return new QuestionOptions(randomizedOptions);
         }
     }
