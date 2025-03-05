@@ -37,7 +37,7 @@ public class TestRespDto {
         private List<OptionDto> options;
         private int timeLimit;
         private int difficulty;
-    
+
         public DailyRespDto(Question questionEntity, long seed) {
             this.questionId = questionEntity.getId();
             this.skillId = questionEntity.getSkill().getId();
@@ -267,9 +267,13 @@ public class TestRespDto {
         private int category;
         private String question;
         private String description;
+        private Long option1Id;
         private String option1;
+        private Long option2Id;
         private String option2;
+        private Long option3Id;
         private String option3;
+        private Long option4Id;
         private String option4;
 
         public ExamRespDto(Question question) {
@@ -278,14 +282,17 @@ public class TestRespDto {
             this.category = question.getCategory();
             this.question = question.getQuestion();
             this.description = question.getDescription();
-            // 기존: this.option1 = question.getOption1();
-            // 변경: Option 엔티티를 통해 옵션 값 할당
+            // Option 엔티티 리스트를 getSortedOptions()로 가져온 후, 각 옵션의 id와 content 할당
             List<Option> sortedOptions = question.getSortedOptions();
+            this.option1Id = sortedOptions.size() > 0 ? sortedOptions.get(0).getId() : null;
             this.option1 = sortedOptions.size() > 0 ? sortedOptions.get(0).getContent() : null;
+            this.option2Id = sortedOptions.size() > 1 ? sortedOptions.get(1).getId() : null;
             this.option2 = sortedOptions.size() > 1 ? sortedOptions.get(1).getContent() : null;
+            this.option3Id = sortedOptions.size() > 2 ? sortedOptions.get(2).getId() : null;
             this.option3 = sortedOptions.size() > 2 ? sortedOptions.get(2).getContent() : null;
+            this.option4Id = sortedOptions.size() > 3 ? sortedOptions.get(3).getId() : null;
             this.option4 = sortedOptions.size() > 3 ? sortedOptions.get(3).getContent() : null;
         }
-
     }
+
 }
