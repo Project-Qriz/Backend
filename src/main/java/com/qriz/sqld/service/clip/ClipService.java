@@ -9,6 +9,8 @@ import com.qriz.sqld.domain.UserActivity.UserActivity;
 import com.qriz.sqld.domain.UserActivity.UserActivityRepository;
 import com.qriz.sqld.domain.clip.ClipRepository;
 import com.qriz.sqld.domain.clip.Clipped;
+import com.qriz.sqld.domain.daily.UserDaily;
+import com.qriz.sqld.domain.daily.UserDailyRepository;
 import com.qriz.sqld.domain.exam.UserExamSession;
 import com.qriz.sqld.domain.exam.UserExamSessionRepository;
 import com.qriz.sqld.domain.question.Question;
@@ -23,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,7 +37,7 @@ public class ClipService {
     private final UserActivityRepository userActivityRepository;
     private final UserExamSessionRepository userExamSessionRepository;
     private final QuestionRepository questionRepository;
-    private final DailyService dailyService;
+    private final UserDailyRepository userDailyRepository;
 
     private final Logger log = LoggerFactory.getLogger(ClipService.class);
 
@@ -69,54 +72,42 @@ public class ClipService {
             Integer category,
             String testInfo) {
 
-        log.info("Getting clipped questions - userId: {}, category: {}, testInfo: {}",
-                userId, category, testInfo);
+        // 현재 활성화된 플랜의 버전 조회
+        List<UserDaily> currentPlan = userDailyRepository.findByUserIdAndIsArchivedFalse(userId);
+        if (currentPlan.isEmpty()) {
+            return Collections.emptyList();
+        }
+        int currentVersion = currentPlan.get(0).getPlanVersion();
 
-        // testInfo가 없으면 해당 카테고리의 최신 testInfo 찾기
-        if (testInfo == null) {
-            if (category == 2) { // 데일리
-                // Day1, Day2, ... 중 가장 큰 번호 찾기
-                Integer latestDay = clipRepository.findLatestDayNumberByUserId(userId);
-                if (latestDay != null) {
-                    testInfo = "Day" + latestDay;
-                }
-            } else if (category == 3) { // 모의고사
-                List<String> sessions = clipRepository.findCompletedSessionsByUserId(userId);
-                if (!sessions.isEmpty()) {
-                    // 이미 내림차순 정렬되어 있으므로 첫 번째 값이 최신
-                    testInfo = sessions.get(0);
-                }
-            }
+        List<Clipped> clippedList;
+
+        // testInfo 존재하는 경우
+        if (testInfo != null) {
+            clippedList = clipRepository.findByUserIdAndPlanVersion(userId, currentVersion)
+                    .stream()
+                    .filter(clip -> clip.getUserActivity().getTestInfo().equals(testInfo))
+                    .collect(Collectors.toList());
+        } else {
+            clippedList = clipRepository.findByUserIdAndPlanVersion(userId, currentVersion);
         }
 
-        List<ClipRespDto> result = new ArrayList<>();
-
-        // testInfo가 있는 경우 해당하는 문제들 조회
-        if (testInfo != null) {
-            List<Clipped> clippedList = clipRepository.findByUserIdAndTestInfoOrderByQuestionNum(userId, testInfo);
-
-            // 오답만 필터링
-            if (onlyIncorrect) {
-                clippedList = clippedList.stream()
-                        .filter(clip -> !clip.getUserActivity().isCorrection())
-                        .collect(Collectors.toList());
-            }
-
-            // 키 컨셉 필터링
-            if (keyConcepts != null && !keyConcepts.isEmpty()) {
-                clippedList = clippedList.stream()
-                        .filter(clip -> keyConcepts.contains(
-                                clip.getUserActivity().getQuestion().getSkill().getKeyConcepts()))
-                        .collect(Collectors.toList());
-            }
-
-            result = clippedList.stream()
-                    .map(ClipRespDto::new)
+        // 기존 필터링 로직 유지
+        if (onlyIncorrect) {
+            clippedList = clippedList.stream()
+                    .filter(clip -> !clip.getUserActivity().isCorrection())
                     .collect(Collectors.toList());
         }
 
-        log.info("Found {} questions for testInfo: {}", result.size(), testInfo);
-        return result;
+        if (keyConcepts != null && !keyConcepts.isEmpty()) {
+            clippedList = clippedList.stream()
+                    .filter(clip -> keyConcepts.contains(
+                            clip.getUserActivity().getQuestion().getSkill().getKeyConcepts()))
+                    .collect(Collectors.toList());
+        }
+
+        return clippedList.stream()
+                .map(ClipRespDto::new)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -131,57 +122,58 @@ public class ClipService {
     }
 
     @Transactional(readOnly = true)
-    public List<ClipRespDto> getFilteredClippedQuestions(Long userId, List<String> keyConcepts, boolean onlyIncorrect,
-            Integer category, String testInfo) {
-        List<Clipped> clippedList;
+    public List<ClipRespDto> getFilteredClippedQuestions(
+            Long userId,
+            List<String> keyConcepts,
+            boolean onlyIncorrect,
+            Integer category,
+            String testInfo) {
+
+        // 현재 활성화된 플랜의 버전 조회
+        List<UserDaily> currentPlan = userDailyRepository.findByUserIdAndIsArchivedFalse(userId);
+        if (currentPlan.isEmpty()) {
+            return Collections.emptyList();
+        }
+        int currentVersion = currentPlan.get(0).getPlanVersion();
+
+        List<Clipped> clippedList = clipRepository.findByUserIdAndPlanVersion(userId, currentVersion);
 
         log.info(
                 "Filtering clips with params - userId: {}, keyConcepts: {}, onlyIncorrect: {}, category: {}, testInfo: {}",
                 userId, keyConcepts, onlyIncorrect, category, testInfo);
 
+        // testInfo 필터링
         if (testInfo != null) {
-            clippedList = clipRepository.findByUserIdAndTestInfoOrderByQuestionNum(userId, testInfo);
-        } else {
-            if (keyConcepts == null || keyConcepts.isEmpty()) {
-                if (onlyIncorrect) {
-                    if (category == null) {
-                        clippedList = clipRepository.findIncorrectByUserId(userId);
-                    } else {
-                        clippedList = clipRepository.findIncorrectByUserIdAndCategory(userId, category);
-                        log.info("Found {} incorrect clips for category {}", clippedList.size(), category);
-                    }
-                } else {
-                    if (category == null) {
-                        clippedList = clipRepository.findByUserActivity_User_IdOrderByDateDesc(userId);
-                    } else {
-                        clippedList = clipRepository.findByUserIdAndCategory(userId, category);
-                        log.info("Found {} clips for category {}", clippedList.size(), category);
-                    }
-                }
-            } else {
-                if (onlyIncorrect) {
-                    if (category == null) {
-                        clippedList = clipRepository.findIncorrectByUserIdAndKeyConcepts(userId, keyConcepts);
-                    } else {
-                        clippedList = clipRepository.findIncorrectByUserIdAndKeyConceptsAndCategory(userId, keyConcepts,
-                                category);
-                    }
-                } else {
-                    if (category == null) {
-                        clippedList = clipRepository.findByUserIdAndKeyConcepts(userId, keyConcepts);
-                    } else {
-                        clippedList = clipRepository.findByUserIdAndKeyConceptsAndCategory(userId, keyConcepts,
-                                category);
-                    }
-                }
-            }
+            clippedList = clippedList.stream()
+                    .filter(clip -> clip.getUserActivity().getTestInfo().equals(testInfo))
+                    .collect(Collectors.toList());
+        }
+
+        // 카테고리 필터링
+        if (category != null) {
+            clippedList = clippedList.stream()
+                    .filter(clip -> clip.getUserActivity().getQuestion().getCategory() == category)
+                    .collect(Collectors.toList());
+        }
+
+        // 오답만 필터링
+        if (onlyIncorrect) {
+            clippedList = clippedList.stream()
+                    .filter(clip -> !clip.getUserActivity().isCorrection())
+                    .collect(Collectors.toList());
+        }
+
+        // 키 컨셉 필터링
+        if (keyConcepts != null && !keyConcepts.isEmpty()) {
+            clippedList = clippedList.stream()
+                    .filter(clip -> keyConcepts.contains(
+                            clip.getUserActivity().getQuestion().getSkill().getKeyConcepts()))
+                    .collect(Collectors.toList());
         }
 
         log.info("Raw clipped list size: {}", clippedList.size());
 
         List<ClipRespDto> result = clippedList.stream()
-                .filter(clipped -> (keyConcepts == null || keyConcepts.isEmpty()
-                        || keyConcepts.contains(clipped.getUserActivity().getQuestion().getSkill().getKeyConcepts())))
                 .map(ClipRespDto::new)
                 .collect(Collectors.toList());
 
@@ -204,63 +196,7 @@ public class ClipService {
         UserActivity userActivity = clipped.getUserActivity();
         Question question = userActivity.getQuestion();
 
-        // ResultDetailDto 직접 생성
-        return ResultDetailDto.builder()
-                .skillName(question.getSkill().getKeyConcepts())
-                .question(question.getQuestion())
-                .qustionNum(userActivity.getQuestionNum())
-                .description(question.getDescription())
-                .option1(question.getOption1())
-                .option2(question.getOption2())
-                .option3(question.getOption3())
-                .option4(question.getOption4())
-                .answer(question.getAnswer())
-                .solution(question.getSolution())
-                .checked(userActivity.getChecked())
-                .correction(userActivity.isCorrection())
-                .testInfo(userActivity.getTestInfo())
-                .title(question.getSkill().getTitle())
-                .keyConcepts(question.getSkill().getKeyConcepts())
-                .build();
-    }
-
-    @Transactional(readOnly = true)
-    public List<ClipRespDto> getFilteredClippedQuestions(Long userId, List<String> keyConcepts, boolean onlyIncorrect,
-            Integer category) {
-        List<Clipped> clippedList;
-        if (keyConcepts == null || keyConcepts.isEmpty()) {
-            if (onlyIncorrect) {
-                if (category == null) {
-                    clippedList = clipRepository.findIncorrectByUserId(userId);
-                } else {
-                    clippedList = clipRepository.findIncorrectByUserIdAndCategory(userId, category);
-                }
-            } else {
-                if (category == null) {
-                    clippedList = clipRepository.findByUserActivity_User_IdOrderByDateDesc(userId);
-                } else {
-                    clippedList = clipRepository.findByUserIdAndCategory(userId, category);
-                }
-            }
-        } else {
-            if (onlyIncorrect) {
-                if (category == null) {
-                    clippedList = clipRepository.findIncorrectByUserIdAndKeyConcepts(userId, keyConcepts);
-                } else {
-                    clippedList = clipRepository.findIncorrectByUserIdAndKeyConceptsAndCategory(userId, keyConcepts,
-                            category);
-                }
-            } else {
-                if (category == null) {
-                    clippedList = clipRepository.findByUserIdAndKeyConcepts(userId, keyConcepts);
-                } else {
-                    clippedList = clipRepository.findByUserIdAndKeyConceptsAndCategory(userId, keyConcepts, category);
-                }
-            }
-        }
-        return clippedList.stream()
-                .map(ClipRespDto::new)
-                .collect(Collectors.toList());
+        return ResultDetailDto.from(question, userActivity);
     }
 
     @Transactional(readOnly = true)

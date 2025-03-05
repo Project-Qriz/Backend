@@ -128,27 +128,24 @@ public class UserService {
         }
     }
 
-    // 내 정보 불러오기
-    @Transactional(readOnly = true)
-    public UserRespDto.ProfileRespDto getProfile(Long userId) {
-        User userOp = userRepository.findById(userId).orElseThrow(() -> new CustomApiException("존재하지 않는 사용자 입니다."));
-        return new UserRespDto.ProfileRespDto(userOp);
-    }
-
     @Transactional
-    public void resetPassword(String newPassword) {
-        // 가장 최근에 인증된 이메일 정보로 사용자 찾기
+    public void resetPassword(String newPassword, String resetToken) {
+        // 토큰으로 특정 인증 정보를 찾음
         EmailVerification verification = verificationRepository
-                .findFirstByVerifiedTrueOrderByExpiryDateDesc()
-                .orElseThrow(() -> new CustomApiException("인증되지 않은 요청입니다."));
+                .findByResetTokenAndVerifiedTrue(resetToken)
+                .orElseThrow(() -> new CustomApiException("유효하지 않은 인증 정보입니다."));
+
+        // 토큰의 만료 여부 확인
+        if (verification.isExpired()) {
+            throw new CustomApiException("인증이 만료되었습니다.");
+        }
 
         User user = userRepository.findByEmail(verification.getEmail())
                 .orElseThrow(() -> new CustomApiException("사용자를 찾을 수 없습니다."));
 
-        // 비밀번호 변경
         user.setPassword(passwordEncoder.encode(newPassword));
 
-        // 인증 정보 삭제
+        // 사용된 인증 정보 삭제
         verificationRepository.delete(verification);
     }
 
@@ -217,4 +214,12 @@ public class UserService {
             log.error("Failed to disconnect Kakao account: {}", e.getMessage());
         }
     }
+
+    // 내 정보 불러오기
+    @Transactional(readOnly = true)
+    public UserRespDto.UserInfoRespDto getUserInfo(Long userId) {
+        User userOp = userRepository.findById(userId).orElseThrow(() -> new CustomApiException("존재하지 않는 사용자 입니다."));
+        return new UserRespDto.UserInfoRespDto(userOp);
+    }
+
 }

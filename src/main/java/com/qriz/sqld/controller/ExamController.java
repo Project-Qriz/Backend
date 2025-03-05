@@ -19,7 +19,6 @@ import com.qriz.sqld.dto.daily.ResultDetailDto;
 import com.qriz.sqld.dto.exam.ExamReqDto;
 import com.qriz.sqld.dto.exam.ExamRespDto;
 import com.qriz.sqld.dto.exam.ExamTestResult;
-import com.qriz.sqld.dto.test.TestReqDto;
 import com.qriz.sqld.service.exam.ExamService;
 
 import lombok.RequiredArgsConstructor;

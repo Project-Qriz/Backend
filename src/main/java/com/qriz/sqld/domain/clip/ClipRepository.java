@@ -6,6 +6,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.qriz.sqld.domain.UserActivity.UserActivity;
+import com.qriz.sqld.domain.daily.UserDaily;
 
 import java.util.List;
 import java.util.Optional;
@@ -148,4 +149,18 @@ public interface ClipRepository extends JpaRepository<Clipped, Long> {
         List<Clipped> findByUserIdAndCategoryOrderByDateDesc(
                         @Param("userId") Long userId,
                         @Param("category") Integer category);
+
+        // UserActivity와 UserDaily를 조인하여 현재 버전의 데이터만 조회
+        @Query("SELECT c FROM Clipped c JOIN c.userActivity ua JOIN ua.question q JOIN q.skill s WHERE ua.user.id = :userId AND ua.userDaily.planVersion = :version ORDER BY c.date DESC")
+        List<Clipped> findByUserIdAndPlanVersion(
+                        @Param("userId") Long userId,
+                        @Param("version") int version);
+
+        // 특정 UserDaily 목록에 속한 모든 Clipped 데이터 삭제
+        @Query("DELETE FROM Clipped c WHERE c.userActivity.userDaily IN :userDailies")
+        void deleteByUserDailyIn(@Param("userDailies") List<UserDaily> userDailies);
+
+        // UserDaily의 planVersion을 기준으로 Clipped 데이터 삭제
+        @Query("DELETE FROM Clipped c WHERE c.userActivity.userDaily.planVersion = :planVersion AND c.userActivity.user.id = :userId")
+        void deleteByUserDailyPlanVersion(@Param("userId") Long userId, @Param("planVersion") int planVersion);
 }

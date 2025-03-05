@@ -2,6 +2,7 @@ package com.qriz.sqld.service.preview;
 
 import com.qriz.sqld.domain.question.Question;
 import com.qriz.sqld.domain.question.QuestionRepository;
+import com.qriz.sqld.domain.question.option.Option;
 import com.qriz.sqld.domain.UserActivity.UserActivity;
 import com.qriz.sqld.domain.UserActivity.UserActivityRepository;
 import com.qriz.sqld.domain.preview.PreviewTestStatus;
@@ -120,23 +121,28 @@ public class PreviewService {
     }
 
     public void processPreviewResults(Long userId, List<ExamReqDto.ExamSubmitReqDto> activities) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         // 프리뷰 테스트 완료 상태로 업데이트
         user.updatePreviewTestStatus(PreviewTestStatus.PREVIEW_COMPLETED);
         userRepository.save(user);
 
+        // 활동들을 스킬별로 그룹화
         Map<Long, List<ExamReqDto.ExamSubmitReqDto>> activityBySkill = activities.stream()
-                .collect(Collectors
-                        .groupingBy(activity -> questionRepository.findById(activity.getQuestion().getQuestionId())
-                                .orElseThrow(() -> new RuntimeException("Question not found"))
-                                .getSkill().getId()));
+                .collect(Collectors.groupingBy(activity -> {
+                    Question q = questionRepository.findById(activity.getQuestion().getQuestionId())
+                            .orElseThrow(() -> new RuntimeException("Question not found"));
+                    return q.getSkill().getId();
+                }));
 
+        // 각 스킬별로 결과 처리
         for (Map.Entry<Long, List<ExamReqDto.ExamSubmitReqDto>> entry : activityBySkill.entrySet()) {
             Long skillId = entry.getKey();
             List<ExamReqDto.ExamSubmitReqDto> skillActivities = entry.getValue();
 
-            Skill skill = skillRepository.findById(skillId).orElseThrow(() -> new RuntimeException("Skill not found"));
+            Skill skill = skillRepository.findById(skillId)
+                    .orElseThrow(() -> new RuntimeException("Skill not found"));
 
             UserPreviewTest userPreviewTest = new UserPreviewTest();
             userPreviewTest.setUser(user);
@@ -160,7 +166,13 @@ public class PreviewService {
                 userActivity.setChecked(activity.getChecked());
                 userActivity.setTimeSpent(0); // ExamReqDto doesn't have timeSpent field
 
-                boolean isCorrect = activity.getChecked() != null && question.getAnswer().equals(activity.getChecked());
+                // 수정: Option 엔티티 기반 정답 비교
+                String correctAnswer = question.getSortedOptions().stream()
+                        .filter(Option::isAnswer)
+                        .map(Option::getContent)
+                        .findFirst()
+                        .orElse("");
+                boolean isCorrect = activity.getChecked() != null && correctAnswer.equals(activity.getChecked());
                 userActivity.setCorrection(isCorrect);
                 userActivity.setScore(isCorrect ? 100.0 / 21 : 0.0);
                 userActivity.setDate(LocalDateTime.now());
@@ -174,7 +186,7 @@ public class PreviewService {
                 }
             }
 
-            // Processing skill levels...
+            // 스킬별 난이도에 따른 정확도 업데이트
             for (int difficulty : difficultyTotalMap.keySet()) {
                 int total = difficultyTotalMap.get(difficulty);
                 int correct = difficultyCorrectMap.getOrDefault(difficulty, 0);

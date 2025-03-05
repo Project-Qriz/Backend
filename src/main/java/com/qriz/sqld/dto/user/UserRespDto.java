@@ -1,7 +1,5 @@
 package com.qriz.sqld.dto.user;
 
-import java.time.LocalDateTime;
-
 import com.qriz.sqld.domain.preview.PreviewTestStatus;
 import com.qriz.sqld.domain.user.User;
 import com.qriz.sqld.util.CustomDateUtil;
@@ -14,18 +12,10 @@ public class UserRespDto {
     @Setter
     @Getter
     public static class LoginRespDto {
-        private Long id;
-        private String username;
-        private String nickname;
-        private String createdAt;
-        private PreviewTestStatus previewTestStatus;
+        private String name;
 
         public LoginRespDto(User user) {
-            this.id = user.getId();
-            this.username = user.getUsername();
-            this.nickname = user.getNickname();
-            this.createdAt = CustomDateUtil.toStringFormat(user.getCreatedAt());
-            this.previewTestStatus = user.getPreviewTestStatus();
+            this.name = user.getNickname();
         }
     }
 
@@ -97,15 +87,19 @@ public class UserRespDto {
 
     @Getter
     @Setter
-    public static class ProfileRespDto {
-        private String nickname;
-        private String username;
-        private String email; 
+    public static class UserInfoRespDto {
+        private String name; // 사용자 성명
+        private String userId; // 사용자 아이디
+        private String email;
+        private PreviewTestStatus previewTestStatus;
+        private String provider;
 
-        public ProfileRespDto(User user) {
-            this.nickname = user.getNickname();
-            this.username = user.getUsername();
+        public UserInfoRespDto(User user) {
+            this.name = user.getNickname();
+            this.userId = user.getUsername();
             this.email = user.getEmail();
+            this.previewTestStatus = user.getPreviewTestStatus();
+            this.provider = user.getProvider();
         }
     }
 }

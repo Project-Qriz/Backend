@@ -46,6 +46,9 @@ public class EmailVerification {
     @Column(nullable = false)
     private int attemptCount;
 
+    @Column(nullable = true)
+    private String resetToken;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

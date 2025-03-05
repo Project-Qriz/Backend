@@ -160,6 +160,26 @@ public class DailyController {
                 return new ResponseEntity<>(new ResponseDto<>(1, "데일리 테스트 상태 조회 성공", status), HttpStatus.OK);
         }
 
+        /**
+         * 플랜 재생성
+         * 
+         * @param loginUser
+         * @return
+         */
+        @PostMapping("/regenerate")
+        public ResponseEntity<?> regenerateDailyPlan(@AuthenticationPrincipal LoginUser loginUser) {
+                try {
+                        dailyPlanService.regenerateDailyPlan(loginUser.getUser().getId());
+                        return new ResponseEntity<>(
+                                        new ResponseDto<>(1, "새로운 학습 플랜이 생성되었습니다.", null),
+                                        HttpStatus.OK);
+                } catch (CustomApiException e) {
+                        return new ResponseEntity<>(
+                                        new ResponseDto<>(-1, e.getMessage(), null),
+                                        HttpStatus.BAD_REQUEST);
+                }
+        }
+
         // 테스트용
         @PostMapping("/complete/{dayNumber}")
         public ResponseEntity<?> completeDailyTest(@PathVariable String dayNumber,

@@ -1,6 +1,7 @@
 package com.qriz.sqld.mail.service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 
@@ -14,6 +15,8 @@ import com.qriz.sqld.mail.domain.EmailVerification.EmailVerification;
 import com.qriz.sqld.mail.domain.EmailVerification.EmailVerificationRepository;
 import com.qriz.sqld.mail.domain.PasswordResetToken.PasswordResetToken;
 import com.qriz.sqld.mail.domain.PasswordResetToken.PasswordResetTokenRepository;
+import com.qriz.sqld.mail.dto.EmailRespDto;
+import com.qriz.sqld.mail.dto.EmailRespDto.VerificationResult;
 
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -221,29 +224,42 @@ public class MailSendService {
         }
     }
 
-    // 비밀번호 재설정 인증번호 검증
+    /**
+     * 비밀번호 재설정용 인증번호 검증
+     * 
+     * @param email      사용자가 입력한 이메일
+     * @param authNumber 사용자가 입력한 인증번호
+     * @return VerificationResult - 인증 성공 여부와 resetToken(성공 시)
+     */
     @Transactional
-    public boolean verifyPasswordResetCode(String authNumber) {
-        return verificationRepository
-                .findByAuthNumberAndVerifiedFalse(authNumber)
-                .map(verification -> {
-                    // 만료 시간 체크
-                    if (verification.isExpired()) {
-                        verificationRepository.delete(verification);
-                        log.debug("인증번호가 만료되었습니다. authNumber: {}", authNumber);
-                        return false;
-                    }
+    public VerificationResult verifyPasswordResetCode(String email, String authNumber) {
+        Optional<EmailVerification> optVerification = verificationRepository
+                .findByEmailAndAuthNumberAndVerifiedFalse(email, authNumber);
 
-                    // 인증 성공 처리
-                    verification.verify();
-                    verificationRepository.save(verification);
-                    log.debug("인증 성공. email: {}", verification.getEmail());
-                    return true;
-                })
-                .orElseGet(() -> {
-                    log.debug("유효하지 않은 인증번호. authNumber: {}", authNumber);
-                    return false;
-                });
+        if (optVerification.isPresent()) {
+            EmailVerification verification = optVerification.get();
+
+            // 만료 여부 확인
+            if (verification.isExpired()) {
+                verificationRepository.delete(verification);
+                log.debug("인증번호가 만료되었습니다. email: {}, authNum: {}", email, authNumber);
+                return new EmailRespDto.VerificationResult(false, null);
+            }
+
+            // 인증 성공 처리
+            verification.verify();
+
+            // resetToken 생성 (UUID 사용) 및 저장
+            String resetToken = UUID.randomUUID().toString();
+            verification.setResetToken(resetToken);
+            verificationRepository.save(verification);
+
+            log.debug("인증 성공. email: {}, resetToken: {}", email, resetToken);
+            return new VerificationResult(true, resetToken);
+        } else {
+            log.debug("유효하지 않은 인증번호. email: {}, authNum: {}", email, authNumber);
+            return new VerificationResult(false, null);
+        }
     }
 
     private String generatePasswordResetEmailContent(String authNumber) {
@@ -283,10 +299,9 @@ public class MailSendService {
                 "              <td style=\"padding: 0 30px;\">\n" +
                 "                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\">\n" +
                 "                  <tr>\n" +
-                "                    <td style=\"text-align: center;\">\n" +
-                "                      <a href=\"" + authNumber
-                + "\" style=\"display: inline-block; min-width: 180px; background-color: #3A6EFE; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: bold;\">비밀번호 재설정하기</a>\n"
+                "                    <td style=\"background-color: #F0F4F7; padding: 20px; font-size: 32px; font-weight: bold; text-align: center; color: #24282D; border-top: 2px solid #24282D;\">\n"
                 +
+                "                      " + authNumber + "\n" +
                 "                    </td>\n" +
                 "                  </tr>\n" +
                 "                </table>\n" +

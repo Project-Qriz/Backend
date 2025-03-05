@@ -6,8 +6,9 @@ import com.qriz.sqld.dto.ResponseDto;
 import com.qriz.sqld.dto.user.UserReqDto;
 import com.qriz.sqld.dto.user.UserRespDto;
 import com.qriz.sqld.handler.ex.CustomApiException;
-import com.qriz.sqld.mail.domain.PasswordResetToken.PasswordResetToken;
 import com.qriz.sqld.mail.domain.PasswordResetToken.PasswordResetTokenRepository;
+import com.qriz.sqld.mail.dto.EmailRespDto;
+import com.qriz.sqld.mail.dto.EmailRespDto.VerificationResult;
 import com.qriz.sqld.mail.service.MailSendService;
 import com.qriz.sqld.service.user.UserService;
 
@@ -71,12 +72,16 @@ public class UserController {
 
     // 비밀번호 변경관련 이메일 인증 번호 검증
     @PostMapping("/verify-pwd-reset")
-    public ResponseEntity<?> verifyPasswordReset(@Valid @RequestBody UserReqDto.VerifyAuthNumberReqDto verifyReqDto) {
-        boolean isVerified = mailService.verifyPasswordResetCode(verifyReqDto.getAuthNumber());
+    public ResponseEntity<?> verifyPasswordReset(
+            @Valid @RequestBody UserReqDto.VerifyAuthNumberReqDto verifyReqDto) {
+        VerificationResult result = mailService.verifyPasswordResetCode(
+                verifyReqDto.getEmail(),
+                verifyReqDto.getAuthNumber());
 
-        if (isVerified) {
+        if (result.isVerified()) {
             return new ResponseEntity<>(
-                    new ResponseDto<>(1, "인증이 완료되었습니다.", null),
+                    new ResponseDto<>(1, "인증이 완료되었습니다.",
+                            new EmailRespDto.VerificationResponse(result.getResetToken())),
                     HttpStatus.OK);
         } else {
             return new ResponseEntity<>(
@@ -87,10 +92,12 @@ public class UserController {
 
     // 비밀번호 변경
     @PostMapping("/pwd-reset")
-    public ResponseEntity<?> resetPassword(@Valid @RequestBody UserReqDto.ResetPasswordReqDto resetPasswordReqDto) {
+    public ResponseEntity<?> resetPassword(
+            @Valid @RequestBody UserReqDto.ResetPasswordReqDto resetPasswordReqDto) {
         try {
-            // 비밀번호 변경
-            userService.resetPassword(resetPasswordReqDto.getNewPassword());
+            userService.resetPassword(
+                    resetPasswordReqDto.getNewPassword(),
+                    resetPasswordReqDto.getResetToken());
 
             return ResponseEntity.ok()
                     .body(new ResponseDto<>(1, "비밀번호가 성공적으로 변경되었습니다.", null));
@@ -116,13 +123,6 @@ public class UserController {
         }
     }
 
-    // 내 정보 불러오기
-    @GetMapping("/v1/my-profile")
-    public ResponseEntity<?> getProfile(@AuthenticationPrincipal LoginUser loginUser) {
-        UserRespDto.ProfileRespDto profileRespDto = userService.getProfile(loginUser.getUser().getId());
-        return new ResponseEntity<>(new ResponseDto<>(1, "회원 정보 불러오기 성공", profileRespDto), HttpStatus.OK);
-    }
-
     /**
      * 회원 탈퇴
      * 
@@ -140,5 +140,11 @@ public class UserController {
         } catch (Exception e) {
             return new ResponseEntity<>(new ResponseDto<>(-1, "회원 탈퇴 중 오류 발생", null), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @GetMapping("/v1/user/info")
+    public ResponseEntity<?> getUserInfo(@AuthenticationPrincipal LoginUser loginUser) {
+        UserRespDto.UserInfoRespDto userInfoRespDto = userService.getUserInfo(loginUser.getUser().getId());
+        return new ResponseEntity<>(new ResponseDto<>(1, "사용자 정보 불러오기 성공", userInfoRespDto), HttpStatus.OK);
     }
 }
