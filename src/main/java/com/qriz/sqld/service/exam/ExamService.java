@@ -24,6 +24,7 @@ import com.qriz.sqld.domain.exam.UserExamSession;
 import com.qriz.sqld.domain.exam.UserExamSessionRepository;
 import com.qriz.sqld.domain.question.Question;
 import com.qriz.sqld.domain.question.QuestionRepository;
+import com.qriz.sqld.domain.question.option.Option;
 import com.qriz.sqld.domain.skill.Skill;
 import com.qriz.sqld.domain.user.User;
 import com.qriz.sqld.domain.user.UserRepository;
@@ -48,32 +49,26 @@ public class ExamService {
 
         private final Logger log = LoggerFactory.getLogger(ExamService.class);
 
+        /**
+         * 특정 회차의 모의고사 문제들을 조회하고 DTO로 변환
+         */
         @Transactional(readOnly = true)
         public ExamTestResult getExamQuestionsBySession(Long userId, String session) {
-                // 해당 회차의 문제들을 불러옴 (category=3은 모의고사를 의미)
+                // category 3은 모의고사를 의미
                 List<Question> examQuestions = questionRepository.findByCategoryAndExamSessionOrderById(3, session);
-
                 if (examQuestions.isEmpty()) {
                         throw new CustomApiException("해당 회차의 모의고사 문제를 찾을 수 없습니다.");
                 }
-
-                // 문제들을 DTO로 변환
+                // ExamRespDto 생성자 내에서 Option 엔티티와 랜덤화 로직을 반영하도록 수정
                 List<TestRespDto.ExamRespDto> questionDtos = examQuestions.stream()
                                 .map(TestRespDto.ExamRespDto::new)
                                 .collect(Collectors.toList());
-
-                // 총 제한 시간 계산
-                int totalTimeLimit = 5400;
-
+                int totalTimeLimit = 5400; // 총 제한 시간 90분
                 return new ExamTestResult(questionDtos, totalTimeLimit);
         }
 
         /**
          * 모의고사 제출 처리
-         * 
-         * @param user             현재 사용자
-         * @param testSubmitReqDto 테스트 제출 데이터
-         * @return 테스트 제출 결과 목록
          */
         @Transactional
         public List<TestRespDto.ExamSubmitRespDto> processExamSubmission(Long userId, String session,
@@ -81,22 +76,17 @@ public class ExamService {
                 User user = userRepository.findById(userId)
                                 .orElseThrow(() -> new CustomApiException("사용자를 찾을 수 없습니다."));
 
-                // 오늘 날짜의 세션만 삭제
+                // 오늘 날짜 범위 내의 기존 세션 삭제
                 LocalDateTime today = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
                 LocalDateTime tomorrow = today.plusDays(1);
-
                 List<UserExamSession> todaySessions = userExamSessionRepository
                                 .findByUserIdAndSessionAndCompletionDateBetween(userId, session, today, tomorrow);
-
                 for (UserExamSession previousSession : todaySessions) {
-                        // 1. 먼저 Clipped 엔티티 삭제
                         List<UserActivity> activities = userActivityRepository.findByExamSession(previousSession);
                         for (UserActivity activity : activities) {
                                 clipRepository.deleteByUserActivity(activity);
                         }
-                        // 2. 그 다음 UserActivity 삭제
                         userActivityRepository.deleteByExamSession(previousSession);
-                        // 3. 마지막으로 UserExamSession 삭제
                         userExamSessionRepository.delete(previousSession);
                 }
 
@@ -104,10 +94,18 @@ public class ExamService {
                 UserExamSession userExamSession = createNewExamSession(user, session);
 
                 // 활동 기록 및 결과 생성
-                List<TestRespDto.ExamSubmitRespDto> results = processActivities(user, examSubmitReqDto,
-                                userExamSession);
+                List<TestRespDto.ExamSubmitRespDto> results = new ArrayList<>();
+                for (ExamReqDto.ExamSubmitReqDto activity : examSubmitReqDto.getActivities()) {
+                        Question question = questionRepository.findById(activity.getQuestion().getQuestionId())
+                                        .orElseThrow(() -> new CustomApiException("문제를 찾을 수 없습니다."));
+                        // 정답 비교 시 Option 엔티티를 통해 가져온 정답 사용 (랜덤화된 구조 반영)
+                        UserActivity userActivity = createUserActivity(user, question, activity, userExamSession);
+                        userActivityRepository.save(userActivity);
+                        createClippedRecord(userActivity);
+                        results.add(createResultDto(userActivity, user.getId(), question));
+                }
 
-                // 과목별 점수 계산 및 저장
+                // 과목별 점수 계산 및 세션 업데이트
                 Map<String, Double> subjectScores = calculateSubjectScores(examSubmitReqDto.getActivities());
                 userExamSession.setSubject1Score(subjectScores.getOrDefault("1과목", 0.0));
                 userExamSession.setSubject2Score(subjectScores.getOrDefault("2과목", 0.0));
@@ -126,31 +124,17 @@ public class ExamService {
                 return userExamSessionRepository.save(userExamSession);
         }
 
-        private List<TestRespDto.ExamSubmitRespDto> processActivities(User user, ExamReqDto examSubmitReqDto,
-                        UserExamSession userExamSession) {
-                List<TestRespDto.ExamSubmitRespDto> results = new ArrayList<>();
-
-                for (ExamReqDto.ExamSubmitReqDto activity : examSubmitReqDto.getActivities()) {
-                        Question question = questionRepository.findById(activity.getQuestion().getQuestionId())
-                                        .orElseThrow(() -> new CustomApiException("문제를 찾을 수 없습니다."));
-
-                        // UserActivity 생성 및 저장
-                        UserActivity userActivity = createUserActivity(user, question, activity, userExamSession);
-                        userActivityRepository.save(userActivity);
-
-                        // 오답 노트 생성
-                        createClippedRecord(userActivity);
-
-                        // 결과 DTO 생성
-                        results.add(createResultDto(userActivity, user.getId(), question));
-                }
-
-                return results;
-        }
-
+        /**
+         * Option 엔티티 기반 정답 비교를 적용하여 UserActivity 생성
+         */
         private UserActivity createUserActivity(User user, Question question,
                         ExamReqDto.ExamSubmitReqDto activity, UserExamSession userExamSession) {
-                boolean isCorrect = question.getAnswer().equals(activity.getChecked()); // 정답 여부 확인
+                String correctAnswer = question.getSortedOptions().stream()
+                                .filter(Option::isAnswer)
+                                .map(Option::getContent)
+                                .findFirst()
+                                .orElse("");
+                boolean isCorrect = correctAnswer.equals(activity.getChecked());
 
                 UserActivity userActivity = new UserActivity();
                 userActivity.setUser(user);
@@ -158,9 +142,9 @@ public class ExamService {
                 userActivity.setTestInfo(userExamSession.getSession());
                 userActivity.setQuestionNum(activity.getQuestionNum());
                 userActivity.setChecked(activity.getChecked());
-                userActivity.setCorrection(isCorrect); // 정답 여부 설정
+                userActivity.setCorrection(isCorrect);
                 userActivity.setDate(LocalDateTime.now());
-                userActivity.setScore(isCorrect ? 2.0 : 0.0); // 점수 설정
+                userActivity.setScore(isCorrect ? 2.0 : 0.0); // 맞으면 2점
                 userActivity.setExamSession(userExamSession);
                 return userActivity;
         }
@@ -172,8 +156,8 @@ public class ExamService {
                 clipRepository.save(clipped);
         }
 
-        private TestRespDto.ExamSubmitRespDto createResultDto(UserActivity userActivity,
-                        Long userId, Question question) {
+        private TestRespDto.ExamSubmitRespDto createResultDto(UserActivity userActivity, Long userId,
+                        Question question) {
                 return new TestRespDto.ExamSubmitRespDto(
                                 userActivity.getId(),
                                 userId,
@@ -185,36 +169,27 @@ public class ExamService {
                                 userActivity.isCorrection());
         }
 
-        private void updateSubjectScores(UserExamSession userExamSession, ExamReqDto examSubmitReqDto) {
-                Map<String, Double> subjectScores = calculateSubjectScores(examSubmitReqDto.getActivities());
-                userExamSession.setSubject1Score(subjectScores.getOrDefault("1과목", 0.0));
-                userExamSession.setSubject2Score(subjectScores.getOrDefault("2과목", 0.0));
-                userExamSessionRepository.save(userExamSession);
-        }
-
+        /**
+         * 제출된 활동들을 바탕으로 과목별 점수 계산
+         */
         private Map<String, Double> calculateSubjectScores(List<ExamReqDto.ExamSubmitReqDto> activities) {
                 Map<String, Double> subjectScores = new HashMap<>();
-
                 for (ExamReqDto.ExamSubmitReqDto activity : activities) {
                         Question question = questionRepository.findById(activity.getQuestion().getQuestionId())
                                         .orElseThrow(() -> new CustomApiException("문제를 찾을 수 없습니다."));
-
-                        boolean isCorrect = question.getAnswer().equals(activity.getChecked());
-                        double score = isCorrect ? 2.0 : 0.0; // 50문제 기준, 맞으면 2점
-
+                        String correctAnswer = question.getSortedOptions().stream()
+                                        .filter(Option::isAnswer)
+                                        .map(Option::getContent)
+                                        .findFirst()
+                                        .orElse("");
+                        boolean isCorrect = correctAnswer.equals(activity.getChecked());
+                        double score = isCorrect ? 2.0 : 0.0;
                         String title = question.getSkill().getTitle(); // "1과목" 또는 "2과목"
                         subjectScores.merge(title, score, Double::sum);
                 }
-
                 return subjectScores;
         }
 
-        /**
-         * 카테고리 번호에 해당하는 카테고리 이름 반환
-         * 
-         * @param category 카테고리 번호
-         * @return 카테고리 이름
-         */
         private String getCategoryName(int category) {
                 switch (category) {
                         case 1:
@@ -229,108 +204,55 @@ public class ExamService {
         }
 
         /**
-         * 오늘의 공부 결과 - 문제 상세보기
-         * 
-         * @param userId
-         * @param session
-         * @param questionId
-         * @return
+         * 모의고사 결과 상세보기
+         * 변경: ResultDetailDto.from()을 사용하여 Option 엔티티 기반 정보를 반영
          */
         @Transactional(readOnly = true)
         public ResultDetailDto getExamResultDetail(Long userId, String session, Long questionId) {
-                log.info("Getting daily result detail for userId: {}, session: {}, questionId: {}", userId, session,
-                                questionId);
-
+                log.info("Getting exam result detail for userId: {}, session: {}, questionId: {}",
+                                userId, session, questionId);
                 String testInfo = session;
-                log.info("Constructed testInfo: {}", testInfo);
-
                 UserActivity userActivity = userActivityRepository
                                 .findByUserIdAndTestInfoAndQuestionId(userId, testInfo, questionId)
-                                .orElseThrow(() -> {
-                                        log.error("UserActivity not found for userId: {}, testInfo: {}, questionId: {}",
-                                                        userId, testInfo,
-                                                        questionId);
-                                        return new CustomApiException("해당 문제의 풀이 결과를 찾을 수 없습니다.");
-                                });
-
-                log.info("UserActivity found: {}", userActivity);
-
+                                .orElseThrow(() -> new CustomApiException("해당 문제의 풀이 결과를 찾을 수 없습니다."));
                 Question question = userActivity.getQuestion();
-                Skill skill = question.getSkill();
-
-                ResultDetailDto result = ResultDetailDto.builder()
-                                .skillName(skill.getKeyConcepts())
-                                .question(question.getQuestion())
-                                .question(question.getDescription())
-                                .option1(question.getOption1())
-                                .option2(question.getOption2())
-                                .option3(question.getOption3())
-                                .option4(question.getOption4())
-                                .answer(question.getAnswer())
-                                .solution(question.getSolution())
-                                .checked(userActivity.getChecked())
-                                .correction(userActivity.isCorrection())
-                                .build();
-
-                log.info("ExamResultDetailDto created: {}", result);
-
+                ResultDetailDto result = ResultDetailDto.from(question, userActivity);
                 return result;
         }
 
         /**
-         * 특정 회차의 테스트 결과 점수
-         * 
-         * @param userId
-         * @param session
-         * @return
+         * 모의고사 과목별 세부 항목 점수, 문제 풀이 결과 조회
+         * (대부분 Exam의 경우 Daily와 유사하므로 기존 로직 유지, 필요시 Option 관련 DTO 매핑 수정)
          */
         @Transactional(readOnly = true)
         public ExamTestResult.Response getExamSubjectDetails(Long userId, String session) {
-                // 해당 회차의 모든 세션을 시간순으로 조회 (내림차순)
                 List<UserExamSession> userExamSessions = userExamSessionRepository
                                 .findByUserIdAndSessionOrderByCompletionDateDesc(userId, session);
-
                 if (userExamSessions.isEmpty()) {
                         throw new CustomApiException("해당 회차의 모의고사 세션을 찾을 수 없습니다.");
                 }
-
-                // 가장 최근 세션
                 UserExamSession latestSession = userExamSessions.get(0);
-
-                // 최신 세션의 과목별 점수로 userExamInfoList 생성
                 List<ExamTestResult.SubjectDetails> userExamInfoList = new ArrayList<>();
-
-                // 1과목 details 생성
                 ExamTestResult.SubjectDetails subject1Details = new ExamTestResult.SubjectDetails("1과목");
                 Map<String, Double> subject1TypeScores = new HashMap<>();
-
-                // 2과목 details 생성
                 ExamTestResult.SubjectDetails subject2Details = new ExamTestResult.SubjectDetails("2과목");
                 Map<String, Double> subject2TypeScores = new HashMap<>();
 
-                // 최신 세션의 활동 조회
                 List<UserActivity> latestActivities = userActivityRepository.findByExamSession(latestSession);
-
-                // 각 활동의 점수를 해당 과목의 type별로 집계
                 for (UserActivity activity : latestActivities) {
                         Question question = activity.getQuestion();
                         Skill skill = question.getSkill();
-
                         if (skill.getTitle().equals("1과목")) {
                                 subject1TypeScores.merge(skill.getKeyConcepts(), activity.getScore(), Double::sum);
                         } else if (skill.getTitle().equals("2과목")) {
                                 subject2TypeScores.merge(skill.getKeyConcepts(), activity.getScore(), Double::sum);
                         }
                 }
-
-                // 집계된 점수를 SubjectDetails에 추가
                 subject1TypeScores.forEach((type, score) -> subject1Details.addScore(type, score));
                 subject2TypeScores.forEach((type, score) -> subject2Details.addScore(type, score));
-
                 userExamInfoList.add(subject1Details);
                 userExamInfoList.add(subject2Details);
 
-                // 문제 풀이 결과 목록 생성
                 List<ExamTestResult.ResultDto> subjectResultsList = latestActivities.stream()
                                 .map(activity -> new ExamTestResult.ResultDto(
                                                 activity.getQuestionNum(),
@@ -340,7 +262,6 @@ public class ExamService {
                                 .sorted(Comparator.comparingInt(ExamTestResult.ResultDto::getQuestionNum))
                                 .collect(Collectors.toList());
 
-                // 날짜별로 그룹화하여 각 날짜의 최신 기록만 유지
                 Map<LocalDate, UserExamSession> dateGroupedSessions = userExamSessions.stream()
                                 .filter(s -> s.getCompletionDate() != null)
                                 .collect(Collectors.groupingBy(
@@ -351,12 +272,11 @@ public class ExamService {
                                                                                 .reversed()),
                                                                 Optional::get)));
 
-                // 날짜별로 그룹화하여 각 날짜의 최신 기록만 유지하고, 최신 5개만 선택
                 List<ExamTestResult.HistoricalScore> historicalScores = new ArrayList<>();
                 if (dateGroupedSessions.size() >= 2) {
                         historicalScores = dateGroupedSessions.values().stream()
                                         .sorted(Comparator.comparing(UserExamSession::getCompletionDate).reversed())
-                                        .limit(5) // 최신 5개만 선택
+                                        .limit(5)
                                         .map(examSession -> {
                                                 List<ExamTestResult.ItemScore> sessionScores = new ArrayList<>();
                                                 if (examSession.getSubject1Score() != null) {
@@ -367,7 +287,6 @@ public class ExamService {
                                                         sessionScores.add(new ExamTestResult.ItemScore("2과목",
                                                                         examSession.getSubject2Score()));
                                                 }
-
                                                 return new ExamTestResult.HistoricalScore(
                                                                 examSession.getCompletionDate(),
                                                                 sessionScores,
@@ -375,16 +294,12 @@ public class ExamService {
                                         })
                                         .collect(Collectors.toList());
                 }
-
                 return new ExamTestResult.Response(session, userExamInfoList, subjectResultsList, historicalScores);
         }
 
         @Transactional
         public List<ExamRespDto.SessionList> getSessionList(Long userId, String status, String sort) {
-                // 1. 모든 모의고사 회차 정보 조회
                 List<String> allSessions = questionRepository.findDistinctExamSessionByCategory(3);
-
-                // 2. 사용자가 완료한 시험 세션 정보 조회 및 Map으로 변환
                 List<UserExamSession> userSessions = userExamSessionRepository
                                 .findByUserIdOrderByCompletionDateDesc(userId);
                 Map<String, UserExamSession> completedSessionsMap = userSessions.stream()
@@ -393,7 +308,6 @@ public class ExamService {
                                                 session -> session,
                                                 (existing, replacement) -> existing));
 
-                // 3. 각 회차별 정보 생성 및 필터링
                 Stream<ExamRespDto.SessionList> sessionStream = allSessions.stream()
                                 .map(session -> {
                                         UserExamSession userSession = completedSessionsMap.get(session);
@@ -404,30 +318,21 @@ public class ExamService {
                                                                 + userSession.getSubject2Score();
                                                 totalScore = String.format("%.1f", score);
                                         }
-
-                                        return new ExamRespDto.SessionList(
-                                                        completed,
-                                                        session,
-                                                        totalScore);
+                                        return new ExamRespDto.SessionList(completed, session, totalScore);
                                 });
 
-                // 4. 학습 상태에 따른 필터링
                 if ("completed".equals(status)) {
                         sessionStream = sessionStream.filter(ExamRespDto.SessionList::isCompleted);
                 } else if ("incomplete".equals(status)) {
                         sessionStream = sessionStream.filter(session -> !session.isCompleted());
                 }
 
-                // 5. 정렬
                 Comparator<ExamRespDto.SessionList> comparator = Comparator.comparing(
                                 session -> Integer.parseInt(session.getSession().split("회차")[0]));
-
                 if ("desc".equals(sort)) {
                         comparator = comparator.reversed();
                 }
 
-                return sessionStream
-                                .sorted(comparator)
-                                .collect(Collectors.toList());
+                return sessionStream.sorted(comparator).collect(Collectors.toList());
         }
 }
