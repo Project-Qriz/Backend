@@ -6,7 +6,6 @@ import com.qriz.sqld.dto.ResponseDto;
 import com.qriz.sqld.dto.user.UserReqDto;
 import com.qriz.sqld.dto.user.UserRespDto;
 import com.qriz.sqld.handler.ex.CustomApiException;
-import com.qriz.sqld.mail.domain.PasswordResetToken.PasswordResetTokenRepository;
 import com.qriz.sqld.mail.dto.EmailRespDto;
 import com.qriz.sqld.mail.dto.EmailRespDto.VerificationResult;
 import com.qriz.sqld.mail.service.MailSendService;
@@ -23,6 +22,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
@@ -38,7 +38,6 @@ public class UserController {
     private final UserService userService;
     private final UserRepository userRepository;
     private final MailSendService mailService;
-    private final PasswordResetTokenRepository passwordResetTokenRepository;
 
     // 회원 가입
     @PostMapping("/join")
@@ -109,16 +108,16 @@ public class UserController {
 
     // 아이디 중복 확인
     @GetMapping("/username-duplicate")
-    public ResponseEntity<?> usernameDuplicate(
-            @RequestBody @Valid UserReqDto.UsernameDuplicateReqDto usernameDuplicateReqDto) {
-        UserRespDto.UsernameDuplicateRespDto usernameDuplicateRespDto = userService
-                .usernameDuplicate(usernameDuplicateReqDto);
+    public ResponseEntity<?> usernameDuplicate(@RequestParam("username") String username) {
+        UserRespDto.UsernameDuplicateRespDto usernameDuplicateRespDto = userService.usernameDuplicate(username);
 
         if (!usernameDuplicateRespDto.isAvailable()) {
-            return new ResponseEntity<>(new ResponseDto<>(-1, "해당 아이디는 이미 사용중 입니다.", usernameDuplicateRespDto),
+            return new ResponseEntity<>(
+                    new ResponseDto<>(-1, "해당 아이디는 이미 사용중 입니다.", usernameDuplicateRespDto),
                     HttpStatus.BAD_REQUEST);
         } else {
-            return new ResponseEntity<>(new ResponseDto<>(1, "사용 가능한 아이디입니다.", usernameDuplicateRespDto),
+            return new ResponseEntity<>(
+                    new ResponseDto<>(1, "사용 가능한 아이디입니다.", usernameDuplicateRespDto),
                     HttpStatus.OK);
         }
     }

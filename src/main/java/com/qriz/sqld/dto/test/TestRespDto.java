@@ -260,38 +260,45 @@ public class TestRespDto {
 
     @Getter
     @Setter
-    @AllArgsConstructor
+    @NoArgsConstructor
     public static class ExamRespDto {
         private Long questionId;
         private Long skillId;
         private int category;
         private String question;
         private String description;
-        private Long option1Id;
-        private String option1;
-        private Long option2Id;
-        private String option2;
-        private Long option3Id;
-        private String option3;
-        private Long option4Id;
-        private String option4;
+        private List<OptionDto> options;
+        private int timeLimit;
+        private int difficulty;
 
-        public ExamRespDto(Question question) {
+        public ExamRespDto(Question question, long seed) {
             this.questionId = question.getId();
-            this.skillId = question.getSkill().getId();
+            // null 체크: 만약 skill이 null이면 기본값으로 0 또는 적절한 값을 사용
+            this.skillId = (question.getSkill() != null) ? question.getSkill().getId() : 0L;
             this.category = question.getCategory();
             this.question = question.getQuestion();
             this.description = question.getDescription();
-            // Option 엔티티 리스트를 getSortedOptions()로 가져온 후, 각 옵션의 id와 content 할당
+            // null 체크: timeLimit와 difficulty가 null이면 기본값 사용
+            this.timeLimit = (question.getTimeLimit() != null) ? question.getTimeLimit() : 0;
+            this.difficulty = (question.getDifficulty() != null) ? question.getDifficulty() : 1;
             List<Option> sortedOptions = question.getSortedOptions();
-            this.option1Id = sortedOptions.size() > 0 ? sortedOptions.get(0).getId() : null;
-            this.option1 = sortedOptions.size() > 0 ? sortedOptions.get(0).getContent() : null;
-            this.option2Id = sortedOptions.size() > 1 ? sortedOptions.get(1).getId() : null;
-            this.option2 = sortedOptions.size() > 1 ? sortedOptions.get(1).getContent() : null;
-            this.option3Id = sortedOptions.size() > 2 ? sortedOptions.get(2).getId() : null;
-            this.option3 = sortedOptions.size() > 2 ? sortedOptions.get(2).getContent() : null;
-            this.option4Id = sortedOptions.size() > 3 ? sortedOptions.get(3).getId() : null;
-            this.option4 = sortedOptions.size() > 3 ? sortedOptions.get(3).getContent() : null;
+            if (sortedOptions == null) {
+                sortedOptions = new ArrayList<>();
+            }
+            List<Option> randomized = new ArrayList<>(sortedOptions);
+            Collections.shuffle(randomized, new Random(seed));
+            this.options = randomized.stream()
+                    .map(opt -> new OptionDto(opt.getId(), opt.getContent()))
+                    .collect(Collectors.toList());
+        }
+
+        @Getter
+        @Setter
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public static class OptionDto {
+            private Long id;
+            private String content;
         }
     }
 

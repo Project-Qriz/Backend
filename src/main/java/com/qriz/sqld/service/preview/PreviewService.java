@@ -24,6 +24,7 @@ import com.qriz.sqld.service.daily.DailyPlanService;
 import com.qriz.sqld.domain.preview.UserPreviewTestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -49,6 +50,7 @@ public class PreviewService {
     private final SurveyRepository surveyRepository;
     private final OptionRepository optionRepository;
 
+    @Transactional
     public PreviewTestResult getPreviewTestQuestions(User user) {
         // 이미 프리뷰 테스트를 완료했는지 확인
         if (userPreviewTestRepository.existsByUserAndCompleted(user, true)) {
@@ -67,9 +69,10 @@ public class PreviewService {
             questions = getPreviewQuestionsBasedOnSelection(selectedSkills);
         }
 
-        // Question을 QuestionDto로 변환
+        // seed 값을 이용해 결정적 랜덤화를 적용합니다.
+        long seed = System.currentTimeMillis(); // 필요에 따라 고정값 또는 다른 seed 사용 가능
         List<QuestionDto> questionDtos = questions.stream()
-                .map(QuestionDto::from)
+                .map(q -> new QuestionDto(q, seed))
                 .collect(Collectors.toList());
 
         int totalTimeLimit = questions.stream()
