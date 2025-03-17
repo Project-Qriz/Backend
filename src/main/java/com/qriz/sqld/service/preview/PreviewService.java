@@ -3,6 +3,7 @@ package com.qriz.sqld.service.preview;
 import com.qriz.sqld.domain.question.Question;
 import com.qriz.sqld.domain.question.QuestionRepository;
 import com.qriz.sqld.domain.question.option.Option;
+import com.qriz.sqld.domain.question.option.OptionRepository;
 import com.qriz.sqld.domain.UserActivity.UserActivity;
 import com.qriz.sqld.domain.UserActivity.UserActivityRepository;
 import com.qriz.sqld.domain.preview.PreviewTestStatus;
@@ -23,6 +24,7 @@ import com.qriz.sqld.service.daily.DailyPlanService;
 import com.qriz.sqld.domain.preview.UserPreviewTestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -46,7 +48,9 @@ public class PreviewService {
     private final DailyPlanService dailyPlanService;
     private final SkillLevelRepository skillLevelRepository;
     private final SurveyRepository surveyRepository;
+    private final OptionRepository optionRepository;
 
+    @Transactional
     public PreviewTestResult getPreviewTestQuestions(User user) {
         // 이미 프리뷰 테스트를 완료했는지 확인
         if (userPreviewTestRepository.existsByUserAndCompleted(user, true)) {
@@ -65,9 +69,10 @@ public class PreviewService {
             questions = getPreviewQuestionsBasedOnSelection(selectedSkills);
         }
 
-        // Question을 QuestionDto로 변환
+        // seed 값을 이용해 결정적 랜덤화를 적용합니다.
+        long seed = System.currentTimeMillis(); // 필요에 따라 고정값 또는 다른 seed 사용 가능
         List<QuestionDto> questionDtos = questions.stream()
-                .map(QuestionDto::from)
+                .map(q -> new QuestionDto(q, seed))
                 .collect(Collectors.toList());
 
         int totalTimeLimit = questions.stream()
@@ -124,7 +129,7 @@ public class PreviewService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // 프리뷰 테스트 완료 상태로 업데이트
+        // 프리뷰 테스트 완료 상태 업데이트
         user.updatePreviewTestStatus(PreviewTestStatus.PREVIEW_COMPLETED);
         userRepository.save(user);
 
@@ -136,7 +141,7 @@ public class PreviewService {
                     return q.getSkill().getId();
                 }));
 
-        // 각 스킬별로 결과 처리
+        // 각 스킬별 결과 처리
         for (Map.Entry<Long, List<ExamReqDto.ExamSubmitReqDto>> entry : activityBySkill.entrySet()) {
             Long skillId = entry.getKey();
             List<ExamReqDto.ExamSubmitReqDto> skillActivities = entry.getValue();
@@ -163,16 +168,14 @@ public class PreviewService {
                 userActivity.setQuestion(question);
                 userActivity.setTestInfo("Preview Test");
                 userActivity.setQuestionNum(activity.getQuestionNum());
-                userActivity.setChecked(activity.getChecked());
-                userActivity.setTimeSpent(0); // ExamReqDto doesn't have timeSpent field
+                // 제출된 optionId를 String 형태로 저장하거나 별도로 보관
+                userActivity.setChecked(String.valueOf(activity.getOptionId()));
+                userActivity.setTimeSpent(0); // 시간 정보가 없으면 0 처리
 
-                // 수정: Option 엔티티 기반 정답 비교
-                String correctAnswer = question.getSortedOptions().stream()
-                        .filter(Option::isAnswer)
-                        .map(Option::getContent)
-                        .findFirst()
-                        .orElse("");
-                boolean isCorrect = activity.getChecked() != null && correctAnswer.equals(activity.getChecked());
+                // Option PK를 사용하여 Option 엔티티 조회
+                Option submittedOption = optionRepository.findById((long) activity.getOptionId())
+                        .orElseThrow(() -> new RuntimeException("Option not found"));
+                boolean isCorrect = submittedOption.isAnswer();
                 userActivity.setCorrection(isCorrect);
                 userActivity.setScore(isCorrect ? 100.0 / 21 : 0.0);
                 userActivity.setDate(LocalDateTime.now());

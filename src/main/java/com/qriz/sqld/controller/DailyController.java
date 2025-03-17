@@ -17,6 +17,7 @@ import com.qriz.sqld.dto.ResponseDto;
 import com.qriz.sqld.dto.daily.ResultDetailDto;
 import com.qriz.sqld.dto.daily.DaySubjectDetailsDto;
 import com.qriz.sqld.dto.daily.UserDailyDto;
+import com.qriz.sqld.dto.daily.UserDailyDto.DailyDetailAndStatusDto;
 import com.qriz.sqld.dto.daily.WeeklyTestResultDto;
 import com.qriz.sqld.dto.test.TestReqDto;
 import com.qriz.sqld.dto.test.TestRespDto;
@@ -137,27 +138,12 @@ public class DailyController {
          * @param loginUser
          * @return
          */
-        @GetMapping("/details/{dayNumber}")
-        public ResponseEntity<?> getDailyDetails(@PathVariable String dayNumber,
+        @GetMapping("/detail-status/{dayNumber}")
+        public ResponseEntity<?> getDailyDetailWithStatus(@PathVariable String dayNumber,
                         @AuthenticationPrincipal LoginUser loginUser) {
-                UserDailyDto.DailyDetailsDto details = dailyService.getDailyDetails(loginUser.getUser().getId(),
-                                dayNumber);
-                return new ResponseEntity<>(new ResponseDto<>(1, "일일 상세 정보 조회 성공", details), HttpStatus.OK);
-        }
-
-        /**
-         * 특정 Day의 테스트 상태 확인
-         * 
-         * @param dayNumber
-         * @param loginUser
-         * @return
-         */
-        @GetMapping("/test-status/{dayNumber}")
-        public ResponseEntity<?> getDailyTestStatus(@PathVariable String dayNumber,
-                        @AuthenticationPrincipal LoginUser loginUser) {
-                UserDailyDto.TestStatusDto status = dailyService.getDailyTestStatus(loginUser.getUser().getId(),
-                                dayNumber);
-                return new ResponseEntity<>(new ResponseDto<>(1, "데일리 테스트 상태 조회 성공", status), HttpStatus.OK);
+                DailyDetailAndStatusDto detailStatus = dailyService
+                                .getDailyDetailWithStatus(loginUser.getUser().getId(), dayNumber);
+                return new ResponseEntity<>(new ResponseDto<>(1, "일일 상세 정보 조회 성공", detailStatus), HttpStatus.OK);
         }
 
         /**

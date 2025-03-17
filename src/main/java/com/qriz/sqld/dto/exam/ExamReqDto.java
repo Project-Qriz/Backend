@@ -15,7 +15,7 @@ public class ExamReqDto {
     public static class ExamSubmitReqDto {
         private QuestionReqDto question;
         private int questionNum;
-        private String checked;
+        private int optionId;
 
         @Getter
         @Setter

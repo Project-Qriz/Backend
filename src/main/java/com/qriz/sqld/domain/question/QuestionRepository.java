@@ -58,7 +58,7 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
          * @return 무작위로 선택된 Question 목록
          */
         @Query(value = "SELECT * FROM question q " +
-                        "WHERE q.skill_id IN :skillIds " +
+                        "WHERE q.skill_id IN (:skillIds) " +
                         "AND q.category = :category " +
                         "ORDER BY RAND() " +
                         "LIMIT :limit", nativeQuery = true)

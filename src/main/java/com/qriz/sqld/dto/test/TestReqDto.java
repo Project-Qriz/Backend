@@ -15,14 +15,15 @@ public class TestReqDto {
     public static class TestSubmitReqDto {
         private QuestionReqDto question;
         private int questionNum;
-        private String checked;
+        private Long optionId;
         private Integer timeSpent;
 
         @Getter
         @Setter
         public static class QuestionReqDto {
             private Long questionId;
-            private int category;    
+            private int category;
         }
     }
+
 }

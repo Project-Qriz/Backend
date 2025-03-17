@@ -79,18 +79,53 @@ public class ExamController {
     }
 
     /**
-     * 특정 모의고사 회차의 과목별 세부 항목 점수, 문제 풀이 결과 조회
+     * 모의고사 특정 과목의 주요항목별 점수
      * 
      * @param session
      * @param loginUser
      * @return
      */
-    @GetMapping("/subject-details/{session}")
-    public ResponseEntity<?> getDaySubjectDetails(@PathVariable String session,
+    @GetMapping("/{session}/scores")
+    public ResponseEntity<?> getExamScores(@PathVariable String session, @RequestParam String subject,
             @AuthenticationPrincipal LoginUser loginUser) {
-        ExamTestResult.Response details = examService.getExamSubjectDetails(loginUser.getUser().getId(),
+        ExamTestResult.ExamScoreDto scores = examService.getExamScoreBySubject(loginUser.getUser().getId(),
+                session, subject);
+        return new ResponseEntity<>(new ResponseDto<>(1, "특정 과목의 주요항목별 점수 조회 성공", scores),
+                HttpStatus.OK);
+    }
+
+    /**
+     * 특정 모의고사의 문제별 채점 결과
+     * 
+     * @param session
+     * @param loginUser
+     * @return
+     */
+    @GetMapping("/{session}/results")
+    public ResponseEntity<?> getExamResults(@PathVariable String session,
+            @AuthenticationPrincipal LoginUser loginUser) {
+        ExamTestResult.ExamResultsDto results = examService.getExamResults(loginUser.getUser().getId(),
                 session);
-        return new ResponseEntity<>(new ResponseDto<>(1, "과목별 세부 항목 점수, 문제 풀이 결과 조회 성공", details),
+        return new ResponseEntity<>(new ResponseDto<>(1, "문제 풀이 결과 조회 성공", results),
+                HttpStatus.OK);
+    }
+
+    /**
+     * 특정 모의고사의 과목별 세부항목별 점수
+     * 
+     * @param session
+     * @param subject
+     * @param loginUser
+     * @return
+     */
+    @GetMapping("/{session}/subject-details")
+    public ResponseEntity<?> getSubjectScoreDetails(
+            @PathVariable String session,
+            @RequestParam String subject, // subject1 또는 subject2
+            @AuthenticationPrincipal LoginUser loginUser) {
+        ExamTestResult.SubjectDetails details = examService.getSubjectScoreDetails(
+                loginUser.getUser().getId(), session, subject);
+        return new ResponseEntity<>(new ResponseDto<>(1, "과목별 세부항목 점수 조회 성공", details),
                 HttpStatus.OK);
     }
 
