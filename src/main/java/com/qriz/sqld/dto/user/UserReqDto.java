@@ -2,6 +2,8 @@ package com.qriz.sqld.dto.user;
 
 import com.qriz.sqld.domain.user.User;
 import com.qriz.sqld.domain.user.UserEnum;
+import com.qriz.sqld.handler.validator.ValidPassword;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -40,7 +42,7 @@ public class UserReqDto {
          * 5. 특수 문자 포함 : 하나 이상의 특수 문자 포함
          */
         @NotEmpty
-        @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=*!])(?=\\S+$).{8,16}$")
+        @ValidPassword
         private String password;
 
         @NotEmpty
