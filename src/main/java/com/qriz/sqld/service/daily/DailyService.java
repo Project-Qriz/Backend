@@ -184,7 +184,7 @@ public class DailyService {
             results.add(result);
         }
 
-        // 전체 점수 계산 및 플랜 상태 업데이트 (이하 기존 로직 유지)
+        // 전체 점수 계산 및 플랜 상태 업데이트
         double totalPossibleScore = testSubmitReqDto.getActivities().stream()
                 .mapToDouble(activity -> {
                     Question question = questionRepository.findById(activity.getQuestion().getQuestionId())
@@ -227,18 +227,7 @@ public class DailyService {
     }
 
     private int getPointsForDifficulty(Integer difficulty) {
-        if (difficulty == null)
-            return 5;
-        switch (difficulty) {
-            case 1:
-                return 5;
-            case 2:
-                return 7;
-            case 3:
-                return 10;
-            default:
-                return 5;
-        }
+        return 5;
     }
 
     private String getCategoryName(int category) {
@@ -331,15 +320,17 @@ public class DailyService {
             String title = skill.getTitle();
             String keyConcepts = skill.getKeyConcepts();
 
-            double score = activity.isCorrection() ? 10.0 : 0.0;
+            // getPointsForDifficulty()를 사용하여 점수 계산
+            double score = activity.isCorrection() ? getPointsForDifficulty(question.getDifficulty()) : 0.0;
+
             subjectDetailsMap.computeIfAbsent(title, k -> new DaySubjectDetailsDto.SubjectDetails(title))
                     .addScore(keyConcepts, score);
 
+            // 각 activity에 대한 DailyResultDto도 생성
             DaySubjectDetailsDto.DailyResultDto resultDto = new DaySubjectDetailsDto.DailyResultDto(
                     skill.getKeyConcepts(),
                     question.getQuestion(),
                     activity.isCorrection());
-
             dailyResults.add(resultDto);
         }
 

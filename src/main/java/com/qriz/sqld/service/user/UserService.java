@@ -113,17 +113,16 @@ public class UserService {
 
     // 아이디 중복확인
     @Transactional
-    public UserRespDto.UsernameDuplicateRespDto usernameDuplicate(
-            UserReqDto.UsernameDuplicateReqDto usernameDuplicateReqDto) {
+    public UserRespDto.UsernameDuplicateRespDto usernameDuplicate(String username) {
         // 1. 사용자 찾기
-        Optional<User> userOP = userRepository.findByUsername(usernameDuplicateReqDto.getUsername());
+        Optional<User> userOP = userRepository.findByUsername(username);
 
         // 2. 사용자 존재 여부에 따라 응답 생성
         if (userOP.isPresent()) {
             // 아이디가 이미 사용 중인 경우
             return new UserRespDto.UsernameDuplicateRespDto(false);
         } else {
-            // 사용 기능한 아이디인 경우
+            // 사용 가능한 아이디인 경우
             return new UserRespDto.UsernameDuplicateRespDto(true);
         }
     }

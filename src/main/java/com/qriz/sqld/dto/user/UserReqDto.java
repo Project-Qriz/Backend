@@ -28,7 +28,7 @@ public class UserReqDto {
          * 3. 공백 불포함
          * 4. 특수문자 불포함
          */
-        @Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*\\d)[a-zA-Z\\d]{6,20}$", message = "영문/숫자 2~20자 이내로 작성해주세요")
+        @Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*\\d)[a-zA-Z\\d]{6,20}$", message = "영문/숫자 6~20자 이내로 작성해주세요")
         @NotEmpty
         private String username;
 
