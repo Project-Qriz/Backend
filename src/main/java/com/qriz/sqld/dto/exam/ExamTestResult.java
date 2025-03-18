@@ -22,6 +22,21 @@ public class ExamTestResult {
         private List<SubjectDetails> userExamInfoList;
     }
 
+    @Getter
+    @AllArgsConstructor
+    public static class SimpleSubjectDetails {
+        private String title; // "1과목", "2과목"
+        private double totalScore;
+        private List<SimpleMajorItem> majorItems;
+    }
+
+    @Getter
+    @AllArgsConstructor
+    public static class SimpleMajorItem {
+        private String majorItem; // 예: "데이터 모델링의 이해"
+        private double score;
+    }
+
     /**
      * 과목별 점수 정보를 담는 DTO
      */

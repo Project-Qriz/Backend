@@ -33,6 +33,8 @@ import com.qriz.sqld.dto.daily.ResultDetailDto;
 import com.qriz.sqld.dto.exam.ExamReqDto;
 import com.qriz.sqld.dto.exam.ExamRespDto;
 import com.qriz.sqld.dto.exam.ExamTestResult;
+import com.qriz.sqld.dto.exam.ExamTestResult.SimpleMajorItem;
+import com.qriz.sqld.dto.exam.ExamTestResult.SimpleSubjectDetails;
 import com.qriz.sqld.dto.test.TestRespDto;
 import com.qriz.sqld.handler.ex.CustomApiException;
 
@@ -55,8 +57,10 @@ public class ExamService {
          * 특정 회차의 모의고사 문제들을 조회하고 DTO로 변환
          */
         @Transactional(readOnly = true)
-        public ExamTestResult getExamQuestionsBySession(Long userId, String session) {
-                // category 3은 모의고사를 의미
+        public ExamTestResult getExamQuestionsBySession(Long userId, Long examId) {
+                // examId를 "회차" 형식의 문자열로 변환
+                String session = examId + "회차";
+
                 List<Question> examQuestions = questionRepository.findByCategoryAndExamSessionOrderById(3, session);
                 if (examQuestions.isEmpty()) {
                         throw new CustomApiException("해당 회차의 모의고사 문제를 찾을 수 없습니다.");
@@ -72,8 +76,11 @@ public class ExamService {
          * 모의고사 제출 처리
          */
         @Transactional
-        public List<TestRespDto.ExamSubmitRespDto> processExamSubmission(Long userId, String session,
+        public List<TestRespDto.ExamSubmitRespDto> processExamSubmission(Long userId, Long examId,
                         ExamReqDto examSubmitReqDto) {
+
+                String session = examId + "회차";
+
                 User user = userRepository.findById(userId)
                                 .orElseThrow(() -> new CustomApiException("사용자를 찾을 수 없습니다."));
 
@@ -195,7 +202,9 @@ public class ExamService {
          * 모의고사 결과 상세보기
          */
         @Transactional(readOnly = true)
-        public ResultDetailDto getExamResultDetail(Long userId, String session, Long questionId) {
+        public ResultDetailDto getExamResultDetail(Long userId, Long examId, Long questionId) {
+                String session = examId + "회차";
+                
                 log.info("Getting exam result detail for userId: {}, session: {}, questionId: {}",
                                 userId, session, questionId);
                 String testInfo = session;
@@ -208,10 +217,14 @@ public class ExamService {
         }
 
         @Transactional(readOnly = true)
-        public ExamTestResult.ExamScoreDto getExamScoreBySubject(Long userId, String session, String subject) {
-                // 영어 subject를 한글 과목명으로 매핑 (예: subject1 -> "1과목", subject2 -> "2과목")
+        public SimpleSubjectDetails getExamScoreBySubject(Long userId, Long examId, String subject) {
+                // examId를 "회차" 형식의 문자열로 변환
+                String session = examId + "회차";
+
+                // 영어 subject를 한글 과목명으로 매핑 (예: "subject1" → "1과목", "subject2" → "2과목")
                 String mappedSubject = mapSubject(subject);
 
+                // 해당 세션의 ExamSession 조회
                 List<UserExamSession> userExamSessions = userExamSessionRepository
                                 .findByUserIdAndSessionOrderByCompletionDateDesc(userId, session);
                 if (userExamSessions.isEmpty()) {
@@ -219,43 +232,53 @@ public class ExamService {
                 }
                 UserExamSession latestSession = userExamSessions.get(0);
 
-                // 특정 과목의 주요 항목(major items)을 미리 정의
+                // 과목별 주요 항목 정의
                 List<String> majorItems;
                 if ("1과목".equals(mappedSubject)) {
                         majorItems = List.of("데이터 모델링의 이해", "데이터 모델과 SQL");
                 } else if ("2과목".equals(mappedSubject)) {
-                        // 수정: subject2의 경우 "SQL 활용" 항목도 추가합니다.
                         majorItems = List.of("SQL 기본", "SQL 활용", "관리 구문");
                 } else {
                         throw new CustomApiException("Unsupported subject: " + mappedSubject);
                 }
 
-                // 특정 과목의 점수를 위한 SubjectDetails 생성 (초기에는 각 주요 항목을 0점으로 초기화)
-                ExamTestResult.SubjectDetails subjectScore = new ExamTestResult.SubjectDetails(mappedSubject);
+                // 각 주요 항목의 점수를 저장할 맵 초기화
+                Map<String, Double> majorScoreMap = new HashMap<>();
                 for (String major : majorItems) {
-                        subjectScore.addMajorItemScore(major, 0.0);
+                        majorScoreMap.put(major, 0.0);
                 }
+                double totalScore = 0.0;
 
-                // 최신 세션의 모든 활동(Activity) 조회
+                // 최신 세션의 활동(Activity) 조회
                 List<UserActivity> latestActivities = userActivityRepository.findByExamSession(latestSession);
-
-                // 활동(Activity) 중 해당 과목에 해당하는 항목만 집계
                 for (UserActivity activity : latestActivities) {
+                        // 해당 활동이 지정된 과목에 속하는지 확인
                         if (mappedSubject.equals(activity.getQuestion().getSkill().getTitle())) {
+                                // 여기서 주요 항목은 skill.getType()로 가정
                                 String majorItem = activity.getQuestion().getSkill().getType();
-                                if (majorItems.contains(majorItem)) {
-                                        subjectScore.addMajorItemScore(majorItem, activity.getScore());
+                                if (majorScoreMap.containsKey(majorItem)) {
+                                        double updatedScore = majorScoreMap.get(majorItem) + activity.getScore();
+                                        majorScoreMap.put(majorItem, updatedScore);
+                                        totalScore += activity.getScore();
                                 }
                         }
                 }
 
-                // 총점 조정 (필요한 경우)
-                subjectScore.adjustTotalScore();
+                // 총점이 100을 초과하면 비율 조정 (옵션)
+                if (totalScore > 100) {
+                        double factor = 100.0 / totalScore;
+                        totalScore = 100.0;
+                        for (String key : majorScoreMap.keySet()) {
+                                majorScoreMap.put(key, majorScoreMap.get(key) * factor);
+                        }
+                }
 
-                // 최종적으로 SubjectDetails를 리스트에 담아 ExamScoreDto 생성하여 반환
-                List<ExamTestResult.SubjectDetails> subjectDetailsList = new ArrayList<>();
-                subjectDetailsList.add(subjectScore);
-                return new ExamTestResult.ExamScoreDto(session, subjectDetailsList);
+                // majorScoreMap을 SimpleMajorItem 리스트로 변환
+                List<SimpleMajorItem> simpleMajorItems = majorScoreMap.entrySet().stream()
+                                .map(e -> new SimpleMajorItem(e.getKey(), e.getValue()))
+                                .collect(Collectors.toList());
+
+                return new SimpleSubjectDetails(mappedSubject, totalScore, simpleMajorItems);
         }
 
         /**
@@ -267,12 +290,14 @@ public class ExamService {
                 } else if ("subject2".equalsIgnoreCase(subject)) {
                         return "2과목";
                 } else {
-                        throw new CustomApiException("지원하지 않는 subject: " + subject);
+                        throw new CustomApiException("Unsupported subject: " + subject);
                 }
         }
 
         @Transactional(readOnly = true)
-        public ExamTestResult.ExamResultsDto getExamResults(Long userId, String session) {
+        public ExamTestResult.ExamResultsDto getExamResults(Long userId, Long examId) {
+                String session = examId + "회차";
+                
                 List<UserExamSession> userExamSessions = userExamSessionRepository
                                 .findByUserIdAndSessionOrderByCompletionDateDesc(userId, session);
                 if (userExamSessions.isEmpty()) {
@@ -327,7 +352,9 @@ public class ExamService {
         }
 
         @Transactional(readOnly = true)
-        public ExamTestResult.SubjectDetails getSubjectScoreDetails(Long userId, String session, String subject) {
+        public ExamTestResult.SubjectDetails getSubjectScoreDetails(Long userId, Long examId, String subject) {
+                String session = examId + "회차";
+                
                 // 영어 subject를 한글 과목명("1과목", "2과목")으로 매핑
                 String mappedSubject = mapSubject(subject);
 
