@@ -21,6 +21,7 @@ import com.qriz.sqld.dto.daily.UserDailyDto.DailyDetailAndStatusDto;
 import com.qriz.sqld.dto.daily.WeeklyTestResultDto;
 import com.qriz.sqld.dto.test.TestReqDto;
 import com.qriz.sqld.dto.test.TestRespDto;
+import com.qriz.sqld.dto.test.TestRespDto.DailyRespDto;
 import com.qriz.sqld.handler.ex.CustomApiException;
 import com.qriz.sqld.service.daily.DailyPlanService;
 import com.qriz.sqld.service.daily.DailyService;
@@ -164,6 +165,21 @@ public class DailyController {
                                         new ResponseDto<>(-1, e.getMessage(), null),
                                         HttpStatus.BAD_REQUEST);
                 }
+        }
+
+        /**
+         * 오늘 공부할 개념 불러오기
+         * 
+         * @param dayNumber
+         * @param loginUser
+         * @return
+         */
+        @GetMapping("/concept/{dayNumber}")
+        public ResponseEntity<?> getDailyConcepts(@PathVariable String dayNumber,
+                        @AuthenticationPrincipal LoginUser loginUser) {
+                List<UserDailyDto.DailySkillDto> dailyConcepts = dailyService
+                                .getDailyConcepts(loginUser.getUser().getId(), dayNumber);
+                return new ResponseEntity<>(new ResponseDto<>(1, "오늘 공부할 개념 불러오기 성공", dailyConcepts), HttpStatus.OK);
         }
 
         // 테스트용
