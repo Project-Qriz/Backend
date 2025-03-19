@@ -401,6 +401,27 @@ public class DailyService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
+    public List<UserDailyDto.DailySkillDto> getDailyConcepts(Long userId, String dayNumber) {
+        // 해당 사용자의 daily plan 조회
+        UserDaily userDaily = userDailyRepository.findByUserIdAndDayNumber(userId, dayNumber)
+                .orElseThrow(() -> new CustomApiException("해당 일자의 데일리 플랜을 찾을 수 없습니다."));
+
+        List<Skill> skills = userDaily.getPlannedSkills();
+        if (skills == null || skills.isEmpty()) {
+            throw new CustomApiException("해당 일자에 배정된 개념이 없습니다.");
+        }
+
+        // plannedSkills에 배정된 모든 스킬을 DTO로 변환하여 리스트로 반환
+        return skills.stream().map(skill -> {
+            UserDailyDto.DailySkillDto dto = new UserDailyDto.DailySkillDto();
+            dto.setSkillId(skill.getId());
+            dto.setKeyConcepts(skill.getKeyConcepts());
+            dto.setDescription(skill.getDescription());
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
     // 테스트용
     @Transactional
     public void completeDailyTest(Long userId, String dayNumber) {

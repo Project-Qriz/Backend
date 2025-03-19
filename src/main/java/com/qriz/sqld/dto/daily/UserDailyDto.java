@@ -89,4 +89,14 @@ public class UserDailyDto {
         }
     }
 
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DailySkillDto {
+        private Long skillId;
+        private String keyConcepts;
+        private String description;
+    }
+
 }
