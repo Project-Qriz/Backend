@@ -204,7 +204,7 @@ public class ExamService {
         @Transactional(readOnly = true)
         public ResultDetailDto getExamResultDetail(Long userId, Long examId, Long questionId) {
                 String session = examId + "회차";
-                
+
                 log.info("Getting exam result detail for userId: {}, session: {}, questionId: {}",
                                 userId, session, questionId);
                 String testInfo = session;
@@ -297,7 +297,7 @@ public class ExamService {
         @Transactional(readOnly = true)
         public ExamTestResult.ExamResultsDto getExamResults(Long userId, Long examId) {
                 String session = examId + "회차";
-                
+
                 List<UserExamSession> userExamSessions = userExamSessionRepository
                                 .findByUserIdAndSessionOrderByCompletionDateDesc(userId, session);
                 if (userExamSessions.isEmpty()) {
@@ -354,7 +354,7 @@ public class ExamService {
         @Transactional(readOnly = true)
         public ExamTestResult.SubjectDetails getSubjectScoreDetails(Long userId, Long examId, String subject) {
                 String session = examId + "회차";
-                
+
                 // 영어 subject를 한글 과목명("1과목", "2과목")으로 매핑
                 String mappedSubject = mapSubject(subject);
 
@@ -422,6 +422,49 @@ public class ExamService {
 
                 subjectDetails.adjustTotalScore();
                 return subjectDetails;
+        }
+
+        @Transactional(readOnly = true)
+        public List<ExamTestResult.SubjectDetails> getSubjectScoreDetailsForAllSubjects(Long userId, Long examId) {
+                // 두 과목에 대한 세부 정보를 개별적으로 구한 후 리스트로 반환
+                ExamTestResult.SubjectDetails details1 = getSubjectScoreDetails(userId, examId, "subject1");
+                ExamTestResult.SubjectDetails details2 = getSubjectScoreDetails(userId, examId, "subject2");
+
+                return List.of(details1, details2);
+        }
+
+        @Transactional
+        public List<ExamTestResult.SimpleMajorItem> getMajorResults(Long userId, Long examId) {
+                // examId를 "회차" 형식의 문자열로 변환 (예: 1 -> "1회차")
+                String session = examId + "회차";
+
+                // 해당 세션의 ExamSession 조회
+                List<UserExamSession> userExamSessions = userExamSessionRepository
+                                .findByUserIdAndSessionOrderByCompletionDateDesc(userId, session);
+                if (userExamSessions.isEmpty()) {
+                        throw new CustomApiException("해당 회차의 모의고사 세션을 찾을 수 없습니다.");
+                }
+                // 최신 세션 사용
+                UserExamSession latestSession = userExamSessions.get(0);
+
+                // 해당 세션의 활동(Activity) 조회
+                List<UserActivity> activities = userActivityRepository.findByExamSession(latestSession);
+
+                // 각 주요 항목별 점수를 누적 (주요 항목은 skill.getType()로 가정)
+                Map<String, Double> majorScoreMap = new HashMap<>();
+                for (UserActivity activity : activities) {
+                        String majorItem = activity.getQuestion().getSkill().getType();
+                        // 누적 점수 계산
+                        double currentScore = majorScoreMap.getOrDefault(majorItem, 0.0);
+                        majorScoreMap.put(majorItem, currentScore + activity.getScore());
+                }
+
+                // Map을 List<SimpleMajorItem>로 변환하여 반환
+                List<ExamTestResult.SimpleMajorItem> result = majorScoreMap.entrySet().stream()
+                                .map(e -> new ExamTestResult.SimpleMajorItem(e.getKey(), e.getValue()))
+                                .collect(Collectors.toList());
+
+                return result;
         }
 
         @Transactional

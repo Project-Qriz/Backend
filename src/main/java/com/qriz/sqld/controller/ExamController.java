@@ -106,6 +106,21 @@ public class ExamController {
         }
 
         /**
+         * 특정 모의고사의 주요항목별 점수
+         * 
+         * @param examId
+         * @param loginUser
+         * @return
+         */
+        @GetMapping("/{examId}/subject-major")
+        public ResponseEntity<?> getMajorScore(@PathVariable Long examId,
+                        @AuthenticationPrincipal LoginUser loginUser) {
+                List<ExamTestResult.SimpleMajorItem> majorItems = examService
+                                .getMajorResults(loginUser.getUser().getId(), examId);
+                return new ResponseEntity<>(new ResponseDto<>(1, "모의고사 주요항목에 대한 점수 조회 성공", majorItems), HttpStatus.OK);
+        }
+
+        /**
          * 특정 모의고사의 과목별 세부항목별 점수
          * 
          * @param examId    모의고사의 식별자 (예: 1)
@@ -116,10 +131,16 @@ public class ExamController {
         @GetMapping("/{examId}/subject-details")
         public ResponseEntity<?> getSubjectScoreDetails(
                         @PathVariable Long examId,
-                        @RequestParam String subject,
+                        @RequestParam(required = false) String subject, // subject 파라미터가 선택적
                         @AuthenticationPrincipal LoginUser loginUser) {
-                ExamTestResult.SubjectDetails details = examService.getSubjectScoreDetails(
-                                loginUser.getUser().getId(), examId, subject);
+
+                Object details; // 반환 타입을 Object나 DTO로 변경할 수 있음
+                if (subject == null || subject.isBlank()) {
+                        // subject가 없으면 전체 과목(예: subject1, subject2)에 대한 결과를 가져옴
+                        details = examService.getSubjectScoreDetailsForAllSubjects(loginUser.getUser().getId(), examId);
+                } else {
+                        details = examService.getSubjectScoreDetails(loginUser.getUser().getId(), examId, subject);
+                }
                 return new ResponseEntity<>(new ResponseDto<>(1, "과목별 세부항목 점수 조회 성공", details), HttpStatus.OK);
         }
 
